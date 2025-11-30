@@ -123,7 +123,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
 
 fp32 motor4310_gyro_control_change(float rad, float offset_rad);
 
-void DMGetBigYawMotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_yaw_motor,attitude_t* gimbal_IMU_data);
+void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_yaw_motor,attitude_t* gimbal_IMU_data);
 
 void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor);
 

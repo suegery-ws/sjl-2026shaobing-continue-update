@@ -500,14 +500,24 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     }
 }
 
-void DMGetBigYawMotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_yaw_motor,attitude_t* gimbal_IMU_data)
+void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_yaw_motor,attitude_t* gimbal_IMU_data)
+{
+ if(big_yaw_motor->flag == 3) //大yaw电机
 {
    DM_Motor_Measure_s* big_yaw_motor_measure = &big_yaw_motor->measure;
    Big_Yaw_Data_s* big_yaw_posture_data = &gimbal_posture_data->Big_Yaw_Data;
    
    big_yaw_posture_data->big_yaw_relative_angle = big_yaw_motor_measure->angle_single_round; //编码值反馈相对角度
    big_yaw_posture_data->big_yaw_absoulte_angle = gimbal_IMU_data->Yaw;  //绝对角度直接用陀螺仪的
-
+}
+ if(big_yaw_motor->flag == 2) //pitch电机
+{
+   DM_Motor_Measure_s* big_yaw_motor_measure = &big_yaw_motor->measure;
+   Big_Yaw_Data_s* big_yaw_posture_data = &gimbal_posture_data->Big_Yaw_Data;
+   
+   big_yaw_posture_data->big_yaw_relative_angle = big_yaw_motor_measure->angle_single_round; //编码值反馈相对角度
+   big_yaw_posture_data->big_yaw_absoulte_angle = gimbal_IMU_data->Yaw;  //绝对角度直接用陀螺仪的
+}
 }
 
 
