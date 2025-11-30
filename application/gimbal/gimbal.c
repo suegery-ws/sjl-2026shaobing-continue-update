@@ -123,9 +123,9 @@ void GimbalInit()
     //PITCH 4310
     Motor_Init_Config_s pitch_config = {
         .can_init_config = {
-            .can_handle = &hcan1, //实车要改
-            .tx_id = 0x02,
-            .rx_id = 4,
+            .can_handle = &hcan1,
+            .tx_id = 0x04,
+            .rx_id = 2,
         },
         .controller_param_init_config = {
             .absoulte_angle_PID = {
@@ -137,20 +137,20 @@ void GimbalInit()
                 .MaxOut = 10000,
             },
             .relative_angle_PID = {
-                .Kp = 5.19, // 10
-                .Ki = 0,
-                .Kd = 0.05,
+                .Kp = 20, // 10
+                .Ki = 1,
+                .Kd = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
-                .MaxOut = 10, //数据待更改
+                .MaxOut = 500, //数据待更改
             },
             .speed_PID = {
-                .Kp = 1.2,  // 50
-                .Ki = 0.9, // 350
-                .Kd = 0,   // 0
+                .Kp = 5.0f,  // 50
+                .Ki = 0.8f, // 350
+                .Kd = 0.0f,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                .IntegralLimit = 2500.0f,
-                .MaxOut = 1,
+                .IntegralLimit = 5000.0f,
+                .MaxOut = 1.0f,
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->Pitch,
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明

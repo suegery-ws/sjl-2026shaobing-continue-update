@@ -10,7 +10,7 @@
 #include "wholecardata.h"
 #include "robot_cmd.h"
 
-#define DM_MOTOR_CNT 1
+#define DM_MOTOR_CNT 2
 
 #define DM_P_MIN  (-12.5f)
 #define DM_P_MAX  12.5f
