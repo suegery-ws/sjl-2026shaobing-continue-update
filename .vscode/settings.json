@@ -1,0 +1,21 @@
+{
+    "files.associations": {
+        "stm32f4xx_hal_def.h": "c",
+        "bsp_usb.h": "c",
+        "usb_device.h": "c",
+        "usbd_cdc.h": "c",
+        "usbd_conf.h": "c",
+        "usbd_desc.h": "c",
+        "usbd_cdc_if.h": "c",
+        "chassis.h": "c",
+        "remote_control.h": "c",
+        "arm_math.h": "c",
+        "can_comm.h": "c",
+        "dji_motor.h": "c",
+        "bsp_log.h": "c"
+    },
+    // "clangd.arguments":[
+    //     "--compile-commands-dir=.",
+    //     "--query-driver = E:/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe"
+    // ]
+}
