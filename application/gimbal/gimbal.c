@@ -137,7 +137,7 @@ void GimbalInit()
                 .MaxOut = 10000,
             },
             .relative_angle_PID = {
-                .Kp = 20, // 10
+                .Kp = 2, // 10
                 .Ki = 1,
                 .Kd = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
@@ -150,20 +150,21 @@ void GimbalInit()
                 .Kd = 0.0f,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 5000.0f,
-                .MaxOut = 1.0f,
+                .MaxOut = 5.0f,
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->Pitch,
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = (&gimbal_IMU_data->Gyro[1]), //这个以后改达妙陀螺仪了
             .flag = 2,
-            .motor_limit_left = 3.54f,//待修改
-            .motor_limit_right = 2.72f,//待修改
+            .motor_limit_left = -0.02f,//待修改
+            .motor_limit_right = -1.05f,//待修改
             
         },
         .controller_setting_init_config = {
             .outer_loop_type = ANGLE_LOOP,
             .close_loop_type = ANGLE_LOOP | SPEED_LOOP,
             .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
+            // .feedback_reverse_flag = FEEDBACK_DIRECTION_REVERSE,
             
         },
         .motor_type = DM4310,};
@@ -197,7 +198,7 @@ void GimbalInit()
                 .Kd = 0.0,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 2500,
-                .MaxOut = 1,
+                .MaxOut = 10,
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->Yaw,
             .other_speed_feedback_ptr = &gimbal_IMU_data->Gyro[2],

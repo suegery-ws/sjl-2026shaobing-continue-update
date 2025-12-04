@@ -123,36 +123,32 @@ static void DMMotorDecode(CANInstance *motor_can)
     measure->T_Mos = (float)rxbuff[6];
     measure->T_Rotor = (float)rxbuff[7];
 
-    //以下是对哨兵多圈计算的插入
-    if(measure->position>=6.25&&measure->position<=12.5)
-	measure->position-=6.25;
-    if(measure->position<=0&&measure->position>-6.25)
-	measure->position+=6.25;
-    if(measure->position<=-6.25&&measure->position>-12.5)
-	measure->position+=12.5;
-    
+    // //以下是对哨兵多圈计算的插入
+    // if(measure->position>=6.25&&measure->position<=12.5)
+	// measure->position-=6.25;
+    // if(measure->position<=0&&measure->position>-6.25)
+	// measure->position+=6.25;
     // if(measure->position<=-6.25&&measure->position>-12.5)
 	// measure->position+=12.5;
-    // if(measure->position<=0&&measure->position>-6.25)
-	// measure->position+=12.5;
+    
 
     //下面是对编码总值的计算 //可以认为4310和大yaw轴是两个东西
     motor->last_ecd = motor->ecd;            //这个可能写的可能有问题，一开始可能会存在垃圾值
     motor->ecd = measure->position*8192/6.25;//把4310电机看作6020电机，用编码值对他进行运算
-    if(motor->ecd - motor->last_ecd > 8100||motor->ecd - motor->last_ecd <-8100)     //转过半圈
+    if(motor->ecd - motor->last_ecd > 4096||motor->ecd - motor->last_ecd <-4096)     //转过半圈
 	{
 	if(motor->ecd < motor->last_ecd)   //从正向向上过0点
 	measure->total_round+=1;
 	else
 	measure->total_round-=1;   //从反向
 	}
-	motor->ecd_sum = measure->total_round*8192+motor->ecd;//
-    //防止ecd_sum溢出 1.7:1 15522为一圈
-    motor->ecd_sum =(int)motor->ecd_sum %16382;//16382是一个前馈 为了减小减速比带来的误差
-	if(motor->ecd_sum<0)
-	motor->ecd_sum+=16382;//因为编码值只能是正值
-    measure ->angle_single_round = -rad_format(MOTOR4310_ECD_TO_RAD * (motor->ecd_sum - BIG_YAW_ZERO_OFFSET_ECD));//这个是相对角度，陀螺仪反馈的是绝对角度//给符号是因为想要统一往左转为负角度
-    //不同位置的电机的相对角度和绝对角度并不互通，不能全部写在这里
+	// motor->ecd_sum = measure->total_round*8192+motor->ecd;//
+    // //防止ecd_sum溢出 1.7:1 15522为一圈
+    // motor->ecd_sum =(int)motor->ecd_sum %16382;//16382是一个前馈 为了减小减速比带来的误差
+	// if(motor->ecd_sum<0)
+	// motor->ecd_sum+=16382;//因为编码值只能是正值
+    // measure ->angle_single_round = -rad_format(MOTOR4310_ECD_TO_RAD * (motor->ecd_sum - BIG_YAW_ZERO_OFFSET_ECD));//这个是相对角度，陀螺仪反馈的是绝对角度//给符号是因为想要统一往左转为负角度
+    // //不同位置的电机的相对角度和绝对角度并不互通，不能全部写在这里
 }
 
 static void DMMotorLostCallback(void *motor_ptr)
@@ -180,6 +176,8 @@ DMMotorInstance *DMMotorInit(Motor_Init_Config_s *config)
     motor->other_angle_feedback_ptr = config->controller_param_init_config.other_angle_feedback_ptr;
     motor->other_speed_feedback_ptr = config->controller_param_init_config.other_speed_feedback_ptr;
     motor->motor_settings.feedforward_flag = config->controller_setting_init_config.feedforward_flag;
+    motor->motor_limit_left = config->controller_param_init_config.motor_limit_left;
+    motor->motor_limit_right = config->controller_param_init_config.motor_limit_right;
     config->can_init_config.can_module_callback = DMMotorDecode;
     config->can_init_config.id = motor;
     motor->motor_can_instace = CANRegister(&config->can_init_config);
@@ -303,7 +301,7 @@ void DMMotorControl()
             //  rc_deadband_limit(pid_measure1,pid_measure,0.02f);//死区处理//限制一下反馈值，因为不管用·陀螺仪还是编码器反馈都不稳定，但陀螺仪更好
             if( motor->motor_mode == GIMBAL_MOTOR_ENCONDE)
             {
-            pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
+            pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
             }
             else if(motor->motor_mode == GIMBAL_MOTOR_GYRO)
             pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
@@ -414,8 +412,6 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
 {
    Gimbal_Ctrl_Cmd_s* gimbal_cmd = gimbal_cmd_recv;
    Big_Yaw_Data_s* big_yaw_posture_data = &gimbal_posture_data->Big_Yaw_Data;
-   if(Instance->flag == 3)
-   {
                if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_RAW) && (gimbal_cmd->last_big_yaw_motor_mode != GIMBAL_MOTOR_RAW))
               {
                 Instance->pid_ref = 0;
@@ -435,27 +431,7 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
              
               //这里以后要加一个自瞄模式的处理函数
    }
-// //    if(Instance->flag == 2)
-// //    {
-// //                 if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_RAW) && (gimbal_cmd->last_big_yaw_motor_mode != GIMBAL_MOTOR_RAW))
-//               {
-//                 Instance->pid_ref = 0;
-//               }
-//                if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_GYRO) && (gimbal_cmd->last_big_yaw_motor_mode != GIMBAL_MOTOR_GYRO))
-//               {
-//                 Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
-//               }
-//               if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ENCONDE) && (gimbal_cmd->last_big_yaw_motor_mode != GIMBAL_MOTOR_ENCONDE))
-//               {
-//                 Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
-//               }
-//               if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ENCONDE) && (gimbal_cmd->last_big_yaw_motor_mode != GIMBAL_MOTOR_ENCONDE))
-//               {
-//                 Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
-//               }
-// //               //这里以后要加一个自瞄模式的处理函数
-// //    }
-}
+   
 
 void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor)
 {
@@ -524,10 +500,13 @@ void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_
 void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor)  //有限位
 {
     DM_Motor_Measure_s* gimbal_motor_measure = &gimbal_motor->measure; 
-    if(gimbal_motor->flag == 2)
     {
     fp32 bias_angle = 0.0f;
     fp32 add = 0.0f;
+    if(gimbal_motor->pid_ref == 0)
+    {
+        gimbal_motor->pid_ref = gimbal_motor_measure->position;
+    }
     add = gimbal_cmd->yaw;
     bias_angle = rad_format(gimbal_motor->pid_ref - gimbal_motor_measure->position);//这边原函数减的是绝对角度，我认为是相对角度，之后调试再看
     if (gimbal_motor_measure->position + bias_angle + add > gimbal_motor->motor_limit_left)

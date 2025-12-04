@@ -397,6 +397,20 @@ static void RemoteControlSet()
     gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
     gimbal_cmd_send.yaw = yaw_channel * YAW_RC_SEN;
        }
+    if(gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//小陀螺模式
+       {
+        //  if (rc_data[TEMP].rc.rocker_l_ == NULL || rc_data[TEMP].rc.rocker_l1 == NULL )
+        // {
+        // return;
+        // }
+
+    rc_deadband_limit(rc_data[TEMP].rc.rocker_l_ , yaw_channel, GIMBAL_RC_DEADBAND);
+    rc_deadband_limit(rc_data[TEMP].rc.rocker_l1 , pitch_channel, GIMBAL_RC_DEADBAND);
+
+    gimbal_cmd_send.big_yaw = 0;
+    gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
+    gimbal_cmd_send.yaw = yaw_channel * YAW_RC_SEN;
+       }
 
         // gimbal_cmd_send.yaw += 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
         // gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
