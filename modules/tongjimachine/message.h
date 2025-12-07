@@ -10,8 +10,8 @@
 #define CBOARD_SEND_ID 0xff
 #define CBOARD_SEND_ID3 0x12 // 发送数据长度
 #define CBOARD_SEND_ID2 0xee // 发送数据长度
-#define CBOARD_RECV_ID_1 0x110
-#define CBOARD_RECV_ID_2 0x001
+#define CBOARD_RECV_ID_1 0x510
+#define CBOARD_RECV_ID_2 0x002 //注意要和其他模块的id不冲突
 
 typedef enum
 {

@@ -62,8 +62,8 @@ void GimbalInit()
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = &gimbal_IMU_data->Gyro[2],
             .flag = 1,
-            .motor_limit_left = 3.48f,
-            .motor_limit_right = 0.60f,
+            .motor_limit_left = 6.00f,
+            .motor_limit_right = 3.37f,
             
         },
         .controller_setting_init_config = {
@@ -123,7 +123,7 @@ void GimbalInit()
     //PITCH 4310
     Motor_Init_Config_s pitch_config = {
         .can_init_config = {
-            .can_handle = &hcan1,
+            .can_handle = &hcan2,
             .tx_id = 0x04,
             .rx_id = 2,
         },
@@ -137,12 +137,12 @@ void GimbalInit()
                 .MaxOut = 10000,
             },
             .relative_angle_PID = {
-                .Kp = 2, // 10
+                .Kp = 10, // 10
                 .Ki = 1,
                 .Kd = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
-                .MaxOut = 500, //数据待更改
+                .MaxOut = 5, //数据待更改
             },
             .speed_PID = {
                 .Kp = 5.0f,  // 50
@@ -150,21 +150,21 @@ void GimbalInit()
                 .Kd = 0.0f,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 5000.0f,
-                .MaxOut = 5.0f,
+                .MaxOut = 1.0f,
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->Pitch,
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = (&gimbal_IMU_data->Gyro[1]), //这个以后改达妙陀螺仪了
             .flag = 2,
-            .motor_limit_left = -0.02f,//待修改
-            .motor_limit_right = -1.05f,//待修改
+            .motor_limit_left = 6.24f,//待修改
+            .motor_limit_right = 5.16f,//待修改
             
         },
         .controller_setting_init_config = {
             .outer_loop_type = ANGLE_LOOP,
             .close_loop_type = ANGLE_LOOP | SPEED_LOOP,
             .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
-            // .feedback_reverse_flag = FEEDBACK_DIRECTION_REVERSE,
+            .feedback_reverse_flag = FEEDBACK_DIRECTION_NORMAL,
             
         },
         .motor_type = DM4310,};
@@ -177,8 +177,8 @@ void GimbalInit()
         },
         .controller_param_init_config = {
             .absoulte_angle_PID = {
-                .Kp = 1.5, // 10
-                .Ki = 0,
+                .Kp = 10, // 10
+                .Ki = 0.2,
                 .Kd = 0.05,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
@@ -190,11 +190,11 @@ void GimbalInit()
                 .Kd = 0.05,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
-                .MaxOut = 10, //
+                .MaxOut = 1, //
             },
             .speed_PID = {
-                .Kp = 1.2,  // 50
-                .Ki = 0.09, // 350
+                .Kp = 7,  // 50
+                .Ki = 0.1, // 350
                 .Kd = 0.0,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 2500,
@@ -230,8 +230,6 @@ void GimbalTask()
     // 获取云台控制数据
     // 后续增加未收到数据的处理
     SubGetMessage(gimbal_sub, &gimbal_cmd_recv);
-    // gimbal_IMU_data = gimbal_cmd_recv.IMU_data;
-
     // @todo:现在已不再需要电机反馈,实际上可以始终使用IMU的姿态数据来作为云台的反馈,yaw电机的offset只是用来跟随底盘
     // 根据控制模式进行电机反馈切换和过渡,视觉模式在robot_cmd模块就已经设置好,gimbal只看yaw_ref和pitch_ref//auto在后续的版本中将会优化
     switch (gimbal_cmd_recv.yaw_motor_mode)
@@ -323,7 +321,7 @@ void GimbalTask()
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP,OTHER_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,pitch_motor,gimbal_IMU_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
-        DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor);
+        DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
         break;
     case GIMBAL_MOTOR_ENCONDE: 
         DMMotorEnable(pitch_motor);
@@ -332,7 +330,7 @@ void GimbalTask()
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP,MOTOR_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,pitch_motor,gimbal_IMU_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
-        DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor);
+        DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
         break;
      case GIMBAL_MOTOR_AUTO: 
         DMMotorEnable(pitch_motor);
@@ -341,7 +339,7 @@ void GimbalTask()
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP,OTHER_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,pitch_motor,gimbal_IMU_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
-        DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor);
+        DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
         break;
     default:
         break;
@@ -349,7 +347,6 @@ void GimbalTask()
     switch (gimbal_cmd_recv.big_yaw_motor_mode)    
     {
     case GIMBAL_MOTOR_RAW:
-        
         DMMotorStop(big_yaw_motor);
         DMMotorinhert(&gimbal_cmd_recv, big_yaw_motor);
         DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data);
@@ -361,16 +358,16 @@ void GimbalTask()
         DMMotorChangeFeed(big_yaw_motor, SPEED_LOOP,OTHER_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
-        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor);
+        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
         break;
     case GIMBAL_MOTOR_ENCONDE: 
         DMMotorEnable(big_yaw_motor);
         DMMotorinhert(&gimbal_cmd_recv, big_yaw_motor);
-        DMMotorChangeFeed(big_yaw_motor, ANGLE_LOOP,OTHER_FEED);
-        DMMotorChangeFeed(big_yaw_motor, SPEED_LOOP,OTHER_FEED);
+        DMMotorChangeFeed(big_yaw_motor, ANGLE_LOOP,MOTOR_FEED);
+        DMMotorChangeFeed(big_yaw_motor, SPEED_LOOP,MOTOR_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
-        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor);
+        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
         break;
     case GIMBAL_MOTOR_ROTATE: 
         DMMotorEnable(big_yaw_motor);
@@ -387,7 +384,7 @@ void GimbalTask()
         DMMotorChangeFeed(big_yaw_motor, SPEED_LOOP,OTHER_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
-        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor);
+        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
         break;
     default:
         break;

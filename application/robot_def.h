@@ -28,12 +28,12 @@
 /* 机器人重要参数定义,注意根据不同机器人进行修改,浮点数需要以.0或f结尾,无符号以u结尾 */
 // 云台参数
 #define YAW_CHASSIS_ALIGN_ECD 0.0f // 6020yaw电机位于中间位置时的C板陀螺仪反馈数据
-#define YAW_6020_OFF_SET_RAD 2.02f // 6020yaw电机位于中间位置时电机弧度制的角度值
+#define YAW_6020_OFF_SET_RAD 4.70f // 6020yaw电机位于中间位置时电机弧度制的角度值
 #define PITCH_6020_OFF_SET_RAD 3.08f // 6020pitch电机位于水平位置时电机弧度制的角度值
 
 // #define BIG_YAW_CHASSIS_ANGLE_POS 0 //云台和底盘对齐时的4310位置值
 // #define BIG_YAW_CHASSIS_ANGLE_ECD (BIG_YAW_CHASSIS_ANGLE_POS*6.25/8192) //把位置值转换成编码值
-#define BIG_YAW_ZERO_OFFSET_ECD 2488 // 大云台中值编码值//如果要开0点保存，就要代码给0了，我们尽量避免
+#define BIG_YAW_ZERO_OFFSET_ECD 8166 // 大云台中值编码值//如果要开0点保存，就要代码给0了，我们尽量避免
 #define BIG_YAW_GYRO_OFFSET_RAD 0.0f // 大云台陀螺仪中值//与4310有类似机制
 #define BIG_YAW_CHASSIS_ANGLE_ECD 7000 //这个存疑
 #define YAW_ECD_GREATER_THAN_4096 0 // ALIGN_ECD值是否大于4096,是为1,否为0;用于计算云台偏转角度
@@ -216,8 +216,6 @@ typedef struct
     float pitch;
     float big_yaw; //大云台的角度预设
     float chassis_rotate_wz;
-
-    attitude_t* IMU_data;
 
     gimbal_mode_e gimbal_mode;//云台行为模式
     gimbal_motor_mode_e yaw_motor_mode;     //云台yaw电机控制模式

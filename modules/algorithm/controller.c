@@ -10,6 +10,8 @@
  */
 #include "controller.h"
 #include "memory.h"
+#include "robot_cmd.h"
+#include "user_lib.h"
 
 /* ----------------------------下面是pid优化环节的实现---------------------------- */
 
@@ -221,7 +223,7 @@ float DMPIDCalculate(PIDInstance *pid, float measure, float ref)
     pid->Measure = measure;
     pid->Ref = ref;
     pid->Err = pid->Ref - pid->Measure;
-
+    // pid->Err = loop_fp32_constrain(pid->Err, -1.0, 1.0);
     
 
     // 如果在死区外,则计算PID
@@ -250,16 +252,17 @@ float DMPIDCalculate(PIDInstance *pid, float measure, float ref)
 
         pid->Iout += pid->ITerm;                         // 累加积分
         pid->Output = pid->Pout + pid->Iout + pid->Dout; // 计算输出
-        if(pid->Err > 4.0f ||pid->Err < -4.0f)
+        if(pid->Err > 5.0f ||pid->Err < -5.0f)
     {
         pid->Output *= -1;
-        if(pid->Output <= -4.0f)
+        if(pid->Output <= -3.0f)
         {
             pid->Output = -2.0f;
         }
         else
         pid->Output = 2.0f;
     }
+       
 
         // 输出滤波
         if (pid->Improve & PID_OutputFilter)

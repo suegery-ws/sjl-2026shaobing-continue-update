@@ -74,7 +74,7 @@ void ChassisInit()
         .can_init_config.can_handle = &hcan1,
         .controller_param_init_config = {
             .follow_speed_PID = {
-                .Kp =15000,//2000.0f, // 4.5
+                .Kp =20000,//2000.0f, // 4.5
                 .Ki =10,//50.0f,   // 0
                 .Kd =0,//0.0f,   // 0
                 .IntegralLimit = 2000.0f,
@@ -179,7 +179,7 @@ void ChassisInit()
 #define LB_CENTER ((HALF_TRACK_WIDTH + CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE + CENTER_GIMBAL_OFFSET_Y) * DEGREE_2_RAD)
 #define RB_CENTER ((HALF_TRACK_WIDTH - CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE + CENTER_GIMBAL_OFFSET_Y) * DEGREE_2_RAD)//暂时就先不用了
 
-#define MOTOR_TO_CENTER 0.2f
+#define MOTOR_TO_CENTER 0.2465
 
 /**
  * @brief 计算每个轮毂电机的输出,正运动学解算

@@ -260,9 +260,9 @@ static void gimbal_behavior_to_motor()
     }
     else if (gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//调试模式
     {
-        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ENCONDE;
-		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_ENCONDE;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_ENCONDE;
+        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_RAW;
+		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_GYRO;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_RAW;
     }    
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄模式
     {
@@ -337,13 +337,13 @@ static void RemoteControlSet()
     }
     else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘跟随云台模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW; 
+        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;  
         gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;    
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
         chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;
     }
     else // 右侧开关状态异常,默认跟随模式
     {
@@ -370,11 +370,7 @@ static void RemoteControlSet()
          
     if(gimbal_cmd_send.gimbal_mode == GIMBAL_ABSOLUTE_ANGLE)//这个是哨兵的底盘跟随云台 //底盘和云台的模式选择以及云台的行为和控制模式的强大关联有待研究
        {
-        //  if (rc_data[TEMP].rc.rocker_l_ == NULL || rc_data[TEMP].rc.rocker_l1 == NULL )
-        // {
-        // return;
-        // }
-
+        
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l_ , yaw_channel, GIMBAL_RC_DEADBAND);
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l1 , pitch_channel, GIMBAL_RC_DEADBAND);
 
@@ -385,10 +381,7 @@ static void RemoteControlSet()
        }
     if(gimbal_cmd_send.gimbal_mode == GIMBAL_RELATIVE_ANGLE)//小陀螺模式
        {
-        //  if (rc_data[TEMP].rc.rocker_l_ == NULL || rc_data[TEMP].rc.rocker_l1 == NULL )
-        // {
-        // return;
-        // }
+        
 
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l_ , yaw_channel, GIMBAL_RC_DEADBAND);
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l1 , pitch_channel, GIMBAL_RC_DEADBAND);
@@ -397,19 +390,14 @@ static void RemoteControlSet()
     gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
     gimbal_cmd_send.yaw = yaw_channel * YAW_RC_SEN;
        }
-    if(gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//小陀螺模式
+    if(gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//调试模式
        {
-        //  if (rc_data[TEMP].rc.rocker_l_ == NULL || rc_data[TEMP].rc.rocker_l1 == NULL )
-        // {
-        // return;
-        // }
-
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l_ , yaw_channel, GIMBAL_RC_DEADBAND);
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l1 , pitch_channel, GIMBAL_RC_DEADBAND);
 
-    gimbal_cmd_send.big_yaw = 0;
+    gimbal_cmd_send.big_yaw = yaw_channel * BIG_YAW_RC_SEN;
     gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
-    gimbal_cmd_send.yaw = yaw_channel * YAW_RC_SEN;
+    gimbal_cmd_send.yaw = 0;
        }
 
         // gimbal_cmd_send.yaw += 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
@@ -424,7 +412,7 @@ static void RemoteControlSet()
         chassis_cmd_send.vx = 0;
         chassis_cmd_send.vy = 0;
     }
-    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW)
+    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW )
     {
         
 		rc_deadband_limit(rc_data[TEMP].rc.rocker_r_, vx_channel, CHASSIS_RC_DEADLINE);
@@ -665,12 +653,12 @@ void RobotCMDTask()
    // BMI088Acquire(bmi088_test,&bmi088_data) ;
     // 从其他应用获取回传数据
 #ifdef ONE_BOARD
-    // SubGetMessage(chassis_feed_sub, (void *)&chassis_fetch_data);
+    SubGetMessage(chassis_feed_sub, (void *)&chassis_fetch_data);
 #endif // ONE_BOARD
 #ifdef GIMBAL_BOARD
     chassis_fetch_data = *(Chassis_Upload_Data_s *)CANCommGet(cmd_can_comm);
 #endif // GIMBAL_BOARD
-    // SubGetMessage(shoot_feed_sub, &shoot_fetch_data);
+    SubGetMessage(shoot_feed_sub, &shoot_fetch_data);
     SubGetMessage(gimbal_feed_sub, &gimbal_fetch_data);//接受来自三个关键部分的数据
 
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成

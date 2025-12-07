@@ -15,7 +15,6 @@
 static uint8_t idx;
 static DMMotorInstance *dm_motor_instance[DM_MOTOR_CNT];//之后会改2
 static osThreadId dm_task_handle[DM_MOTOR_CNT]; //static 函数要在.c文件中声明
-// static uint8_t Data_Save_zero[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE}; // 电机保存零点命令
 
 fp32 motor4310_ecd_to_rad_change(int32_t ecd, int32_t offset_ecd)
 {
@@ -32,7 +31,7 @@ fp32 motor4310_ecd_to_rad_change(int32_t ecd, int32_t offset_ecd)
     }
     return relative_ecd * MOTOR4310_ECD_TO_RAD;
 	}
-}//因为ecd_sum不可能是负值,不考虑为负的情况
+}//因为ecd_sum不可能是负值,不考虑为负的情况,暂时不用//规划了相对角度处于-180到180之间
 
 fp32 motor4310_gyro_control_change(float rad, float offset_rad)
 {
@@ -82,13 +81,17 @@ static float uint_to_float(int x_int, float x_min, float x_max, int bits)
 }
 
 
- void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor)  //无限位，小陀螺模式
+ void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data)  //无限位，小陀螺模式
 {
     static fp32 angle_set;
     static fp32 add;
     add = gimbal_cmd->big_yaw;
     angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
     gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
+     if(gimbal_motor->pid_ref == 0)
+    {
+        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle;
+    }
  }
 
 
@@ -111,8 +114,13 @@ static void DMMotorDecode(CANInstance *motor_can)
     DaemonReload(motor->motor_daemon);
 
     measure->last_position = measure->position;
+    measure->pitch_last_position = measure->pitch_position;
+
     tmp = (uint16_t)((rxbuff[1] << 8) | rxbuff[2]);
     measure->position = uint_to_float(tmp, DM_P_MIN, DM_P_MAX, 16);
+
+    tmp = (uint16_t)((rxbuff[1] << 8) | rxbuff[2]);
+    measure->pitch_position = uint_to_float(tmp, DM_P_MIN, DM_P_MAX, 16);
 
     tmp = (uint16_t)((rxbuff[3] << 4) | rxbuff[4] >> 4);
     measure->velocity = uint_to_float(tmp, DM_V_MIN, DM_V_MAX, 12);
@@ -123,32 +131,27 @@ static void DMMotorDecode(CANInstance *motor_can)
     measure->T_Mos = (float)rxbuff[6];
     measure->T_Rotor = (float)rxbuff[7];
 
-    // //以下是对哨兵多圈计算的插入
-    // if(measure->position>=6.25&&measure->position<=12.5)
-	// measure->position-=6.25;
-    // if(measure->position<=0&&measure->position>-6.25)
-	// measure->position+=6.25;
-    // if(measure->position<=-6.25&&measure->position>-12.5)
-	// measure->position+=12.5;
+    //以下是对哨兵多圈计算的插入
+    if(measure->position>=6.25&&measure->position<=12.5)
+	measure->position-=6.25;
+    if(measure->position<=0&&measure->position>-6.25)
+	measure->position+=6.25;
+    if(measure->position<=-6.25&&measure->position>-12.5)
+	measure->position+=12.5;
     
-
     //下面是对编码总值的计算 //可以认为4310和大yaw轴是两个东西
     motor->last_ecd = motor->ecd;            //这个可能写的可能有问题，一开始可能会存在垃圾值
     motor->ecd = measure->position*8192/6.25;//把4310电机看作6020电机，用编码值对他进行运算
-    if(motor->ecd - motor->last_ecd > 4096||motor->ecd - motor->last_ecd <-4096)     //转过半圈
-	{
-	if(motor->ecd < motor->last_ecd)   //从正向向上过0点
-	measure->total_round+=1;
-	else
-	measure->total_round-=1;   //从反向
-	}
-	// motor->ecd_sum = measure->total_round*8192+motor->ecd;//
-    // //防止ecd_sum溢出 1.7:1 15522为一圈
-    // motor->ecd_sum =(int)motor->ecd_sum %16382;//16382是一个前馈 为了减小减速比带来的误差
-	// if(motor->ecd_sum<0)
-	// motor->ecd_sum+=16382;//因为编码值只能是正值
-    // measure ->angle_single_round = -rad_format(MOTOR4310_ECD_TO_RAD * (motor->ecd_sum - BIG_YAW_ZERO_OFFSET_ECD));//这个是相对角度，陀螺仪反馈的是绝对角度//给符号是因为想要统一往左转为负角度
-    // //不同位置的电机的相对角度和绝对角度并不互通，不能全部写在这里
+    // if(motor->ecd - motor->last_ecd > 4096||motor->ecd - motor->last_ecd <-4096)     //转过半圈
+	// {
+	// if(motor->ecd < motor->last_ecd)   //从正向向上过0点
+	// measure->total_round+=1;
+	// else
+	// measure->total_round-=1;   //从反向
+	// }
+	motor->ecd_sum = motor->ecd;
+    measure ->angle_single_round = -rad_format(MOTOR4310_ECD_TO_RAD * (motor->ecd_sum - BIG_YAW_ZERO_OFFSET_ECD));//这个是相对角度，陀螺仪反馈的是绝对角度//给符号是因为想要统一往左转为负角度
+    //不同位置的电机的相对角度和绝对角度并不互通，不能全部写在这里
 }
 
 static void DMMotorLostCallback(void *motor_ptr)
@@ -221,48 +224,48 @@ void DMMotorOuterLoop(DMMotorInstance *motor, Closeloop_Type_e type)
 
 
 //@Todo: 目前只实现了力控，更多位控PID等请自行添加
-void DMMotorTask(void const *argument)
-{
-    float  pid_ref, set;
-    DMMotorInstance *motor = (DMMotorInstance *)argument;
-   //DM_Motor_Measure_s *measure = &motor->measure;
-    Motor_Control_Setting_s *setting = &motor->motor_settings;
-    //CANInstance *motor_can = motor->motor_can_instace;
-    //uint16_t tmp;
-    DMMotor_Send_s motor_send_mailbox;
-    while (1)
-    {
+// void DMMotorTask(void const *argument)
+// {
+//     float  pid_ref, set;
+//     DMMotorInstance *motor = (DMMotorInstance *)argument;
+//    //DM_Motor_Measure_s *measure = &motor->measure;
+//     Motor_Control_Setting_s *setting = &motor->motor_settings;
+//     //CANInstance *motor_can = motor->motor_can_instace;
+//     //uint16_t tmp;
+//     DMMotor_Send_s motor_send_mailbox;
+//     while (1)
+//     {
         
-        pid_ref = motor->pid_ref;
-        set = pid_ref;
+//         pid_ref = motor->pid_ref;
+//         set = pid_ref;
 
-        if (setting->motor_reverse_flag == MOTOR_DIRECTION_REVERSE)
-            set *= -1;
+//         if (setting->motor_reverse_flag == MOTOR_DIRECTION_REVERSE)
+//             set *= -1;
        
-        LIMIT_MIN_MAX(set, DM_T_MIN, DM_T_MAX);
-        motor_send_mailbox.position_des = float_to_uint(0, DM_P_MIN, DM_P_MAX, 16);
-        motor_send_mailbox.velocity_des = float_to_uint(0, DM_V_MIN, DM_V_MAX, 12);
-        motor_send_mailbox.torque_des = float_to_uint(0, DM_T_MIN, DM_T_MAX, 12);
-        motor_send_mailbox.Kp = 0;
-        motor_send_mailbox.Kd = 0;
+//         LIMIT_MIN_MAX(set, DM_T_MIN, DM_T_MAX);
+//         motor_send_mailbox.position_des = float_to_uint(0, DM_P_MIN, DM_P_MAX, 16);
+//         motor_send_mailbox.velocity_des = float_to_uint(0, DM_V_MIN, DM_V_MAX, 12);
+//         motor_send_mailbox.torque_des = float_to_uint(0, DM_T_MIN, DM_T_MAX, 12);
+//         motor_send_mailbox.Kp = 0;
+//         motor_send_mailbox.Kd = 0;
 
-        if(motor->stop_flag == MOTOR_STOP)
-            motor_send_mailbox.torque_des = float_to_uint(0, DM_T_MIN, DM_T_MAX, 12);
+//         if(motor->stop_flag == MOTOR_STOP)
+//             motor_send_mailbox.torque_des = float_to_uint(0, DM_T_MIN, DM_T_MAX, 12);
 
-        motor->motor_can_instace->tx_buff[0] = (uint8_t)(motor_send_mailbox.position_des >> 8);
-        motor->motor_can_instace->tx_buff[1] = (uint8_t)(motor_send_mailbox.position_des);
-        motor->motor_can_instace->tx_buff[2] = (uint8_t)(motor_send_mailbox.velocity_des >> 4);
-        motor->motor_can_instace->tx_buff[3] = (uint8_t)(((motor_send_mailbox.velocity_des & 0xF) << 4) | (motor_send_mailbox.Kp >> 8));
-        motor->motor_can_instace->tx_buff[4] = (uint8_t)(motor_send_mailbox.Kp);
-        motor->motor_can_instace->tx_buff[5] = (uint8_t)(motor_send_mailbox.Kd >> 4);
-        motor->motor_can_instace->tx_buff[6] = (uint8_t)(((motor_send_mailbox.Kd & 0xF) << 4) | (motor_send_mailbox.torque_des >> 8));
-        motor->motor_can_instace->tx_buff[7] = (uint8_t)(motor_send_mailbox.torque_des);
+//         motor->motor_can_instace->tx_buff[0] = (uint8_t)(motor_send_mailbox.position_des >> 8);
+//         motor->motor_can_instace->tx_buff[1] = (uint8_t)(motor_send_mailbox.position_des);
+//         motor->motor_can_instace->tx_buff[2] = (uint8_t)(motor_send_mailbox.velocity_des >> 4);
+//         motor->motor_can_instace->tx_buff[3] = (uint8_t)(((motor_send_mailbox.velocity_des & 0xF) << 4) | (motor_send_mailbox.Kp >> 8));
+//         motor->motor_can_instace->tx_buff[4] = (uint8_t)(motor_send_mailbox.Kp);
+//         motor->motor_can_instace->tx_buff[5] = (uint8_t)(motor_send_mailbox.Kd >> 4);
+//         motor->motor_can_instace->tx_buff[6] = (uint8_t)(((motor_send_mailbox.Kd & 0xF) << 4) | (motor_send_mailbox.torque_des >> 8));
+//         motor->motor_can_instace->tx_buff[7] = (uint8_t)(motor_send_mailbox.torque_des);
 
-        CANTransmit(motor->motor_can_instace, 1);
+//         CANTransmit(motor->motor_can_instace, 1);
 
-        osDelay(2);
-    }
-}
+//         osDelay(2);
+//     }
+// }
 
 
 
@@ -320,9 +323,9 @@ void DMMotorControl()
             /////////////以上的两个都进不去/////////////////////////
             else // MOTOR_FEED
                 pid_measure1 = measure->velocity;
-                rc_deadband_limit(pid_measure1,pid_measure,0.2f);//死区处理
+                // rc_deadband_limit(pid_measure1,pid_measure,0.2f);//死区处理
             // 更新pid_ref进入下一个环
-            pid_ref = PIDCalculate(&motor->speed_PID, pid_measure, pid_ref1);
+            pid_ref = PIDCalculate(&motor->speed_PID, pid_measure1, pid_ref1);
 
         if (motor_setting->feedback_reverse_flag == FEEDBACK_DIRECTION_REVERSE)
             pid_ref *= -1;
@@ -387,7 +390,9 @@ void DMMotorChangeFeed(DMMotorInstance *motor, Closeloop_Type_e loop, Feedback_S
 //对电机模式的传承
 void DMMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance)
 {
-     switch(gimbal_cmd_recv->big_yaw_motor_mode)
+    if(Instance->flag == 3)
+     {
+        switch(gimbal_cmd_recv->big_yaw_motor_mode)
      {
         case GIMBAL_MOTOR_RAW:
             Instance->motor_mode = GIMBAL_MOTOR_RAW;
@@ -405,6 +410,28 @@ void DMMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance)
             Instance->motor_mode = GIMBAL_MOTOR_ROTATE;
             break;
      }
+    }
+    if(Instance->flag == 2)
+    {
+     switch(gimbal_cmd_recv->pitch_motor_mode)
+     {
+        case GIMBAL_MOTOR_RAW:
+            Instance->motor_mode = GIMBAL_MOTOR_RAW;
+            break;
+        case GIMBAL_MOTOR_ENCONDE:
+            Instance->motor_mode = GIMBAL_MOTOR_ENCONDE;
+            break;
+        case GIMBAL_MOTOR_GYRO:
+            Instance->motor_mode = GIMBAL_MOTOR_GYRO;
+            break;
+        case GIMBAL_MOTOR_AUTO:
+            Instance->motor_mode = GIMBAL_MOTOR_AUTO;
+            break;
+        case GIMBAL_MOTOR_ROTATE:
+            Instance->motor_mode = GIMBAL_MOTOR_ROTATE;
+            break;
+     }
+    }
 }
 
 //模式转换函数，这个要好好测一下
@@ -412,6 +439,8 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
 {
    Gimbal_Ctrl_Cmd_s* gimbal_cmd = gimbal_cmd_recv;
    Big_Yaw_Data_s* big_yaw_posture_data = &gimbal_posture_data->Big_Yaw_Data;
+   if(Instance->flag == 3)
+{
                if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_RAW) && (gimbal_cmd->last_big_yaw_motor_mode != GIMBAL_MOTOR_RAW))
               {
                 Instance->pid_ref = 0;
@@ -428,12 +457,31 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
               {
                 Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
               }
-             
-              //这里以后要加一个自瞄模式的处理函数
-   }
+}
+    if(Instance->flag == 2)
+{
+              if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_RAW) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_RAW))
+              {
+                Instance->pid_ref = 0;
+              }
+               if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_GYRO))
+              {
+                Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
+              }
+              if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ENCONDE) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_ENCONDE))
+              {
+                Instance->pid_ref = big_yaw_posture_data->big_yaw_relative_angle;
+              }
+              if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ROTATE) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_ROTATE))
+              {
+                Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
+              }
+}
+
+}
    
 
-void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor)
+void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data)
 {
     Gimbal_Ctrl_Cmd_s* gimbal_cmd = gimbal_cmd_recv; //cmd层传过来的数据
     // DM_Motor_Measure_s* gimbal_motor_measure = &gimbal_motor->measure; //电机反馈至
@@ -442,7 +490,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_GYRO)
     {
         //gyro模式下，陀螺仪角度控制，小陀螺，无限位
-        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor);//add_yaw_angle
+        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);//add_yaw_angle
     }
     if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_ENCONDE)
     {
@@ -460,7 +508,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
         if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_GYRO)
     {
         //gyro模式下，陀螺仪角度控制，小陀螺，无限位
-        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor);//add_yaw_angle
+        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);//add_yaw_angle
     }
     if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_ENCONDE)
     {
@@ -476,23 +524,23 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     }
 }
 
-void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_yaw_motor,attitude_t* gimbal_IMU_data)
+void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *motor,attitude_t* gimbal_IMU_data)
 {
- if(big_yaw_motor->flag == 3) //大yaw电机
+ if(motor->flag == 3) //大yaw电机
 {
-   DM_Motor_Measure_s* big_yaw_motor_measure = &big_yaw_motor->measure;
-   Big_Yaw_Data_s* big_yaw_posture_data = &gimbal_posture_data->Big_Yaw_Data;
+   DM_Motor_Measure_s* motor_measure = &motor->measure;
+   Big_Yaw_Data_s* posture_data = &gimbal_posture_data->Big_Yaw_Data;
    
-   big_yaw_posture_data->big_yaw_relative_angle = big_yaw_motor_measure->angle_single_round; //编码值反馈相对角度
-   big_yaw_posture_data->big_yaw_absoulte_angle = gimbal_IMU_data->Yaw;  //绝对角度直接用陀螺仪的
+   posture_data->big_yaw_relative_angle = motor_measure->angle_single_round; //编码值反馈相对角度
+   posture_data->big_yaw_absoulte_angle = gimbal_IMU_data->Yaw;  //绝对角度直接用陀螺仪的
 }
- if(big_yaw_motor->flag == 2) //pitch电机
+ if(motor->flag == 2) //pitch电机
 {
-   DM_Motor_Measure_s* big_yaw_motor_measure = &big_yaw_motor->measure;
-   Big_Yaw_Data_s* big_yaw_posture_data = &gimbal_posture_data->Big_Yaw_Data;
+   DM_Motor_Measure_s* motor_measure = &motor->measure;
+   Big_Yaw_Data_s* posture_data = &gimbal_posture_data->Big_Yaw_Data;
    
-   big_yaw_posture_data->big_yaw_relative_angle = big_yaw_motor_measure->angle_single_round; //编码值反馈相对角度
-   big_yaw_posture_data->big_yaw_absoulte_angle = gimbal_IMU_data->Yaw;  //绝对角度直接用陀螺仪的
+   posture_data->big_yaw_relative_angle = (motor_measure->position - PITCH_MID_POS); //编码值反馈相对角度
+   posture_data->big_yaw_absoulte_angle = gimbal_IMU_data->Yaw + posture_data->big_yaw_relative_angle;  //绝对角度直接用陀螺仪的
 }
 }
 
@@ -524,7 +572,6 @@ void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_
             add = gimbal_motor->motor_limit_right - gimbal_motor_measure->position - bias_angle;
         }
     }
-    
     gimbal_motor->pid_ref = gimbal_motor->pid_ref + add;
     }
 }

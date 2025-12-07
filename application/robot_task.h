@@ -79,7 +79,7 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         if (dm_ins_dt > 1)
             LOGERROR("[freeRTOS] DM_INS Task is being DELAY! dt = [%f]", &dm_ins_dt);
         // VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
-        TongjiVisionSend();
+        // TongjiVisionSend();
         //这边写用同济的发送函数
         osDelay(1);
     }
@@ -95,7 +95,7 @@ __attribute__((noreturn)) void StartMOTORTASK(void const *argument)
         motor_start = DWT_GetTimeline_ms();
         MotorControlTask();
         motor_dt = DWT_GetTimeline_ms() - motor_start;
-        if (motor_dt > 1)
+        if (motor_dt > 2) //1
             LOGERROR("[freeRTOS] MOTOR Task is being DELAY! dt = [%f]", &motor_dt);
         osDelay(1);
     }

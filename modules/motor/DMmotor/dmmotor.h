@@ -21,11 +21,12 @@
 //单位转换 
 
 #ifndef MOTOR4310_ECD_TO_RAD
-#define MOTOR4310_ECD_TO_RAD 0.000383542016065168 //      2*  PI  /15520
+#define MOTOR4310_ECD_TO_RAD 0.000762939453125 //      2*  PI  /8192
 #endif
 
-#define HALF4310_ECD_RANGE  8191
-#define ECD4310_RANGE       16384
+#define HALF4310_ECD_RANGE  4096
+#define PITCH_MID_POS 5.76
+#define ECD4310_RANGE 8192
 
 #define HALF4310_RAD_RANGE  3.14f
 #define RAD4310_RANGE       6.28f
@@ -37,6 +38,8 @@ typedef struct
     float velocity;
     float last_position;
     float position;
+    float pitch_position;
+    float pitch_last_position;
     float torque;
     float T_Mos;
     float T_Rotor;
@@ -119,13 +122,13 @@ void DMMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance)
 
 void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance,Gimbal_Data_s* gimbal_posture_data);
 
-void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor);
+void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data);
 
 fp32 motor4310_gyro_control_change(float rad, float offset_rad);
 
 void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_yaw_motor,attitude_t* gimbal_IMU_data);
 
-void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor);
+void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data);
 
 void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor);
 #endif // !DMMOTOR

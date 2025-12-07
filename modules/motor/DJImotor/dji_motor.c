@@ -284,9 +284,15 @@ static void DecodeDJIMotor(CANInstance *_instance)
     DaemonReload(motor->daemon);
     motor->dt = DWT_GetDeltaT(&motor->feed_cnt);
 
+    // if (measure->ecd - measure->last_ecd > 4096)
+    //     measure->total_round--;
+    // else if (measure->ecd - measure->last_ecd < -4096)
+    //     measure->total_round++;
+    // measure->total_angle = (measure->total_round * 6.28 + measure->angle_single_round);
+
     // 解析数据并对电流和速度进行滤波,电机的反馈报文具体格式见电机说明手册
-    measure->last_ecd = measure->ecd;
     measure->ecd = ((uint16_t)rxbuff[0]) << 8 | rxbuff[1];
+    measure->last_ecd = measure->ecd;
     measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;
     measure->speed_aps = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_aps +
                          RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3]));

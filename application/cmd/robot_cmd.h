@@ -38,16 +38,16 @@ double my_sin(double rad);
 double mx_sin(double rad);
 
 ////////////////////////////////////
-#define GIMBAL_RC_DEADBAND  50 
-#define CHASSIS_RC_DEADLINE 50
+#define GIMBAL_RC_DEADBAND  10
+#define CHASSIS_RC_DEADLINE 10
 
 ///////////////////////////////////
 #define YAW_RC_SEN    -0.0006f //0.002//灵敏度
-#define PITCH_RC_SEN  0.0009f //0.005//灵敏度
-#define BIG_YAW_RC_SEN 0.00005f
+#define PITCH_RC_SEN  -0.0006f //0.005//灵敏度
+#define BIG_YAW_RC_SEN 0.0001f
 /////////////////////////////////
-#define CHASSIS_VY_RC_SEN -0.006f
-#define CHASSIS_VX_RC_SEN -0.005f
+#define CHASSIS_VY_RC_SEN 0.006f
+#define CHASSIS_VX_RC_SEN 0.005f
 
 #define ONE_PI   (3.14159265)
 /**
