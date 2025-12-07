@@ -266,6 +266,7 @@ C_INCLUDES =  \
 -Imodules/message_center \
 -Imodules/daemon \
 -Imodules/alarm \
+-Imodules/dmimu \
 -Imodules  \
 -IMiddlewares/ST/ARM/DSP/Inc
 

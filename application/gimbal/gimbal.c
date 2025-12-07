@@ -10,8 +10,10 @@
 #include <stdint.h>
 #include "dmmotor.h"
 #include "wholecardata.h"
+#include "dmimu.h"
 
 static attitude_t *gimbal_IMU_data; // 云台IMU数据
+static dm_imu_data_t *gimbal_imu_data;
 static DJIMotorInstance *yaw_motor;// 云台电机实例指针
 static DMMotorInstance *big_yaw_motor, *pitch_motor; // 大yaw4310电机实例指针
 static Publisher_t *gimbal_pub;                   // 云台应用消息发布者(云台反馈给cmd)
@@ -20,11 +22,11 @@ static Gimbal_Upload_Data_s gimbal_feedback_data; // 回传给cmd的云台状态
 static Gimbal_Ctrl_Cmd_s gimbal_cmd_recv;         // 来自cmd的控制信息
 static Gimbal_Data_s* Gimbal_motor_posture_data;   //云台各个电机所对应整车部分的姿态解算，反馈数据,要用的话直接从这里调
  
-
 // static BMI088Instance *bmi088; // 云台IMU
 void GimbalInit()
 {   
     gimbal_IMU_data = INS_Init(); // IMU先初始化,获取姿态数据指针赋给yaw电机的其他数据来源
+    gimbal_imu_data = DmimuInit(&hcan1);
     // YAW//下面可能会出现can总线拥堵问题，要注意
     Motor_Init_Config_s yaw_config = {
         .can_init_config = {

@@ -18,6 +18,7 @@
 #include "struct_typedef.h"
 #include "bsp_log.h"
 #include "tongjimachine/message.h"
+#include "dmimu.h"
 
 osThreadId insTaskHandle;
 osThreadId robotTaskHandle;
@@ -70,16 +71,17 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
     {
         // 1kHz
         ins_start = DWT_GetTimeline_ms();
-        dm_ins_start = DWT_GetTimeline_ms(); //dmimu用的时间
         INS_Task();
         ins_dt = DWT_GetTimeline_ms() - ins_start;
-        dm_ins_dt = DWT_GetTimeline_ms() - dm_ins_start;
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
+        dm_ins_start = DWT_GetTimeline_ms(); //dmimu用的时间
+        ImuTask_Function();
+        dm_ins_dt = DWT_GetTimeline_ms() - dm_ins_start;
         if (dm_ins_dt > 1)
             LOGERROR("[freeRTOS] DM_INS Task is being DELAY! dt = [%f]", &dm_ins_dt);
         // VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
-        // TongjiVisionSend();
+        TongjiVisionSend();
         //这边写用同济的发送函数
         osDelay(1);
     }
