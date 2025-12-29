@@ -1,13 +1,15 @@
 #include "dmimu.h"
 // FreeRTOS task delay API
 #include "FreeRTOS.h"
+#include "robot_def.h"
 #include "task.h"
+
 
 
 static dm_imu_data_t  dm_imu_data;
 static CANInstance * dm_imu;
 static DaemonInstance * dm_imu_instance;
-
+static int abt=0;
 
 static float uint_to_float(int x_int, float x_min, float x_max, int bits)
 {
@@ -52,9 +54,9 @@ static void IMU_UpdateEuler(uint8_t* pData)
 	euler[1]=pData[5]<<8|pData[4];
 	euler[2]=pData[7]<<8|pData[6];
 	
-	dm_imu_data.oula_data.pitch=uint_to_float(euler[0],PITCH_CAN_MIN,PITCH_CAN_MAX,16);
-	dm_imu_data.oula_data.yaw=uint_to_float(euler[1],YAW_CAN_MIN,YAW_CAN_MAX,16);
-	dm_imu_data.oula_data.roll=uint_to_float(euler[2],ROLL_CAN_MIN,ROLL_CAN_MAX,16);
+	dm_imu_data.oula_data.pitch=uint_to_float(euler[0],PITCH_CAN_MIN,PITCH_CAN_MAX,16)*angle_to_radian;
+	dm_imu_data.oula_data.yaw=uint_to_float(euler[1],YAW_CAN_MIN,YAW_CAN_MAX,16)*angle_to_radian;
+	dm_imu_data.oula_data.roll=uint_to_float(euler[2],ROLL_CAN_MIN,ROLL_CAN_MAX,16)*angle_to_radian;
 }
 
 
@@ -73,23 +75,18 @@ static void IMU_UpdateQuaternion(uint8_t* pData)
 
 static void IMU_RequestData(CAN_HandleTypeDef* hcan,uint16_t can_id,uint8_t reg)
 {
-	CAN_TxHeaderTypeDef tx_header;
 	uint8_t cmd[4]={(uint8_t)can_id,(uint8_t)(can_id>>8),reg,0xCC};
-	uint32_t returnBox;
-	tx_header.DLC=4;
-	tx_header.IDE=CAN_ID_STD;
-	tx_header.RTR=CAN_RTR_DATA;
-	tx_header.StdId=0x6FF;
-	
-	if(HAL_CAN_GetTxMailboxesFreeLevel(hcan)>1)
-	{
-		HAL_CAN_AddTxMessage(hcan,&tx_header,cmd,&returnBox);
-	}
+    dm_imu->tx_buff[0] = cmd[0];
+	dm_imu->tx_buff[1] = cmd[1];
+    dm_imu->tx_buff[2] = cmd[2];
+	dm_imu->tx_buff[3] = cmd[3];
+
+	abt = CANTransmit(dm_imu, 10);
 }
 
 static void IMUOfflineCallback(void *id)
 {
-    LOGWARNING("[vision] dmimu offline, restart communication.");
+    LOGWARNING("[DMIMU] dmimu offline, restart communication.");
 }
 
 static void DecodeImu(CANInstance *_instance)
@@ -119,11 +116,11 @@ dm_imu_data_t *DmimuInit(CAN_HandleTypeDef *_handle)
 {
     static CAN_Init_Config_s conf1;
     conf1.can_module_callback = DecodeImu;
-    conf1.tx_id = DM_IMU_TX_ID;
     conf1.rx_id = DM_IMU_RX_ID;
     conf1.can_handle = _handle;
     conf1.id = dm_imu;
-    dm_imu = CANRegister(&conf1);
+    dm_imu = DMCANRegister(&conf1);
+	//接下来是修正部分
 
     Daemon_Init_Config_s daemon_conf_1 = 
     {
@@ -139,16 +136,11 @@ dm_imu_data_t *DmimuInit(CAN_HandleTypeDef *_handle)
 void ImuTask_Function(void)
 {
     
-		//tick = xTaskGetTickCount();  // 获取当前系统时间
-//        mpu_get_data();        // 获取陀螺仪数据
-//		imu_ahrs_update();     // 更新航姿参考
-//	    imu_attitude_update(); // 姿态解算
-			IMU_RequestData(&hcan1,0x01,1);
-			vTaskDelay(1);//之后换一下osdelay
-			IMU_RequestData(&hcan1,0x01,2);
+			IMU_RequestData(&hcan2,DM_IMU_TX_ID,1);
 			vTaskDelay(1);
-			IMU_RequestData(&hcan1,0x01,3);
+			IMU_RequestData(&hcan2,DM_IMU_TX_ID,2);
+			vTaskDelay(1);
+			IMU_RequestData(&hcan2,DM_IMU_TX_ID,3);
 			vTaskDelay(1);
 	
 }
-

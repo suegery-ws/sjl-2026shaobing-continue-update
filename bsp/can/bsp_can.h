@@ -93,4 +93,6 @@ uint8_t CANTransmit(CANInstance *_instance,float timeout);
 
 uint8_t TongjiCANTransmit(CANInstance *_instance, float timeout);
 
+CANInstance *DMCANRegister(CAN_Init_Config_s *config);
+
 #endif

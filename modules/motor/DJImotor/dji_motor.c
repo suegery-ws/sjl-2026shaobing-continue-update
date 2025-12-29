@@ -284,13 +284,8 @@ static void DecodeDJIMotor(CANInstance *_instance)
     DaemonReload(motor->daemon);
     motor->dt = DWT_GetDeltaT(&motor->feed_cnt);
 
-    // if (measure->ecd - measure->last_ecd > 4096)
-    //     measure->total_round--;
-    // else if (measure->ecd - measure->last_ecd < -4096)
-    //     measure->total_round++;
-    // measure->total_angle = (measure->total_round * 6.28 + measure->angle_single_round);
-
     // 解析数据并对电流和速度进行滤波,电机的反馈报文具体格式见电机说明手册
+    measure->dji2006_last_ecd = measure->ecd;
     measure->ecd = ((uint16_t)rxbuff[0]) << 8 | rxbuff[1];
     measure->last_ecd = measure->ecd;
     measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;
@@ -301,10 +296,20 @@ static void DecodeDJIMotor(CANInstance *_instance)
     measure->temperature = rxbuff[6];
 
     // 多圈角度计算,前提是假设两次采样间电机转过的角度小于180°,自己画个图就清楚计算过程了
-    if (measure->ecd - measure->last_ecd > 4096)
+    if(motor->motor_type == M2006)
+    {
+        if (measure->dji2006_last_ecd - measure->last_ecd > 4096)
         measure->total_round--;
-    else if (measure->ecd - measure->last_ecd < -4096)
+        else if (measure->dji2006_last_ecd - measure->last_ecd < -4096)
         measure->total_round++;
+    }
+    else 
+    {
+        if (measure->ecd - measure->last_ecd > 4096)
+        measure->total_round--;
+        else if (measure->ecd - measure->last_ecd < -4096)
+        measure->total_round++;
+    }
     measure->total_angle = (measure->total_round * 6.28 + measure->angle_single_round);
     //以下是对2006的特殊处理
     if(motor->motor_type == M2006)
@@ -429,12 +434,12 @@ void DJIMotorControl()
 
         if (motor->motor_type == M2006 && motor_controller->shoot_mode == LOAD_1_BULLET)
         {
-            if(measure->total_angle == 0 && pid_ref >6.6f)
+            if(measure->total_angle == 0 && pid_ref <-6.6f)
             {
-                pid_ref = 0.785;
+                pid_ref = -0.785;
             }
-            else if(pid_ref > 6.28)
-            pid_ref = pid_ref - 6.28f;
+            else if(pid_ref < -6.28)
+            pid_ref = pid_ref + 6.28f;
         }
         // pid_ref会顺次通过被启用的闭环充当数据的载体
         // 计算位置环,只有启用位置环且外层闭环为位置时会计算速度环输出
@@ -444,7 +449,7 @@ void DJIMotorControl()
                 pid_measure = *motor_controller->other_angle_feedback_ptr;
             else
                 pid_measure = measure->total_angle; // MOTOR_FEED,对total angle闭环,防止在边界处出现突跃//为什么用总角度，因为有多圈//这边没看见角度环的前馈，之后加
-            // 更新pid_ref进入下一个环
+           // 更新pid_ref进入下一个环
             if(motor->motor_type == M2006)
             {
             if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE)
@@ -453,9 +458,9 @@ void DJIMotorControl()
             pid_ref = DJI2006PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);
             }
             else
-            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE)
+            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE || motor_controller->motor_mode == GIMBAL_MOTOR_ROTATE)
             pid_ref = PIDCalculate(&motor_controller->relative_angle_PID, pid_measure, pid_ref);
-            else if(motor_controller->motor_mode == GIMBAL_MOTOR_GYRO)
+            else if(motor_controller->motor_mode == GIMBAL_MOTOR_GYRO )
             pid_ref = PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);
         }
 
@@ -574,26 +579,11 @@ void DJIMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorInstance* Instanc
             break;
         case GIMBAL_MOTOR_AUTO:
             Instance->motor_controller.motor_mode = GIMBAL_MOTOR_AUTO;
+        case GIMBAL_MOTOR_ROTATE:
+            Instance->motor_controller.motor_mode = GIMBAL_MOTOR_ROTATE;
             break;
      }
     }
-    if(Instance->motor_controller.flag == 2)//pitch
-     {switch(gimbal_cmd_recv->pitch_motor_mode)
-     {
-        case GIMBAL_MOTOR_RAW:
-            Instance->motor_controller.motor_mode = GIMBAL_MOTOR_RAW;
-            break;
-        case GIMBAL_MOTOR_ENCONDE:
-            Instance->motor_controller.motor_mode = GIMBAL_MOTOR_ENCONDE;
-            break;
-        case GIMBAL_MOTOR_GYRO:
-            Instance->motor_controller.motor_mode = GIMBAL_MOTOR_GYRO;
-            break;
-        case GIMBAL_MOTOR_AUTO:
-            Instance->motor_controller.motor_mode = GIMBAL_MOTOR_AUTO;
-            break;
-     }
-     }
 }
 
 //模式转换的数据保存，这个放置的位置存疑 //这个函数要先写反馈数据结构体然后再写它
@@ -619,24 +609,13 @@ void DJIModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorIns
               {
                 motor_controller->pid_ref = motor_measure->total_angle; //
               }
-              //这里以后要加一个自瞄模式的处理函数
-    }
-    if(motor_controller->flag == 2) //这个加了pitch4310之后其实也用不到了
-    {
-              if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_RAW) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_RAW))
-             {
-                motor_controller->pid_ref = yaw_posture_data->yaw_relative_angle; //raw模式下直接输出0
-             }
-               if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_GYRO))
+              if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ROTATE) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_ROTATE))
               {
-                motor_controller->pid_ref = pitch_posture_data->pitch_absoulte_angle; //基本不用
+                motor_controller->pid_ref = YAW_6020_OFF_SET_RAD;
               }
-              if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ENCONDE) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_ENCONDE))
-              {
-                motor_controller->pid_ref = motor_measure->total_angle; //
-              } 
               //这里以后要加一个自瞄模式的处理函数
     }
+    
 }
 //这部份解算代码之后都会移到decode函数中去
 void DJIGetYawMotorData(Gimbal_Data_s* gimbal_posture_data,DJIMotorInstance* yaw_motor,attitude_t* gimbal_IMU_data)

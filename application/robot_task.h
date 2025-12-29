@@ -2,6 +2,7 @@
 #pragma once
 
 #include "FreeRTOS.h"
+#include "robot_task.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -25,6 +26,7 @@ osThreadId robotTaskHandle;
 osThreadId motorTaskHandle;
 osThreadId daemonTaskHandle;
 // osThreadId uiTaskHandle;
+// osThreadId dmimuTaskHandle;
 
 
 void StartINSTASK(void const *argument);
@@ -32,6 +34,7 @@ void StartMOTORTASK(void const *argument);
 void StartDAEMONTASK(void const *argument);
 void StartROBOTTASK(void const *argument);
 // void StartUITASK(void const *argument);
+void StartDMIMUTASK(void const *argument);
 
 /**
  * @brief 初始化机器人任务,所有持续运行的任务都在这里初始化
@@ -39,7 +42,7 @@ void StartROBOTTASK(void const *argument);
  */
 void OSTaskInit()
 {
-    osThreadDef(instask, StartINSTASK, osPriorityAboveNormal, 0, 1024);
+    osThreadDef(instask, StartINSTASK, osPriorityRealtime, 0, 1024);
     insTaskHandle = osThreadCreate(osThread(instask), NULL); // 由于是阻塞读取传感器,为姿态解算设置较高优先级,确保以1khz的频率执行
     // // 后续修改为读取传感器数据准备好的中断处理,
 
@@ -49,13 +52,15 @@ void OSTaskInit()
     osThreadDef(daemontask, StartDAEMONTASK, osPriorityNormal, 0, 128);
     daemonTaskHandle = osThreadCreate(osThread(daemontask), NULL);
 
-    osThreadDef(robottask, StartROBOTTASK, osPriorityNormal, 0, 1024);
+    osThreadDef(robottask, StartROBOTTASK, osPriorityHigh, 0, 1024);
     robotTaskHandle = osThreadCreate(osThread(robottask), NULL);
 
     // osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
     // uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
 
     // HTMotorControlInit(); // 没有注册HT电机则不会执行
+    // osThreadDef(imutask, StartDMIMUTASK, osPriorityNormal, 0, 1024);
+    // dmimuTaskHandle = osThreadCreate(osThread(imutask), NULL);
 }
 
 
@@ -63,8 +68,8 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
 {
     static float ins_start;
     static float ins_dt;
-    static float dm_ins_start;
-    static float dm_ins_dt;
+    static float dmimu_start;
+    static float dmimu_dt;
     INS_Init(); // 确保BMI088被正确初始化.
     LOGINFO("[freeRTOS] INS Task Start");
     for (;;)
@@ -75,13 +80,13 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         ins_dt = DWT_GetTimeline_ms() - ins_start;
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
-        dm_ins_start = DWT_GetTimeline_ms(); //dmimu用的时间
-        ImuTask_Function();
-        dm_ins_dt = DWT_GetTimeline_ms() - dm_ins_start;
-        if (dm_ins_dt > 1)
-            LOGERROR("[freeRTOS] DM_INS Task is being DELAY! dt = [%f]", &dm_ins_dt);
         // VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
-        TongjiVisionSend();
+        dmimu_start = DWT_GetTimeline_ms();
+        ImuTask_Function();
+        dmimu_dt =  DWT_GetTimeline_ms() - dmimu_start;
+        if(dmimu_dt > 5)
+            LOGERROR("[freeRTOS] DMINS Task is being DELAY! dt = [%f]", &dmimu_dt);
+        // TongjiVisionSend();
         //这边写用同济的发送函数
         osDelay(1);
     }
@@ -133,7 +138,7 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument)
         robot_start = DWT_GetTimeline_ms();
         RobotTask();
         robot_dt = DWT_GetTimeline_ms() - robot_start;
-        if (robot_dt > 25) //原版本是5
+        if (robot_dt > 5) //原版本是5
             LOGERROR("[freeRTOS] ROBOT core Task is being DELAY! dt = [%f]", &robot_dt);
         osDelay(5);
     }
@@ -151,3 +156,23 @@ __attribute__((noreturn)) void StartUITASK(void const *argument)
         osDelay(1); // 即使没有任何UI需要刷新,也挂起一次,防止卡在UITask中无法切换
     }
 }
+
+
+// __attribute__((noreturn)) void StartDMIMUTASK(void const *argument)
+// {
+//     static float ins_start;
+//     static float ins_dt;
+   
+//     LOGINFO("[freeRTOS] DMINS Task Start");
+//     for (;;)
+//     {
+//         // 1kHz
+//         ins_start = DWT_GetTimeline_ms();
+//         // INS_Task();
+//         ImuTask_Function();
+//         ins_dt = DWT_GetTimeline_ms() - ins_start;
+//         if (ins_dt > 1)
+//             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
+//         osDelay(1);
+//     }
+// }

@@ -176,9 +176,9 @@ typedef enum
 
 typedef enum
 {
-    LOAD_STOP = 0,  // 停止发射   
-    LOAD_1_BULLET,  // 单发
+    LOAD_STOP = 0,  // 停止发射    // 单发
     LOAD_BURSTFIRE, // 连发
+    LOAD_1_BULLET, 
     LOAD_REVERSE,  // 反转
 } loader_mode_e;
 

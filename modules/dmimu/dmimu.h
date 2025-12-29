@@ -8,8 +8,8 @@
 #include "bsp_log.h"
 
 
-#define DM_IMU_RX_ID 0x04
-#define DM_IMU_TX_ID 0x05
+#define DM_IMU_RX_ID 0x11
+#define DM_IMU_TX_ID 0x01
 #define ACCEL_CAN_MAX (58.8f)
 #define ACCEL_CAN_MIN	(-58.8f)
 #define GYRO_CAN_MAX	(34.88f)

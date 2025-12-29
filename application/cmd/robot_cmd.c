@@ -166,8 +166,8 @@ void RobotCMDInit()
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
     // vision_recv_data = VisionInit(&huart1); // 视觉通信串口，这个没问题
     //这边加一个can初始化函数当作视觉部分的初始化
-    tongji_vision_recv_data = TongjiVisionInit(&hcan1); // 同济视觉通信can口初始化
-    // IMU_data = INS_Init();//反馈陀螺仪数据指针
+    // tongji_vision_recv_data = TongjiVisionInit(&hcan1); // 同济视觉通信can口初始化
+
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
     shoot_cmd_pub = PubRegister("shoot_cmd", sizeof(Shoot_Ctrl_Cmd_s));
@@ -248,9 +248,9 @@ static void gimbal_behavior_to_motor()
     }
     else if (gimbal_cmd_send.gimbal_mode == GIMBAL_ABSOLUTE_ANGLE)//底盘跟随云台
     {
-        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_RAW;
+        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ROTATE;
 		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_GYRO;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_ENCONDE;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
     }
     else if (gimbal_cmd_send.gimbal_mode == GIMBAL_RELATIVE_ANGLE)//小陀螺
     {
@@ -260,9 +260,9 @@ static void gimbal_behavior_to_motor()
     }
     else if (gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//调试模式
     {
-        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_RAW;
+        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ROTATE;
 		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_GYRO;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_RAW;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
     }    
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄模式
     {
@@ -397,7 +397,6 @@ static void RemoteControlSet()
 
     gimbal_cmd_send.big_yaw = yaw_channel * BIG_YAW_RC_SEN;
     gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
-    gimbal_cmd_send.yaw = 0;
        }
 
         // gimbal_cmd_send.yaw += 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
@@ -435,9 +434,11 @@ static void RemoteControlSet()
 
     ///////////////////////////////////发射机构////////////////////////////////////////////////////////////////////////////////////////////////shoot
     // 发射参数
+    static int a = 0;
+    static int b = 0;
     shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;//发射的数据继承
     shoot_cmd_send.shoot_flag = shoot_fetch_data.feedback_shoot_flag;
-        osDelay(10);//之后可以改用DWTDELAY
+        // osDelay(10);//之后可以改用DWTDELAY
     if((switch_is_up(rc_data[TEMP].rc.switch_left))&&(!switch_is_up(rc_data[LAST].rc.switch_left))&&(shoot_cmd_send.friction_mode == FRICTION_OFF))//默认摩擦轮关闭，上拨一下打开，再拨到上面关闭
     {
        shoot_cmd_send.friction_mode = FRICTION_ON;
@@ -449,11 +450,11 @@ static void RemoteControlSet()
 
     if(switch_is_down(rc_data[TEMP].rc.switch_left)&&!switch_is_down(rc_data[LAST].rc.switch_left))
     {
-         osDelay(10);
+        //  osDelay(10);
 
        mode_shoot_flag++;
        
-       if(mode_shoot_flag == 3)
+       if(mode_shoot_flag == 2)
        {
         mode_shoot_flag = 0;
         shoot_cmd_send.load_mode = LOAD_STOP;
@@ -461,17 +462,19 @@ static void RemoteControlSet()
        else
        {shoot_cmd_send.load_mode = mode_shoot_flag;} //连发模式切换
 
-       if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
-       {
-         shoot_cmd_send.shoot_flag = 1;
-       }
-       else
-       {
-         shoot_cmd_send.shoot_flag = 2;
-       }
+    //    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
+    //    {
+    //      shoot_cmd_send.shoot_flag = 1;
+    //      a++;
+    //    }
+    //    else
+    //    {
+    //      shoot_cmd_send.shoot_flag = 2;
+    //      b++;
+    //    }
     }
 
-    shoot_cmd_send.shoot_rate = 20;//射频固定8发每秒
+    shoot_cmd_send.shoot_rate = 10;//射频固定8发每秒
     shoot_cmd_send.bullet_speed = BIG_AMU_10;//设置弹速
 }
 

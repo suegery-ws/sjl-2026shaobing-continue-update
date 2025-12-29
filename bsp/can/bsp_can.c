@@ -101,6 +101,48 @@ CANInstance *CANRegister(CAN_Init_Config_s *config)
     return instance; // 返回can实例指针
 }
 
+CANInstance *DMCANRegister(CAN_Init_Config_s *config)
+{
+    if (!idx)
+    {
+        CANServiceInit(); // 第一次注册,先进行硬件初始化
+        LOGINFO("[bsp_can] DMCAN Service Init");
+    }
+    if (idx >= CAN_MX_REGISTER_CNT) // 超过最大实例数
+    {
+        while (1)
+            LOGERROR("[bsp_can] DMCAN instance exceeded MAX num, consider balance the load of CAN bus");
+    }
+    for (size_t i = 0; i < idx; i++)
+    { // 重复注册 | id重复
+        if (can_instance[i]->rx_id == config->rx_id && can_instance[i]->can_handle == config->can_handle)
+        {
+            while (1)
+                LOGERROR("[}bsp_can] DMCAN id crash ,tx [%d] or rx [%d] already registered", &config->tx_id, &config->rx_id);
+        }
+    }
+    
+    CANInstance *instance = (CANInstance *)malloc(sizeof(CANInstance)); // 分配空间
+    memset(instance, 0, sizeof(CANInstance));                           // 分配的空间未必是0,所以要先清空
+    // 进行发送报文的配置
+    instance->txconf.StdId = 0x6FF; // 发送id
+    instance->txconf.IDE = CAN_ID_STD;      // 使用标准id,扩展id则使用CAN_ID_EXT(目前没有需求)
+    instance->txconf.RTR = CAN_RTR_DATA;    // 发送数据帧
+    instance->txconf.DLC = 0x04;            // 发送长度为4
+    // 设置回调函数和接收发送id
+    instance->can_handle = config->can_handle;
+    instance->tx_id = config->tx_id;
+    instance->rx_id = config->rx_id;
+    instance->can_module_callback = config->can_module_callback;
+    instance->id = config->id;
+
+    CANAddFilter(instance);         // 添加CAN过滤器规则
+    can_instance[idx++] = instance; // 将实例保存到can_instance中
+
+    return instance; // 返回can实例指针
+}
+
+
 
 /* @todo 目前似乎封装过度,应该添加一个指向tx_buff的指针,tx_buff不应该由CAN instance保存 */
 /* 如果让CANinstance保存txbuff,会增加一次复制的开销 */
@@ -143,7 +185,7 @@ void CANSetDLC(CANInstance *_instance, uint8_t length)
 
 /**
  * @brief 此函数会被下面两个函数调用,用于处理FIFO0和FIFO1溢出中断(说明收到了新的数据)
- *        所有的实例都会被遍历,找到can_handle和rx_id相等的实例时,调用该实例的回调函数
+ *        所有的实例都会被遍历,找到can_handle和rx_id相等的实例时,调用该实例的回调函数//所以rx_id一定要独一无二
  *
  * @param _hcan
  * @param fifox passed to HAL_CAN_GetRxMessage() to get mesg from a specific fifo

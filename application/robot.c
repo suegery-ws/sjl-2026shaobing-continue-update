@@ -33,11 +33,11 @@ void RobotInit()
 #if defined(ONE_BOARD) || defined(GIMBAL_BOARD)
     RobotCMDInit();
     GimbalInit();
-    // ShootInit();
+    ShootInit();
 #endif
 
 #if defined(ONE_BOARD) || defined(CHASSIS_BOARD)
-    ChassisInit();
+     ChassisInit();
 #endif
      // 创建基础任务
     //这里原来有一个任务函数，本来打算留着的，但编译不通过
@@ -51,11 +51,11 @@ void RobotTask()
 #if defined(ONE_BOARD) || defined(GIMBAL_BOARD)
     RobotCMDTask();
     GimbalTask();
-    //  ShootTask();
+    ShootTask();
 #endif
 
 #if defined(ONE_BOARD) || defined(CHASSIS_BOARD)
-    ChassisTask();
+     ChassisTask();
 #endif
 
 }

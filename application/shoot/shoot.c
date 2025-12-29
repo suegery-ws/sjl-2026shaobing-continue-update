@@ -55,11 +55,12 @@ void ShootInit()
         },
         .motor_type = M3508};
     friction_config.can_init_config.tx_id = 1,
-    friction_l = DJIMotorInit(&friction_config);
+    friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
+     friction_l = DJIMotorInit(&friction_config);
 
     friction_config.can_init_config.tx_id = 2; // 右摩擦轮,改txid和方向就行
-    friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    friction_r = DJIMotorInit(&friction_config);
+    friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+     friction_r = DJIMotorInit(&friction_config);
 
     // 拨盘电机
     Motor_Init_Config_s loader_config = {
@@ -70,13 +71,13 @@ void ShootInit()
         .controller_param_init_config = {
             .absoulte_angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
-                .Kp = 50, // 10
+                .Kp = 10, // 10
                 .Ki = -0.05,
                 .Kd = 0,
                 .MaxOut = 100,
             },
             .speed_PID = {
-                .Kp = 100, // 10
+                .Kp = 20, // 10
                 .Ki = 0.5, // 1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
@@ -147,20 +148,20 @@ void ShootTask()
         break;
     // 单发模式,根据鼠标按下的时间,触发一次之后需要进入不响应输入的状态(否则按下的时间内可能多次进入,导致多次发射)
     case LOAD_1_BULLET:
-    if(shoot_cmd_recv.shoot_flag == 1)
+    if(shoot_cmd_recv.shoot_flag == 1)//1
     {
         DJI2006MotorInhert(&shoot_cmd_recv, loader);                                                             
         loader->motor_settings.close_loop_type = ANGLE_LOOP|SPEED_LOOP; // 开启速度环和角度环双闭环控制
+        loader->motor_settings.outer_loop_type = ANGLE_LOOP;
         loader->motor_controller.motor_mode = GIMBAL_MOTOR_GYRO; //写这个的目的完全是想要用绝对角度的pid控制，算是前面留的石了
-        DJIMotorSetRef(loader, (loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE)); // 控制量增加一发弹丸的角度
-        if(loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE >= 6.28f)
+        DJIMotorSetRef(loader, (loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE)); // 控制量增加一发弹丸的角度
+        if(loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE <= -6.28f)
         {
-            DJIMotorSetRef(loader, (loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE - 6.28f)); // 控制量增加一发弹丸的角度
+            DJIMotorSetRef(loader, (loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE + 6.28f)); // 控制量增加一发弹丸的角度
         }
-        // pid_ref = loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE;
-        hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
-        dead_time = 150;      
-        shoot_feedback_data.feedback_shoot_flag = 2;                                                 // 完成1发弹丸发射的时间
+        // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
+        // dead_time = 150;      
+        // shoot_feedback_data.feedback_shoot_flag = 2;                                                 // 完成1发弹丸发射的时间
         break;
     }
     if(shoot_cmd_recv.shoot_flag == 2)
@@ -169,12 +170,13 @@ void ShootTask()
         DJIMotorSetRef(loader, loader->motor_controller.pid_ref); // 达到指定位置之前保持位置不变，持续pid控制
         shoot_feedback_data.feedback_shoot_flag = 2;// 达到指定位置之前保持位置不变，持续pid控制
     }
-    if(loader->motor_controller.absoulte_angle_PID.Err <= 0.09f || loader->motor_controller.absoulte_angle_PID.Err >= -0.09f)
+    if( loader->motor_controller.absoulte_angle_PID.Err >= -0.09f && shoot_cmd_recv.shoot_flag == 2)
     {
         DJI2006MotorInhert(&shoot_cmd_recv, loader);
         shoot_feedback_data.feedback_shoot_flag = 0; //发射完成反馈给cmd
         break;
     }
+    break;
     case LOAD_BURSTFIRE:
         DJI2006MotorInhert(&shoot_cmd_recv, loader);
         DJIMotorOuterLoop(loader, SPEED_LOOP);

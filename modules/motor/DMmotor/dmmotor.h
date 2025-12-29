@@ -9,6 +9,8 @@
 #include "struct_typedef.h"
 #include "wholecardata.h"
 #include "robot_cmd.h"
+#include "dmimu.h"
+#
 
 #define DM_MOTOR_CNT 2
 
@@ -25,7 +27,7 @@
 #endif
 
 #define HALF4310_ECD_RANGE  4096
-#define PITCH_MID_POS 5.76
+#define PITCH_MID_POS 3.73
 #define ECD4310_RANGE 8192
 
 #define HALF4310_RAD_RANGE  3.14f
@@ -122,13 +124,13 @@ void DMMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance)
 
 void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance,Gimbal_Data_s* gimbal_posture_data);
 
-void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data);
+void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data, dm_imu_data_t* dm_imu_data);
 
 fp32 motor4310_gyro_control_change(float rad, float offset_rad);
 
-void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *big_yaw_motor,attitude_t* gimbal_IMU_data);
+void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *motor,attitude_t* gimbal_IMU_data ,dm_imu_data_t* dmimudata);
 
 void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data);
 
-void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor);
+void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data);  //有限位
 #endif // !DMMOTOR
