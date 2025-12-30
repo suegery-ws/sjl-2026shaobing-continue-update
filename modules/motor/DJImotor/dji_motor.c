@@ -432,15 +432,15 @@ void DJIMotorControl()
         if (motor_setting->motor_reverse_flag == MOTOR_DIRECTION_REVERSE)
             pid_ref *= -1; // 设置反转  这个只针对拨弹轮电机有意义
 
-        if (motor->motor_type == M2006 && motor_controller->shoot_mode == LOAD_1_BULLET)
-        {
-            if(measure->total_angle == 0 && pid_ref <-6.6f)
-            {
-                pid_ref = -0.785;
-            }
-            else if(pid_ref < -6.28)
-            pid_ref = pid_ref + 6.28f;
-        }
+        // if (motor->motor_type == M2006 && motor_controller->shoot_mode == LOAD_1_BULLET)
+        // {
+        //     if(measure->total_angle == 0 && pid_ref <-6.6f)
+        //     {
+        //         pid_ref = -0.785;
+        //     }
+        //     else if(pid_ref < -6.28)
+        //     pid_ref = pid_ref + 6.28f;
+        
         // pid_ref会顺次通过被启用的闭环充当数据的载体
         // 计算位置环,只有启用位置环且外层闭环为位置时会计算速度环输出
         if ((motor_setting->close_loop_type & ANGLE_LOOP) && motor_setting->outer_loop_type == ANGLE_LOOP)
@@ -503,6 +503,7 @@ void DJIMotorControl()
             memset(sender_assignment[group].tx_buff + 2 * num, 0, sizeof(uint16_t));
     }
 
+
     // 遍历flag,检查是否要发送这一帧报文
     for (size_t i = 0; i < 6; ++i)
     {
@@ -512,6 +513,7 @@ void DJIMotorControl()
         }
     }
 }
+
 //这个函数的目标是对cmd层传过来的数据进行校验，根据不同模式来更改，需要cmd层的命令指针，要电机数据的预设值和预设模式，最后的结果是对预设数值进行更改
 //个人认为限幅问题和自不自动没半毛钱关系，完全就是怎么好限怎么来
 void DJIMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DJIMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_posture_data)

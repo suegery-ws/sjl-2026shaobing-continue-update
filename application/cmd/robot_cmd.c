@@ -13,6 +13,7 @@
 // bsp
 #include "bsp_dwt.h"
 #include "bsp_log.h"
+#include "usart.h"
 
 // 私有宏,自动将编码器转换成角度值
 #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // 对齐时的角度,0-360
@@ -164,7 +165,7 @@ double my_cos(double rad)
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
-    // vision_recv_data = VisionInit(&huart1); // 视觉通信串口，这个没问题
+    vision_recv_data = VisionInit(&huart1); // 视觉通信串口，这个没问题
     //这边加一个can初始化函数当作视觉部分的初始化
     // tongji_vision_recv_data = TongjiVisionInit(&hcan1); // 同济视觉通信can口初始化
 
@@ -195,37 +196,7 @@ void RobotCMDInit()
     robot_state = ROBOT_READY; // 启动时机器人进入工作模式,后续加入所有应用初始化完成之后再进入
     shoot_cmd_send.load_mode = LOAD_STOP;
 }
-/**
- * @brief 底盘行为模式转换为电机控制模式
- * 后来发现这鬼东西一点用都没有
- */
-// static void chassis_behavior_to_motor()
-// {
-//     if (chassis_cmd_send.chassis_mode == CHASSIS_ZERO_FORCE)
-//     {
-//         chassis_cmd_send.chassis_motor_mode = CHASSIS_VECTOR_RAW; 
-//     }
-//     else if (chassis_cmd_send.chassis_mode == CHASSIS_NO_MOVE)
-//     {
-//         chassis_cmd_send.chassis_motor_mode = CHASSIS_VECTOR_RAW; 
-//     }
-//     else if (chassis_cmd_send.chassis_mode == CHASSIS_ROTATE)
-//     {
-//         chassis_cmd_send.chassis_motor_mode = CHASSIS_VECTOR_ROTATE;
-//     }
-// 	else if (chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_ROS)
-//     {
-//         chassis_cmd_send.chassis_motor_mode = CHASSIS_AUTO_GUIDGENCE;
-//     }
-// 	else if (chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW)
-//     {
-//         chassis_cmd_send.chassis_motor_mode = CHASSIS_AUTO_GUIDGENCE_FOLLOW_GIMBAL_YAW;
-//     }
-//     else if (chassis_cmd_send.chassis_mode == CHASSIS_OPEN)
-//     {
-//         chassis_cmd_send.chassis_motor_mode = CHASSIS_VECTOR_RAW;
-//     }
-// };
+
 static void gimbal_behavior_to_motor()
 {
     if (gimbal_cmd_send.gimbal_mode == GIMBAL_ZERO_FORCE)//无力
@@ -256,7 +227,7 @@ static void gimbal_behavior_to_motor()
     {
         gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ENCONDE;  
 		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_ROTATE;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_ENCONDE;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
     }
     else if (gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//调试模式
     {
@@ -343,11 +314,11 @@ static void RemoteControlSet()
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
         chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
     }
     else // 右侧开关状态异常,默认跟随模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
     }//感觉用不到
     gimbal_behavior_to_motor();
@@ -424,14 +395,6 @@ static void RemoteControlSet()
         chassis_cmd_send.vy = vy_set_channel;
        }         
         //应该能用
-    
-     
-    // 1数值方向
-    // chassis_cmd_send.IMU_data = IMU_data;
-    // gimbal_cmd_send.IMU_data = IMU_data;
-
-
-
     ///////////////////////////////////发射机构////////////////////////////////////////////////////////////////////////////////////////////////shoot
     // 发射参数
     static int a = 0;
@@ -454,7 +417,7 @@ static void RemoteControlSet()
 
        mode_shoot_flag++;
        
-       if(mode_shoot_flag == 2)
+       if(mode_shoot_flag == 3)
        {
         mode_shoot_flag = 0;
         shoot_cmd_send.load_mode = LOAD_STOP;
@@ -474,62 +437,11 @@ static void RemoteControlSet()
     //    }
     }
 
-    shoot_cmd_send.shoot_rate = 10;//射频固定8发每秒
-    shoot_cmd_send.bullet_speed = BIG_AMU_10;//设置弹速
+    shoot_cmd_send.shoot_rate = 15;//射频固定8发每秒
+    shoot_cmd_send.bullet_speed = SMALL_AMU_15;//设置弹速
 }
 
-// 下面是源代码
-// static void RemoteControlSet()
-// {
-//     // 控制底盘和云台运行模式,云台待添加,云台是否始终使用IMU数据?
-//     if (switch_is_down(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[下],底盘跟随云台
-//     {
-//         chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-//         gimbal_cmd_send.gimbal_mode = GIMBAL_GYRO_MODE;
-//     }
-//     else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘和云台分离,底盘保持不转动
-//     {
-//         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
-//         gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
-//     }
 
-//     // 云台参数,确定云台控制数据
-//     if (switch_is_mid(rc_data[TEMP].rc.switch_left)) // 左侧开关状态为[中],视觉模式
-//     {
-//         // 待添加,视觉会发来和目标的误差,同样将其转化为total angle的增量进行控制
-//         // ...
-//     }
-//     // 左侧开关状态为[下],或视觉未识别到目标,纯遥控器拨杆控制
-//     if (switch_is_down(rc_data[TEMP].rc.switch_left) || vision_recv_data->target_state == NO_TARGET)
-//     { // 按照摇杆的输出大小进行角度增量,增益系数需调整
-//         gimbal_cmd_send.yaw += 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
-//         gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
-//     }
-//     // 云台软件限位
-
-//     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
-//     chassis_cmd_send.vx = 10.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
-//     chassis_cmd_send.vy = 10.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1数值方向
-
-//     // 发射参数
-//     if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],弹舱打开
-//         ;                                            // 弹舱舵机控制,待添加servo_motor模块,开启
-//     else
-//         ; // 弹舱舵机控制,待添加servo_motor模块,关闭
-
-//     // 摩擦轮控制,拨轮向上打为负,向下为正
-//     if (rc_data[TEMP].rc.dial < -100) // 向上超过100,打开摩擦轮
-//         shoot_cmd_send.friction_mode = FRICTION_ON;
-//     else
-//         shoot_cmd_send.friction_mode = FRICTION_OFF;
-//     // 拨弹控制,遥控器固定为一种拨弹模式,可自行选择
-//     if (rc_data[TEMP].rc.dial < -500)
-//         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-//     else
-//         shoot_cmd_send.load_mode = LOAD_STOP;
-//     // 射频控制,固定每秒1发,后续可以根据左侧拨轮的值大小切换射频,
-//     shoot_cmd_send.shoot_rate = 8;
-// }
 
 
 /**

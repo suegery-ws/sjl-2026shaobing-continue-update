@@ -74,22 +74,24 @@ void ChassisInit()
         .can_init_config.can_handle = &hcan1,
         .controller_param_init_config = {
             .follow_speed_PID = {
-                .Kp =20000,//2000.0f, // 4.5
-                .Ki =10,//50.0f,   // 0
-                .Kd =0,//0.0f,   // 0
+                .Kp = 10000.0f,//20000.0f, // 4.5
+                .Ki = 50,//50.0f,   // 0
+                .Kd = 100,//0.0f,   // 0
                 .IntegralLimit = 2000.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 15000.0f,
                 .Output_LPF_RC = 0.3, //输出低通滤波时间常数
+                .DeadBand = 0.03,
             },
             .rotate_speed_PID = {
-                .Kp =2000,//2000.0f, // 4.5
+                .Kp =8000,//2000.0f, // 4.5 //8000
                 .Ki =50,//50.0f,   // 0
                 .Kd =0,//0.0f,   // 0
                 .IntegralLimit = 700.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 8000.0f,
                 .Output_LPF_RC = 0.3, //输出低通滤波时间常数
+                .DeadBand = 0,
             }
         },
         .controller_setting_init_config = {
@@ -126,21 +128,23 @@ void ChassisInit()
 
 /* Buffer环暂未测试，逻辑是计算期望buffer与实际buffer的差值，转换为冗余的功率，todo：输入给功率控制部分，待完善 */
     PID_Init_Config_s Buffer_pid_conf = {
-        .Kp = 9.0f,
+        .Kp = 9.0f, //9
         .Ki = 0.001f,
         .Kd = 0.05f,
         .IntegralLimit = 0.2f,
         .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
         .MaxOut = 10.0f,
+        .DeadBand = 0
     };
     PIDInit(&buffer_PID, &Buffer_pid_conf); // 缓冲能量PID初始化 //待调
     PID_Init_Config_s Angle_pid_conf = {
-        .Kp = 8.6f,
+        .Kp = 8.0f,
         .Ki = 0.0f,
-        .Kd = 0.05f,
+        .Kd = 0.0f,
         .IntegralLimit = 0.2f,
         .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
         .MaxOut = 5.0f,
+        .DeadBand = 0
     };
     PIDInit(&angle_PID, &Angle_pid_conf);
 
@@ -317,7 +321,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, chassis_cmd_recv.offset_angle,0 );//前面可能有一个负号，这个用pid,角度环的输出结果就是速度目标值
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = -3;
+        chassis_cmd_recv.wz = -7;
         //这里之后加受击改速策略
         break;
     default:

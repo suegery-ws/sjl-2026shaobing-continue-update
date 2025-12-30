@@ -258,6 +258,19 @@ void DMMotorControl()
                 pid_measure = motor->measure.position; // MOTOR_FEED,对total angle闭环,防止在边界处出现突跃//为什么用总角度，因为有多圈，基本不用
             // 更新pid_ref进入下一个环
             //  rc_deadband_limit(pid_measure1,pid_measure,0.02f);//死区处理//限制一下反馈值，因为不管用·陀螺仪还是编码器反馈都不稳定，但陀螺仪更好
+            if(motor->flag == 2)
+        {
+            if( motor->motor_mode == GIMBAL_MOTOR_ENCONDE)
+            {
+            pid_ref1 = PIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
+            }
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO)
+            pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
+            else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
+            pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);
+        }
+           if(motor->flag == 3)
+        {
             if( motor->motor_mode == GIMBAL_MOTOR_ENCONDE)
             {
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
@@ -265,7 +278,8 @@ void DMMotorControl()
             else if(motor->motor_mode == GIMBAL_MOTOR_GYRO)
             pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
             else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
-            pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);
+            pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);
+        }
            
         }
         // 计算速度环,(外层闭环为速度或位置)且(启用速度环)时会计算速度环

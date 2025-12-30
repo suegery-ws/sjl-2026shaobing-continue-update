@@ -38,34 +38,34 @@ void GimbalInit()
                 .Kp = 8, // 8
                 .Ki = 0,
                 .Kd = 0,
-                .DeadBand = 0.1,//另外宏定义死区了，暂时应该没太大影响,不写也行
+                .DeadBand = 0.001,//另外宏定义死区了，暂时应该没太大影响,不写也行
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
                 .MaxOut = 500,
             },
             .relative_angle_PID = {
-                .Kp = 55.0f, // 10
+                .Kp = 120.0f, // 10
                 .Ki = 0.0f,
                 .Kd = -0.8f,
-                .DeadBand = 0.1,
+                .DeadBand = 0.001,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 0.0f,
-                .MaxOut = 15.0f, //数据待更改//用弧度制就注定pid给的比较大
+                .MaxOut = 50.0f, //数据待更改//用弧度制就注定pid给的比较大
             },
             .speed_PID = {
-                .Kp = 500.0f,  // 50
+                .Kp = 450.0f,  // 50
                 .Ki = 0.8f, // 200
                 .Kd = 0.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 5000.0f,
-                .MaxOut = 20000,
+                .MaxOut = 16384,
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->YawTotalAngle,
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = &gimbal_IMU_data->Gyro[2],
             .flag = 1,
             .motor_limit_left = 6.00f,
-            .motor_limit_right = 3.37f,
+            .motor_limit_right = 3.35f,
             
         },
         .controller_setting_init_config = {
@@ -139,22 +139,25 @@ void GimbalInit()
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
                 .MaxOut = 3,//底盘跟随云台专用
+                .DeadBand = 0.02
             },
             .relative_angle_PID = {
-                .Kp = 5.19, // 10
+                .Kp = 10, // 10
                 .Ki = 0,
-                .Kd = 0.05,
+                .Kd = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
-                .MaxOut = 1, //
+                .MaxOut = 3, //
+                .DeadBand = 0
             },
             .speed_PID = {
-                .Kp = 7,  // 50
-                .Ki = 0.1, // 350
+                .Kp = 7,  // 7
+                .Ki = 0.1, // 0.1
                 .Kd = 0.0,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                .IntegralLimit = 2500,
-                .MaxOut = 10,
+                .IntegralLimit = 2500,//2500
+                .MaxOut = 10, //10
+                .DeadBand = 0.02 //0.02
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->Yaw,
             .other_speed_feedback_ptr = &gimbal_IMU_data->Gyro[2],

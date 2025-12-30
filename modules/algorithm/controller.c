@@ -222,9 +222,29 @@ float DMPIDCalculate(PIDInstance *pid, float measure, float ref)
     // 保存上次的测量值和误差,计算当前error
     pid->Measure = measure;
     pid->Ref = ref;
-    pid->Err = pid->Ref - pid->Measure;
-    // pid->Err = loop_fp32_constrain(pid->Err, -1.0, 1.0);
-    
+
+    // 原始角度误差（可能跨 2PI）
+    float raw_err = pid->Ref - pid->Measure;
+
+    // 先把误差压到 [-PI, PI]，避免数值特别大的跳变
+    if (raw_err > PI)
+    {
+        raw_err -= 2.0f * PI;
+    }
+    else if (raw_err < -PI)
+    {
+        raw_err += 2.0f * PI;
+    }
+
+    // 在接近 ±PI 边界时，如果误差符号将要翻转，则跟随上一次误差的符号，
+    // 保证电机转动方向在穿越 -PI/PI 时不发生突变
+    // if (fabsf(raw_err) > (PI * 0.9f) && pid->Last_Err != 0.0f)
+    // {
+    //     float sign_last = (pid->Last_Err > 0.0f) ? 1.0f : -1.0f;
+    //     raw_err = fabsf(raw_err) * sign_last;
+    // }
+
+    pid->Err = raw_err;
 
     // 如果在死区外,则计算PID
     if (abs(pid->Err) > pid->DeadBand)
@@ -252,17 +272,6 @@ float DMPIDCalculate(PIDInstance *pid, float measure, float ref)
 
         pid->Iout += pid->ITerm;                         // 累加积分
         pid->Output = pid->Pout + pid->Iout + pid->Dout; // 计算输出
-        if(pid->Err > 5.0f ||pid->Err < -5.0f)
-    {
-        pid->Output *= -1;
-        if(pid->Output <= -3.0f)
-        {
-            pid->Output = -2.0f;
-        }
-        else
-        pid->Output = 2.0f;
-    }
-       
 
         // 输出滤波
         if (pid->Improve & PID_OutputFilter)
