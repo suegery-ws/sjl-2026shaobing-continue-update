@@ -227,8 +227,8 @@ void GimbalTask()
      case GIMBAL_MOTOR_AUTO: 
         DJIMotorEnable(yaw_motor);
         DJIMotorinhert(&gimbal_cmd_recv, yaw_motor);
-        DJIMotorChangeFeed(yaw_motor, ANGLE_LOOP, OTHER_FEED);
-        DJIMotorChangeFeed(yaw_motor, SPEED_LOOP, OTHER_FEED);
+        DJIMotorChangeFeed(yaw_motor, ANGLE_LOOP, MOTOR_FEED);
+        DJIMotorChangeFeed(yaw_motor, SPEED_LOOP, MOTOR_FEED);
         DJIGetYawMotorData(Gimbal_motor_posture_data,yaw_motor,gimbal_IMU_data);
         DJIModeChangeControlTransmit(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
         DJIMotorRefVerify(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
@@ -328,7 +328,7 @@ void GimbalTask()
     // 设置反馈数据,主要是imu和yaw的ecd
     gimbal_feedback_data.gimbal_imu_data = *gimbal_IMU_data;
     gimbal_feedback_data.yaw_motor_single_round_angle = big_yaw_motor->measure.angle_single_round;//这个反馈的是哨兵的相对角度
-    
+    gimbal_feedback_data.gimbal_data = Gimbal_motor_posture_data;
     // 推送消息
     PubPushMessage(gimbal_pub, (void *)&gimbal_feedback_data);
 }

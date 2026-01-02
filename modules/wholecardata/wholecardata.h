@@ -1,13 +1,10 @@
 #ifndef WHOLECARDATA_H
 #define WHOLECARDATA_H
 
-#include "robot_cmd.h"
 #include "struct_typedef.h"
-#include "motor_def.h" //因为涉及到了正反装
 #include "ins_task.h"
 #include "message_center.h"
 #include "bmi088.h"
-#include "robot_def.h"
 #include "arm_math.h"
 #include "controller.h"
 #include "ins_task.h"

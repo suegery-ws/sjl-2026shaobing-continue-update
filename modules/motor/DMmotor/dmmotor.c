@@ -428,6 +428,10 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
               {
                 Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
               }
+              if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_AUTO))
+              {
+                Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
+              }
 }
     if(Instance->flag == 2)
 {
@@ -444,6 +448,10 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
                 Instance->pid_ref = pitch_posture_data->pitch_relative_angle;
               }
               if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ROTATE) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_ROTATE))
+              {
+                Instance->pid_ref = pitch_posture_data->pitch_absoulte_angle;
+              }
+              if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_AUTO))
               {
                 Instance->pid_ref = pitch_posture_data->pitch_absoulte_angle;
               }
@@ -470,7 +478,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     }
     if(gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO)
     {
-        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
+         DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);
         //encode模式下，编码器角度控制，有限位，以后加一个限位函数,
     }
     }

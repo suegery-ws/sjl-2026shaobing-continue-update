@@ -30,10 +30,11 @@ static USARTInstance *vision_usart_instance;
 // }
 
 //数据耦合性最低的写法
-void VisionSetAltitude(float yaw, float pitch,float big_yaw,float mode)
+void VisionSetAltitude(float yaw, float pitch,float big_yaw)
 {
     send_data.yaw = yaw;
     send_data.pitch = pitch;
+    send_data.mode = 0;
     send_data.roll = 0;
     send_data.big_yaw = big_yaw;
     send_data.big_pitch = 0;

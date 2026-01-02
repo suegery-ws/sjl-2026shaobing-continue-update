@@ -8,6 +8,7 @@
 #include "cmsis_os.h"
 
 #include "robot.h"
+#include "robot_def.h"
 #include "ins_task.h"
 #include "motor_task.h"
 #include "referee_task.h"

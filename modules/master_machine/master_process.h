@@ -147,7 +147,7 @@ void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Spee
  * @param yaw
  * @param pitch
  */
-void VisionSetAltitude(float yaw, float pitch, float roll,float big_yaw);
+void VisionSetAltitude(float yaw, float pitch,float big_yaw);
 
 
 

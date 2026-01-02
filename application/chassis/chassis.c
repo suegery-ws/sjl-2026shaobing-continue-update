@@ -60,6 +60,7 @@ static DJIMotorInstance *motor_lf, *motor_rf, *motor_lb, *motor_rb; // left righ
 
 static Chassis_Data_s* chassis_data;
 static attitude_t* Chassis_IMU_data;
+static float feedback;
 /* 用于自旋变速策略的时间变量 */
 // static float t;
 
@@ -73,6 +74,7 @@ void ChassisInit()
     Motor_Init_Config_s chassis_motor_config = {
         .can_init_config.can_handle = &hcan1,
         .controller_param_init_config = {
+            .other_speed_feedback_ptr = &feedback,
             .follow_speed_PID = {
                 .Kp = 10000.0f,//20000.0f, // 4.5
                 .Ki = 50,//50.0f,   // 0
@@ -100,7 +102,10 @@ void ChassisInit()
             .outer_loop_type = SPEED_LOOP, // 设置为开环，电机设定值由下面的功率控制设定，不走普通的pid
             .close_loop_type = SPEED_LOOP,
             .feedback_reverse_flag = FEEDBACK_DIRECTION_NORMAL,
+            .feedforward_flag =1,
+        
         },
+
         .motor_type = M3508,
 
 

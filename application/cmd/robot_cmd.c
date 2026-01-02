@@ -423,6 +423,19 @@ static void RemoteControlSet()
 }
 
 
+static void AUTOKeySet()
+{
+    chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
+    gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
+    gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
+    gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
+    chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
+    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO;
+    gimbal_behavior_to_motor();
+    gimbal_cmd_send.pitch = vision_recv_data->y;
+    gimbal_cmd_send.big_yaw = vision_recv_data->x;
+    shoot_cmd_send.shoot_mode = SHOOT_OFF;
+}
 
 
 /**
@@ -552,15 +565,16 @@ void RobotCMDTask()
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();//由于大小yaw的存在，所以这个函数要改
     // 根据遥控器左侧开关,确定当前使用的控制模式为遥控器调试还是键鼠
-    // if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[下],遥控器控制
+    if (switch_is_mid(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[下],遥控器控制
     RemoteControlSet();
-    // else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
-    //MouseKeySet();
+    else if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
+    AUTOKeySet();
+
     chassis_cmd_send.IMU_data = &gimbal_fetch_data.gimbal_imu_data;//把在云台初始化的陀螺仪的地址传到了底盘里面
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
-    //VisionSetFlag(chassis_fetch_data.enemy_color,chassis_fetch_data.bullet_speed);
+    VisionSetAltitude(gimbal_fetch_data.gimbal_data->Yaw_Data.yaw_absoulte_angle,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
