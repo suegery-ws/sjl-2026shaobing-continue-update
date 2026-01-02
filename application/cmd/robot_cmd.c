@@ -34,7 +34,7 @@ static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反�
 
 static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
 static RC_ctrl_t *rc_data_last;         // 上一时刻遥控器数据,用于按键边沿检测
-static Vision_Recv_s *vision_recv_data; // 视觉接收数据指针,初始化时返回
+static CTRL *vision_recv_data; // 视觉接收数据指针,初始化时返回
 static Vision_Send_s vision_send_data;  // 视觉发送数据
 static cboard_recv_message_t *tongji_vision_recv_data; // 同济视觉接收数据指针,初始化时返回
 static cboard_send_message1_t tongji_vision_send_data_1;  // 同济视觉发送数据1
@@ -254,25 +254,6 @@ static void CalcOffsetAngle()
     static float angle;
     static float total_angle;
     chassis_cmd_send.offset_angle = gimbal_fetch_data.yaw_motor_single_round_angle; // 从云台获取的当前yaw电机单圈角度，单圈角度就是电机此时转到的角度，这里我直接在回调函数里写完了
-// #if YAW_ECD_GREATER_THAN_4096                               // 如果大于180度
-//     if (angle > YAW_ALIGN_ANGLE && angle <= 180.0f + YAW_ALIGN_ANGLE)
-//         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
-//     else if (angle > 180.0f + YAW_ALIGN_ANGLE)
-//         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE - 360.0f;
-//     else
-//         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
-// #else // 小于180度
-//     if (angle > YAW_ALIGN_ANGLE)
-//         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
-//     else if (angle <= YAW_ALIGN_ANGLE && angle >= YAW_ALIGN_ANGLE - 180.0f)
-//         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
-//     else
-//         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE + 360.0f;  
-// #endif
-
-
-
-
 }//计算底盘和云台的相对角度，这个要改
 
 
@@ -410,11 +391,10 @@ static void RemoteControlSet()
     {
        shoot_cmd_send.friction_mode = FRICTION_OFF;
     }
-
-    if(switch_is_down(rc_data[TEMP].rc.switch_left)&&!switch_is_down(rc_data[LAST].rc.switch_left))
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    if(rc_data[TEMP].rc.dial>500)
     {
-        //  osDelay(10);
-
+    //    osDelay(10);
        mode_shoot_flag++;
        
        if(mode_shoot_flag == 3)
@@ -425,20 +405,21 @@ static void RemoteControlSet()
        else
        {shoot_cmd_send.load_mode = mode_shoot_flag;} //连发模式切换
 
-    //    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
-    //    {
-    //      shoot_cmd_send.shoot_flag = 1;
-    //      a++;
-    //    }
-    //    else
-    //    {
-    //      shoot_cmd_send.shoot_flag = 2;
-    //      b++;
-    //    }
+       if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
+       {
+         shoot_cmd_send.shoot_flag = 1;
+         a++;
+       }
+       else
+       {
+         shoot_cmd_send.shoot_flag = 2;
+         b++;
+       }
     }
 
-    shoot_cmd_send.shoot_rate = 15;//射频固定8发每秒
-    shoot_cmd_send.bullet_speed = SMALL_AMU_15;//设置弹速
+    shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
+    shoot_cmd_send.bullet_speed = SMALL_AMU_18;//设置弹速
+    // osDelay(10);
 }
 
 
@@ -535,7 +516,7 @@ static void MouseKeySet()
 static void EmergencyHandler()
 {
     // 拨轮的向下拨超过一半进入急停模式.注意向打时下拨轮是正
-    if (rc_data[TEMP].rc.dial > 600 || robot_state == ROBOT_STOP) // 还需添加重要应用和模块离线的判断
+    if (rc_data[TEMP].rc.dial <-500 || robot_state == ROBOT_STOP) // 还需添加重要应用和模块离线的判断
     {
         robot_state = ROBOT_STOP;
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
@@ -544,14 +525,6 @@ static void EmergencyHandler()
         shoot_cmd_send.friction_mode = FRICTION_OFF;
         shoot_cmd_send.load_mode = LOAD_STOP;
         LOGERROR("[CMD] emergency stop!");
-    }
-    if(rc_data[TEMP].rc.dial > 300)
-    {
-        shoot_cmd_send.shoot_mode = SHOOT_OFF;
-    }
-    if(rc_data[TEMP].rc.dial < -300)
-    {
-        shoot_cmd_send.shoot_mode = SHOOT_ON;
     }
     // 遥控器右侧开关为[上],恢复正常运行
     // if (switch_is_up(rc_data[TEMP].rc.switch_right))
@@ -587,7 +560,7 @@ void RobotCMDTask()
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
-    //  VisionSetFlag(chassis_fetch_data.enemy_color,chassis_fetch_data.bullet_speed);
+    //VisionSetFlag(chassis_fetch_data.enemy_color,chassis_fetch_data.bullet_speed);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置

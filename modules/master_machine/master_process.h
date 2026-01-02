@@ -85,60 +85,7 @@ typedef struct
 	float roll;
 } Vision_Send_s;
 #pragma pack()
-
-typedef struct
-{
-	uint8_t frame_header;
-  float x; 
-  float y;
-  float distance; 
-	int shoot_mode;
-
-	////////////导航/////////////
-  float ahead;
-  float ahead_y;
-  float angle;
-  int mode;
-	//////////////////////////
-	uint8_t blank;               //空白帧，视觉要不要校验由视觉决定
-	uint8_t frame_tail ;         //帧尾
-} CTRL;
-
-typedef __packed struct
-{
-	uint8_t FRAME_HEADER ;       //帧头
-	uint8_t mode;  //探测的颜色
-	float roll;
-	float pitch;
-	float yaw;
-	float big_pitch;
-	float big_yaw;
-	////////////////////////////////////22
-
-		//////////////裁判/////////////////
-	uint8_t game_progress; //比赛状态
-	uint16_t remaining_time; //比赛剩余时间
-	uint16_t sentry_hp;    //sentry血量self
-	//uint8_t able_to_resurrection;  //是否可以免费买活 1可以 0不行
-	//uint8_t center_gain_point;  //是否在中心增益点
-	uint16_t self_outpost_HP;  //己方前哨战血量
-	uint16_t projectile_allowance_17mm; //允许发弹量
-	uint8_t self_support_point;  //己方与兑换区不重叠的补给区bool 0不在 1在
-	////////////////////////////////////32
-	
-	
-	uint8_t blank;               //空白帧，视觉要不要校验由视觉决定
-	uint8_t FRAME_TAIL ;         //帧尾
-
-}AUTO_SEND_TO_NUC_DATA_t;  //34
-
-
-typedef union      //共用体
-{
-AUTO_SEND_TO_NUC_DATA_t  AUTO_SEND_TO_NUC_DATA;  
-uint8_t board_tx_date[VISION_SEND_SIZE];  
-} TX_AUTO_AIM;
-
+////////////////////////////////////////////////////////////////////////////////////////
 
 typedef struct//发送数据
 {
@@ -177,7 +124,7 @@ GAME_DATE_t GAME_DATE;
  *
  * @param handle 用于和视觉通信的串口handle(C板上一般为USART1,丝印为USART2,4pin)
  */
-Vision_Recv_s *VisionInit(UART_HandleTypeDef *_handle);
+CTRL *VisionInit(UART_HandleTypeDef *_handle);
 
 /**
  * @brief 发送视觉数据
@@ -200,7 +147,8 @@ void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Spee
  * @param yaw
  * @param pitch
  */
-void VisionSetAltitude(float yaw, float pitch, float roll);
+void VisionSetAltitude(float yaw, float pitch, float roll,float big_yaw);
+
 
 
 

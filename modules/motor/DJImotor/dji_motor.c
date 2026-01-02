@@ -103,24 +103,6 @@ static int8_t reverse_time = 0;                            // 已注册的电机
         gimbal_motor_control->pid_ref = gimbal_motor_control->motor_limit_right;
     }
     }
-    if(gimbal_motor_control->flag == 2)
-    {
-    fp32 add = gimbal_cmd->pitch;
-    if(gimbal_motor_control->pid_ref == 0)
-    {
-        gimbal_motor_control->pid_ref = gimbal_motor_measure->total_angle;
-    }
-	gimbal_motor_control->pid_ref += add;
-    //是否超过最大 最小值，最大最小在校准里得到
-    if (gimbal_motor_control->pid_ref > gimbal_motor_control->motor_limit_left)
-    {
-        gimbal_motor_control->pid_ref = gimbal_motor_control->motor_limit_left;
-    }
-    else if (gimbal_motor_control->pid_ref < gimbal_motor_control->motor_limit_right)
-    {
-        gimbal_motor_control->pid_ref = gimbal_motor_control->motor_limit_right;
-    }
-    }
 
 }
 
@@ -290,7 +272,8 @@ static void DecodeDJIMotor(CANInstance *_instance)
     measure->last_ecd = measure->ecd;
     measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;
     measure->speed_aps = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_aps +
-                         RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3]));
+                         RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3])); //RAD
+    measure->speed_vector = (rxbuff[2] << 8 | rxbuff[3])*M3508_MOTOR_RPM_TO_VECTOR; //M/S
     measure->real_current = (1.0f - CURRENT_SMOOTH_COEF) * measure->real_current +
                             CURRENT_SMOOTH_COEF * (float)((int16_t)(rxbuff[4] << 8 | rxbuff[5]));
     measure->temperature = rxbuff[6];
@@ -473,7 +456,7 @@ void DJIMotorControl()
             if (motor_setting->speed_feedback_source == OTHER_FEED)
                 pid_measure = *motor_controller->other_speed_feedback_ptr;
             else // MOTOR_FEED
-                pid_measure = measure->speed_aps;
+                pid_measure = measure->speed_aps;//aps
             // 更新pid_ref进入下一个环
             pid_ref = PIDCalculate(&motor_controller->speed_PID, pid_measure, pid_ref);
         }
@@ -541,26 +524,12 @@ void DJIMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DJIMotorInstance* gim
         DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure);
     }
     }
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    if(motor_controller->flag == 2)
+    if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ROTATE)
     {
-        
-    if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO)
-    {
-        //auto模式下，陀螺仪角度控制
-        DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure);
-    }
-    else if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ENCONDE)
-    {
-        //enconde模式下，电机编码角度控制
         DJIGimbalRefLimit(motor_measure,gimbal_cmd,motor_controller,gimbal_posture_data);
     }
-     if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_AUTO)
-    {
-        DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure);
-    }
-
-    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+   
 
 }
 
@@ -613,7 +582,7 @@ void DJIModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorIns
               }
               if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ROTATE) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_ROTATE))
               {
-                motor_controller->pid_ref = YAW_6020_OFF_SET_RAD;
+                motor_controller->pid_ref = motor_measure->total_angle;
               }
               //这里以后要加一个自瞄模式的处理函数
     }

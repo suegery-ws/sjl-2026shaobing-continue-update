@@ -13,7 +13,28 @@
 #include "seasky_protocol.h"
 #include "crc8.h"
 #include "crc16.h"
+#include "master_process.h"
 #include "memory.h"
+#include <stdint.h>
+
+
+void memory_from_buffer(uint8_t *buffer, CTRL *ctrl)
+{
+	//////////////////////////////////////////////////////////////////
+    ctrl->frame_header = buffer[0];
+	//需要的部分
+    memcpy(&ctrl->x, &buffer[1], 4);
+    memcpy(&ctrl->y, &buffer[1+1 * 4], 4);
+    memcpy(&ctrl->distance, &buffer[1+2 * 4], 4);
+	memcpy(&ctrl->shoot_mode, &buffer[1+3*4], 4);
+	memcpy(&ctrl->ahead, &buffer[1+4*4], 4);
+	memcpy(&ctrl->ahead_y, &buffer[1+5*4], 4);
+	memcpy(&ctrl->angle, &buffer[1+6*4], 4);
+	memcpy(&ctrl->mode, &buffer[1+7*4], 4);
+	memcpy(&ctrl->blank, &buffer[1+7*4], 4);
+	memcpy(&ctrl->frame_tail, &buffer[1+7*4+1], 4);
+	///////////////////////////////////////////////////////////////////
+}
 
 /*获取CRC8校验码*/
 uint8_t Get_CRC8_Check(uint8_t *pchMessage,uint16_t dwLength)
@@ -54,11 +75,11 @@ static uint8_t protocol_heade_Check(protocol_rm_struct *pro, uint8_t *rx_buf)
     if (rx_buf[0] == PROTOCOL_CMD_ID)
     {
         pro->header.sof = rx_buf[0];
-        if (CRC8_Check_Sum(&rx_buf[0], 4))
+        if (CRC8_Check_Sum(&rx_buf[0], 34)) //dwLength是数据段的长度,包括校验位
         {
-            pro->header.data_length = (rx_buf[2] << 8) | rx_buf[1];
-            pro->header.crc_check = rx_buf[3];
-            pro->cmd_id = (rx_buf[5] << 8) | rx_buf[4];
+            // pro->header.data_length = (rx_buf[2] << 8) | rx_buf[1];
+            // pro->header.crc_check = rx_buf[3];
+            // pro->cmd_id = (rx_buf[5] << 8) | rx_buf[4];
             return 1;
         }
     }
@@ -69,51 +90,29 @@ static uint8_t protocol_heade_Check(protocol_rm_struct *pro, uint8_t *rx_buf)
     此函数根据待发送的数据更新数据帧格式以及内容，实现数据的打包操作
     后续调用通信接口的发送函数发送tx_buf中的对应数据
 */
-void get_protocol_send_data(uint16_t send_id,        // 信号id
-                            uint16_t flags_register, // 16位寄存器
-                            float *tx_data,          // 待发送的float数据
-                            uint8_t float_length,    // float的数据长度
-                            uint8_t *tx_buf,         // 待发送的数据帧
-                            uint16_t *tx_buf_len)    // 待发送的数据帧长度
+void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
+                            uint8_t *tx_buf)     // 待发送的数据帧
 {
-    static uint16_t crc16;
-    static uint16_t data_len;
+    uint8_t crc8;
 
-    data_len = float_length * 4 + 2;
-    /*帧头部分*/
-    tx_buf[0] = PROTOCOL_CMD_ID;
-    tx_buf[1] = data_len & 0xff;        // 低位在前
-    tx_buf[2] = (data_len >> 8) & 0xff; // 低位在前
-    tx_buf[3] = crc_8(&tx_buf[0], 3);   // 获取CRC8校验位
+    // 设置帧头和帧尾
+    send_data->FRAME_HEADER = PROTOCOL_CMD_ID;
+    send_data->frame_tail = FRAME_TAIL;
+    
+    // 将整个34字节的结构体数据复制到发送缓冲区
+    memcpy(tx_buf, (uint8_t *)send_data, 34);
+    
+    // 计算CRC8校验并替换第33字节（索引32）
+    crc8 = crc_8(tx_buf, 32);
+    tx_buf[32] = crc8;
 
-    /*数据的信号id*/
-    tx_buf[4] = send_id & 0xff;
-    tx_buf[5] = (send_id >> 8) & 0xff;
-
-    /*建立16位寄存器*/
-    tx_buf[6] = flags_register & 0xff;
-    tx_buf[7] = (flags_register >> 8) & 0xff;
-
-    /*float数据段*/
-    for (int i = 0; i < 4 * float_length; i++)
-    {
-        tx_buf[i + 8] = ((uint8_t *)(&tx_data[i / 4]))[i % 4];
-    }
-
-    /*整包校验*/
-    crc16 = crc_16(&tx_buf[0], data_len + 6);
-    tx_buf[data_len + 6] = crc16 & 0xff;
-    tx_buf[data_len + 7] = (crc16 >> 8) & 0xff;
-
-    *tx_buf_len = data_len + 8;
 }
 /*
     此函数用于处理接收数据，
     返回数据内容的id
 */
-uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
-                           uint16_t *flags_register, // 接收数据的16位寄存器地址
-                           uint8_t *rx_data)         // 接收的float数据存储地址
+uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
+                           CTRL *rx_data)         // 接收的float数据存储地址
 {
     // 放在静态区,避免反复申请栈上空间
     static protocol_rm_struct pro;
@@ -121,13 +120,16 @@ uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
 
     if (protocol_heade_Check(&pro, rx_buf))
     {
-        date_length = OFFSET_BYTE + pro.header.data_length;
-        if (CRC16_Check_Sum(&rx_buf[0], date_length))
+        // date_length = OFFSET_BYTE + pro.header.data_length;
+        if (CRC8_Check_Sum(&rx_buf[0], 34))//大小为35
         {
-            *flags_register = (rx_buf[7] << 8) | rx_buf[6];
-            memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);
-            return pro.cmd_id;
+            // memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);
+            memory_from_buffer(rx_buf,rx_data);
+            return 1;
         }
     }
     return 0;
 }
+
+
+ 

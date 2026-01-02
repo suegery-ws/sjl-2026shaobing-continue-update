@@ -10,8 +10,10 @@
  */
 #include "bsp_usart.h"
 #include "bsp_log.h"
+#include "seasky_protocol.h"
 #include "stdlib.h"
 #include "memory.h"
+#include <stdint.h>
 
 /* usart service instance, modules' info would be recoreded here using USARTRegister() */
 /* usart服务实例,所有注册了usart的模块信息会被保存在这里 */
@@ -28,7 +30,7 @@ static USARTInstance *usart_instance[DEVICE_USART_CNT] = {NULL};
  */
 void USARTServiceInit(USARTInstance *_instance)
 {
-    HAL_UARTEx_ReceiveToIdle_DMA(_instance->usart_handle, _instance->recv_buff, _instance->recv_buff_size);
+    HAL_UARTEx_ReceiveToIdle_DMA(_instance->usart_handle, _instance->recv_buff, _instance->recv_buff_size); //指定了数据应该写到什么地方以及写道这个地方的数据长度，从这之后开始接受，不需要额外的函数了
     // 关闭dma half transfer中断防止两次进入HAL_UARTEx_RxEventCallback()
     // 这是HAL库的一个设计失误,发生DMA传输完成/半完成以及串口IDLE中断都会触发HAL_UARTEx_RxEventCallback()
     // 我们只希望处理第一种和第三种情况,因此直接关闭DMA半传输中断
@@ -108,7 +110,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
             if (usart_instance[i]->module_callback != NULL)
             {
                 usart_instance[i]->module_callback();
-                memset(usart_instance[i]->recv_buff, 0, Size); // 接收结束后清空buffer,对于变长数据是必要的
+                memset(usart_instance[i]->recv_buff, 0, Size); // 接收结束后清空buffer,对于变长数据是必要的 从初始地址开始，把size个字节变成同一个值
             }
             HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle, usart_instance[i]->recv_buff, usart_instance[i]->recv_buff_size);
             __HAL_DMA_DISABLE_IT(usart_instance[i]->usart_handle->hdmarx, DMA_IT_HT);

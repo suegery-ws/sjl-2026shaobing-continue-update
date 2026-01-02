@@ -3,9 +3,11 @@
 
 #include <stdio.h>
 #include <stdint.h>
-
-#define PROTOCOL_CMD_ID 0XA5
-#define OFFSET_BYTE 8 // 出数据段外，其他部分所占字节数
+#include <stdbool.h>
+                                                                                
+#define PROTOCOL_CMD_ID 0XFF
+#define FRAME_TAIL 0x0D
+#define OFFSET_BYTE 3 // 出数据段外，其他部分所占字节数 校验位加帧头帧尾
 
 typedef struct
 {
@@ -14,23 +16,64 @@ typedef struct
 		uint8_t sof;
 		uint16_t data_length;
 		uint8_t crc_check; // 帧头CRC校验
-	} header;			   // 数据帧头
+	} header;			   // 数据帧头                                                                                                          
 	uint16_t cmd_id;	   // 数据ID
-	uint16_t frame_tail;   // 帧尾CRC校验
+	uint16_t frame_tail;   // 帧尾CRC校验                  
 } protocol_rm_struct;
 
+typedef struct
+{
+	uint8_t frame_header;
+  float x; 
+  float y;
+  float distance; 
+	int shoot_mode;
 
+	////////////导航/////////////
+  float ahead;
+  float ahead_y;
+  float angle;
+  int mode;
+	//////////////////////////
+	uint8_t blank;               //空白帧，视觉要不要校验由视觉决定
+	uint8_t frame_tail ;         //帧尾
+} CTRL;
+
+
+typedef __packed struct
+{
+	uint8_t FRAME_HEADER ;       //帧头
+	uint8_t mode;  //探测的颜色
+	float roll;
+	float pitch;
+	float yaw;
+	float big_pitch;
+	float big_yaw;
+	////////////////////////////////////22
+
+		//////////////裁判/////////////////
+	uint8_t game_progress; //比赛状态
+	uint16_t remaining_time; //比赛剩余时间
+	uint16_t sentry_hp;    //sentry血量self
+	//uint8_t able_to_resurrection;  //是否可以免费买活 1可以 0不行
+	//uint8_t center_gain_point;  //是否在中心增益点
+	uint16_t self_outpost_HP;  //己方前哨战血量
+	uint16_t projectile_allowance_17mm; //允许发弹量
+	uint8_t self_support_point;  //己方与兑换区不重叠的补给区bool 0不在 1在
+	////////////////////////////////////32
+	
+	uint8_t blank;               //空白帧，视觉要不要校验由视觉决定
+	uint8_t frame_tail ;         //帧尾
+
+}AUTO_SEND_TO_NUC_DATA_t;  //34
+                                                                            
 /*更新发送数据帧，并计算发送数据帧长度*/
-void get_protocol_send_data(uint16_t send_id,		 // 信号id
-							uint16_t flags_register, // 16位寄存器
-							float *tx_data,			 // 待发送的float数据
-							uint8_t float_length,	 // float的数据长度
-							uint8_t *tx_buf,		 // 待发送的数据帧
-							uint16_t *tx_buf_len);	 // 待发送的数据帧长度
+void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
+                            uint8_t *tx_buf);
 
 /*接收数据处理*/
-uint16_t get_protocol_info(uint8_t *rx_buf,			 // 接收到的原始数据
-						   uint16_t *flags_register, // 接收数据的16位寄存器地址
-						   uint8_t *rx_data);			 // 接收的float数据存储地址
+uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
+                           CTRL *rx_data);         // 接收的float数据存储地址
 
+						   
 #endif

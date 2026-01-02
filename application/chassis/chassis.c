@@ -191,20 +191,6 @@ void ChassisInit()
  */
 static void MecanumCalculate()//这里改成全向轮解算
 {
-    // vt_lf = chassis_vx*my_sin(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_vy*my_cos(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//0
-    // vt_rf = -chassis_vx*my_sin(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_vy*my_cos(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//3
-    // vt_lb = chassis_vx*my_sin(angle_to_rad_45+chassis_cmd_recv.offset_angle) + chassis_vy*my_cos(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//1
-    // vt_rb = -chassis_vx*my_sin(angle_to_rad_45+chassis_cmd_recv.offset_angle) + chassis_vy*my_cos(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//2
-
-    // vt_lf = chassis_vx*my_sin(angle_to_rad_45-chassis_cmd_recv.offset_angle) - chassis_vy*my_cos(angle_to_rad_45-chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//0
-    // vt_rf = -chassis_vx*my_sin(angle_to_rad_45-chassis_cmd_recv.offset_angle) - chassis_vy*my_cos(angle_to_rad_45-chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//3
-    // vt_lb = chassis_vx*my_sin(angle_to_rad_45-chassis_cmd_recv.offset_angle) + chassis_vy*my_cos(angle_to_rad_45-chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//1
-    // vt_rb = -chassis_vx*my_sin(angle_to_rad_45-chassis_cmd_recv.offset_angle) + chassis_vy*my_cos(angle_to_rad_45-chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//2
-    //解算是这一套
-    // vt_lf = chassis_vx*my_sin(angle_to_rad_45) - chassis_vy*my_cos(angle_to_rad_45) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//0
-    // vt_rf = -chassis_vx*my_sin(angle_to_rad_45) - chassis_vy*my_cos(angle_to_rad_45) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//3
-    // vt_lb = chassis_vx*my_sin(angle_to_rad_45) + chassis_vy*my_cos(angle_to_rad_45) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//1
-    // vt_rb = -chassis_vx*my_sin(angle_to_rad_45) + chassis_vy*my_cos(angle_to_rad_45) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//2
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     vt_lb = chassis_vx*my_sin(angle_to_rad_45) - chassis_vy*my_cos(angle_to_rad_45) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//0
@@ -221,7 +207,7 @@ static void MecanumCalculate()//这里改成全向轮解算
     // vt_lf = -chassis_vx*my_sin(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_vy*my_cos(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//3
     // vt_rb = chassis_vx*my_sin(angle_to_rad_45+chassis_cmd_recv.offset_angle) + chassis_vy*my_cos(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//1
     // vt_rf = -chassis_vx*my_sin(angle_to_rad_45+chassis_cmd_recv.offset_angle) + chassis_vy*my_cos(angle_to_rad_45+chassis_cmd_recv.offset_angle) - chassis_cmd_recv.wz * MOTOR_TO_CENTER;//2
-//  }
+
 }
 /**
  * @brief 根据裁判系统和电容剩余容量对输出进行限制并设置电机参考值

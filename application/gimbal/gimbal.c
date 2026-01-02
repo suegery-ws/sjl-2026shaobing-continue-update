@@ -220,9 +220,9 @@ void GimbalTask()
         DJIMotorinhert(&gimbal_cmd_recv, yaw_motor);
         DJIMotorChangeFeed(yaw_motor, ANGLE_LOOP, MOTOR_FEED);
         DJIMotorChangeFeed(yaw_motor, SPEED_LOOP, MOTOR_FEED);
-        DJIModeChangeControlTransmit(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
         DJIGetYawMotorData(Gimbal_motor_posture_data,yaw_motor,gimbal_IMU_data);
-        
+        DJIModeChangeControlTransmit(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
+        DJIMotorRefVerify(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
         break;
      case GIMBAL_MOTOR_AUTO: 
         DJIMotorEnable(yaw_motor);

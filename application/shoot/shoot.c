@@ -206,21 +206,19 @@ void ShootTask()
         // 根据收到的弹速设置设定摩擦轮电机参考值,需实测后填入
         switch (shoot_cmd_recv.bullet_speed)
         {
-        case BIG_AMU_10:
-            DJIMotorSetRef(friction_l, -4000);
-            DJIMotorSetRef(friction_r, -4000);
+        case BIG_AMU_10: //20m/s
+            DJIMotorSetRef(friction_l, 952);
+            DJIMotorSetRef(friction_r, 952);
             break;
-        case SMALL_AMU_18:
-            DJIMotorSetRef(friction_l, 0);
-            DJIMotorSetRef(friction_r, 0);
+        case SMALL_AMU_18: //18m/s
+            DJIMotorSetRef(friction_l, 857);
+            DJIMotorSetRef(friction_r, 857);
             break;
         case SMALL_AMU_30:
             DJIMotorSetRef(friction_l, 0);
             DJIMotorSetRef(friction_r, 0);
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
-            DJIMotorSetRef(friction_l, 30000);
-            DJIMotorSetRef(friction_r, 30000);
             break;
         }
     }
