@@ -61,6 +61,7 @@ static DJIMotorInstance *motor_lf, *motor_rf, *motor_lb, *motor_rb; // left righ
 static Chassis_Data_s* chassis_data;
 static attitude_t* Chassis_IMU_data;
 static float feedback;
+static float delat_angle;
 /* 用于自旋变速策略的时间变量 */
 // static float t;
 
@@ -315,6 +316,18 @@ void ChassisTask()
         chassis_cmd_recv.wz = -7;
         //这里之后加受击改速策略
         break;
+    case CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW:  //自动模式底盘跟随云台
+        chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, chassis_cmd_recv.offset_angle,0 );//只需要下x,y的速度
+    case CHASSIS_NO_FOLLOW_YAW: //给定一个角度转过去
+        delat_angle = chassis_cmd_recv.no_follow_yaw_angle - chassis_data->chassis_posture_data.car_yaw_posture;
+        chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, 0, delat_angle);//前面可能有一个负号，这个用pid,角度环的输出结果就是速度目标值
+        break;
+    case CHASSIS_AUTO_NO_FOLLOW_YAW: //哨兵变速小陀螺
+       //变速逻辑后面再加
+    case CHASSIS_AUTO_GUIDGENCE:  //哨兵旋转小陀螺自动导航，速度恒定，旋转速度由上位机给出，暂时写恒定
+        chassis_cmd_recv.wz = -7;  //其实可以什么都不用写
+    
+        
     default:
         break;
     }//暂时就先只有这两种模式了

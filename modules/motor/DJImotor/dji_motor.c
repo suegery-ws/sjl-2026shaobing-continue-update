@@ -649,7 +649,7 @@ void DJIGetChassisMotorData(Chassis_Data_s* chassis_data, Chassis_Ctrl_Cmd_s* ch
    - motor_rf_measure->speed_aps) * MOTOR_SPEED_TO_CHASSIS_SPEED_WZ / MOTOR_DISTANCE_TO_CENTER;
    ///////////////////////////////////底盘姿态////////////////////////////////////////////////////////////
    chassis_posture_data->car_yaw_posture = rad_format(Chassis_IMU_data->Yaw - chassis_cmd->offset_angle); 
-	chassis_posture_data->car_pitch_posture = rad_format(Chassis_IMU_data->Pitch);
+   chassis_posture_data->car_pitch_posture = rad_format(Chassis_IMU_data->Pitch);
    chassis_posture_data->car_roll_posture = rad_format(Chassis_IMU_data->Roll);//暂时不清楚它读到的是什么制的东西
 }
 

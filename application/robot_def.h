@@ -115,21 +115,13 @@ typedef enum
     CHASSIS_ZERO_FORCE = 0,    // 电流零输入
     CHASSIS_ROTATE,            // 小陀螺模式
     CHASSIS_FOLLOW_GIMBAL_YAW, // 跟随模式，底盘叠加角度环控制
-    CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW,//自动模式下的底盘跟随云台
-    CHASSIS_FOLLOW_ROS,         //叉乘小陀螺导航
+    CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW,//自动模式下的底盘跟随云台--3 这个模式下底盘跟随云台，数据来自上位机
+    CHASSIS_AUTO_GUIDGENCE,         //叉乘小陀螺导航,这个是边转边走--4 这个模式下是边转边走，旋转速度恒定
+    CHASSIS_AUTO_NO_FOLLOW_YAW,      //自瞄模式下的小陀螺，即底盘不跟随云台，但是云台可以自己转动并且会按照云台的方向进行运动 --5
+    CHASSIS_NO_FOLLOW_YAW,      //和云台间没有任何联系，转过的角度自己给
     CHASSIS_OPEN,               //此模式下预设值成比例直接写进速度环
     CHASSIS_NO_MOVE,            //nuc控制下强行使电机无力
 } chassis_mode_e; //顺序带来的影响未知（底盘行为模式），一个行为模式就够了
-
-// typedef enum chassis_mode
-// {
-//   CHASSIS_VECTOR_FOLLOW_GIMBAL_YAW = 0,   //chassis will follow yaw gimbal motor relative angle.底盘会跟随云台相对角度
-//   CHASSIS_VECTOR_FOLLOW_CHASSIS_YAW,  //chassis will have yaw angle(chassis_yaw) close-looped control.底盘有底盘角度控制闭环
-//   CHASSIS_VECTOR_ROTATE, 	          //小陀螺
-//   CHASSIS_VECTOR_RAW,                 //control-current will be sent to CAN bus derectly.
-//   CHASSIS_AUTO_GUIDGENCE,             //导航模式
-//   CHASSIS_AUTO_GUIDGENCE_FOLLOW_GIMBAL_YAW 
-// } chassis_motor_e;    //底盘电机控制模式 根据mode_e选择motor_e
 
 
 // 云台模式设置
@@ -202,6 +194,7 @@ typedef struct
     float vy;           // 横移方向速度
     float wz;           // 旋转速度
     float offset_angle; // 底盘和归中位置的夹角//就是相对角度
+    float no_follow_yaw_angle; //自己给要转的角度
     chassis_mode_e chassis_mode;//底盘行为模式
     chassis_mode_e last_chassis_mode;//上一次底盘的行为模式
     //本来加了电机控制模式，想了想没有用，就不加了
@@ -269,7 +262,7 @@ typedef struct
 typedef struct
 {
     attitude_t gimbal_imu_data;
-    float yaw_motor_single_round_angle;
+    float yaw_motor_single_round_angle; //相对角度
     Gimbal_Data_s* gimbal_data;
 } Gimbal_Upload_Data_s;
 

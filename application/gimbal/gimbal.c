@@ -324,7 +324,6 @@ void GimbalTask()
     // 在合适的地方添加pitch重力补偿前馈力矩
     // 根据IMU姿态/pitch电机角度反馈计算出当前配重下的重力矩
     // ...
-
     // 设置反馈数据,主要是imu和yaw的ecd
     gimbal_feedback_data.gimbal_imu_data = *gimbal_IMU_data;
     gimbal_feedback_data.yaw_motor_single_round_angle = big_yaw_motor->measure.angle_single_round;//这个反馈的是哨兵的相对角度

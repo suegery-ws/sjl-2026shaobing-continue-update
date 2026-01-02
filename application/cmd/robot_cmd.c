@@ -437,7 +437,8 @@ static void AUTOKeySet()
     gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*PITCH_AUTO_SEN;
     gimbal_cmd_send.big_yaw = bubing_vision_recv_data->yaw*YAW_AUTO_SEN;
     shoot_cmd_send.shoot_mode = SHOOT_OFF;
-    
+
+
 }
 
 

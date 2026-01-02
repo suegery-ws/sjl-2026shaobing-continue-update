@@ -623,10 +623,6 @@ void chassis_behavior_to_motor(Chassis_Ctrl_Cmd_s* chassis_cmd_recv)
     {
         motor_controller->chassis_mode = CHASSIS_ROTATE;
     }
-	else if (chassis_cmd_recv->chassis_mode == CHASSIS_FOLLOW_ROS)
-    {
-        motor_controller->chassis_mode = CHASSIS_FOLLOW_ROS;
-    }
 	else if (chassis_cmd_recv->chassis_mode == CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW)
     {
         motor_controller->chassis_mode = CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW;
@@ -638,6 +634,18 @@ void chassis_behavior_to_motor(Chassis_Ctrl_Cmd_s* chassis_cmd_recv)
     else if (chassis_cmd_recv->chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW)
     {
         motor_controller->chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+    }
+    else if (chassis_cmd_recv->chassis_mode == CHASSIS_AUTO_GUIDGENCE)
+    {
+        motor_controller->chassis_mode = CHASSIS_AUTO_GUIDGENCE;
+    }
+    else if (chassis_cmd_recv->chassis_mode == CHASSIS_AUTO_NO_FOLLOW_YAW)
+    {
+        motor_controller->chassis_mode = CHASSIS_AUTO_NO_FOLLOW_YAW;
+    }
+    else if (chassis_cmd_recv->chassis_mode == CHASSIS_NO_FOLLOW_YAW)
+    {
+        motor_controller->chassis_mode = CHASSIS_NO_FOLLOW_YAW;
     }
     }
 };
