@@ -9,6 +9,7 @@
 #include "general_def.h"
 #include "dji_motor.h"
 #include "bmi088.h"
+#include "seasky_protocol.h"
 #include "tongjimachine/message.h"  //这个应该是绝对路径，clangd找不到我的文件夹
 // bsp
 #include "bsp_dwt.h"
@@ -34,8 +35,9 @@ static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反�
 
 static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
 static RC_ctrl_t *rc_data_last;         // 上一时刻遥控器数据,用于按键边沿检测
-static CTRL *vision_recv_data; // 视觉接收数据指针,初始化时返回
-static Vision_Send_s vision_send_data;  // 视觉发送数据
+// static CTRL *vision_recv_data; // 视觉接收数据指针,初始化时返回
+static BUBING_CTRL *bubing_vision_recv_data;
+// static Vision_Send_s vision_send_data;  // 视觉发送数据
 static cboard_recv_message_t *tongji_vision_recv_data; // 同济视觉接收数据指针,初始化时返回
 static cboard_send_message1_t tongji_vision_send_data_1;  // 同济视觉发送数据1
 static cboard_send_message2_t tongji_vision_send_data_2;  // 同济视觉发送数据2
@@ -165,7 +167,7 @@ double my_cos(double rad)
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
-    vision_recv_data = VisionInit(&huart1); // 视觉通信串口，这个没问题
+    bubing_vision_recv_data = BubingVisionInit(&huart1); // 视觉通信串口，这个没问题
     //这边加一个can初始化函数当作视觉部分的初始化
     // tongji_vision_recv_data = TongjiVisionInit(&hcan1); // 同济视觉通信can口初始化
 
@@ -432,9 +434,10 @@ static void AUTOKeySet()
     chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
     gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO;
     gimbal_behavior_to_motor();
-    gimbal_cmd_send.pitch = vision_recv_data->y;
-    gimbal_cmd_send.big_yaw = vision_recv_data->x;
+    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*PITCH_AUTO_SEN;
+    gimbal_cmd_send.big_yaw = bubing_vision_recv_data->yaw*YAW_AUTO_SEN;
     shoot_cmd_send.shoot_mode = SHOOT_OFF;
+    
 }
 
 
@@ -534,6 +537,7 @@ static void EmergencyHandler()
         robot_state = ROBOT_STOP;
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
         chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
         shoot_cmd_send.shoot_mode = SHOOT_OFF;
         shoot_cmd_send.friction_mode = FRICTION_OFF;
         shoot_cmd_send.load_mode = LOAD_STOP;

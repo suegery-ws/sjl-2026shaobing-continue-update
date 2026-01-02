@@ -36,6 +36,25 @@ void memory_from_buffer(uint8_t *buffer, CTRL *ctrl)
 	///////////////////////////////////////////////////////////////////
 }
 
+void bubing_memory_from_buffer(uint8_t *buffer, BUBING_CTRL *ctrl)
+{
+   ctrl->FRAME_HEADER = buffer[0];
+   //需要的部分
+    memcpy(&ctrl->fire_advice, &buffer[1], 1);
+    memcpy(&ctrl->is_spining, &buffer[2], 1);
+    memcpy(&ctrl->is_navigating, &buffer[3], 1);
+	memcpy(&ctrl->pitch, &buffer[3+1*4], 4);
+	memcpy(&ctrl->yaw, &buffer[3+2*4], 4);
+	memcpy(&ctrl->distance, &buffer[3+3*4], 4);
+	memcpy(&ctrl->linearx, &buffer[3+4*4], 4);
+	memcpy(&ctrl->linery, &buffer[3+5*4], 4);
+	memcpy(&ctrl->angularz, &buffer[3+6*4], 4);
+	memcpy(&ctrl->blank, &buffer[4+6*4], 1);
+    memcpy(&ctrl->check_byte, &buffer[5+6*4], 1);
+    memcpy(&ctrl->frame_tail, &buffer[6+6*4], 1);
+}
+
+
 /*获取CRC8校验码*/
 uint8_t Get_CRC8_Check(uint8_t *pchMessage,uint16_t dwLength)
 {
@@ -75,7 +94,7 @@ static uint8_t protocol_heade_Check(protocol_rm_struct *pro, uint8_t *rx_buf)
     if (rx_buf[0] == PROTOCOL_CMD_ID)
     {
         pro->header.sof = rx_buf[0];
-        if (CRC8_Check_Sum(&rx_buf[0], 34)) //dwLength是数据段的长度,包括校验位
+        if (CRC8_Check_Sum(&rx_buf[0], 31)) //dwLength是数据段的长度,包括校验位
         {
             // pro->header.data_length = (rx_buf[2] << 8) | rx_buf[1];
             // pro->header.crc_check = rx_buf[3];
@@ -130,6 +149,27 @@ uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
     }
     return 0;
 }
+
+uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
+                                  CTRL *rx_data)         // 接收的float数据存储地址
+{
+    // 放在静态区,避免反复申请栈上空间
+    static protocol_rm_struct pro;
+    static uint16_t date_length;
+
+    if (protocol_heade_Check(&pro, rx_buf))
+    {
+        // date_length = OFFSET_BYTE + pro.header.data_length;
+        if (CRC8_Check_Sum(&rx_buf[0], BUBING_DWLENGTH))//大小为32
+        {
+            memory_from_buffer(rx_buf,rx_data);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
 
 
  

@@ -7,7 +7,9 @@
                                                                                 
 #define PROTOCOL_CMD_ID 0XFF
 #define FRAME_TAIL 0x0D
-#define OFFSET_BYTE 3 // 出数据段外，其他部分所占字节数 校验位加帧头帧尾
+
+#define BUBING_DWLENGTH 31
+#define SHAOBING_DWLENGTH 34
 
 typedef struct
 {
@@ -66,7 +68,25 @@ typedef __packed struct
 	uint8_t frame_tail ;         //帧尾
 
 }AUTO_SEND_TO_NUC_DATA_t;  //34
-                                                                            
+ 
+typedef __packed struct
+{
+	uint8_t FRAME_HEADER; 
+	uint8_t fire_advice;
+    uint8_t is_spining;
+	uint8_t is_navigating;
+	float pitch;
+	float yaw;
+	float distance;
+	float linearx;
+	float linery;
+	float angularz;
+	uint8_t blank;
+	uint8_t check_byte;
+	uint8_t frame_tail;
+}BUBING_CTRL;
+
+
 /*更新发送数据帧，并计算发送数据帧长度*/
 void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
                             uint8_t *tx_buf);
@@ -74,6 +94,9 @@ void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
 /*接收数据处理*/
 uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
                            CTRL *rx_data);         // 接收的float数据存储地址
+
+uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
+                                  CTRL *rx_data);         // 接收的float数据存储地址						   
 
 						   
 #endif

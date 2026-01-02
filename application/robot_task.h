@@ -157,23 +157,3 @@ __attribute__((noreturn)) void StartUITASK(void const *argument)
         osDelay(1); // 即使没有任何UI需要刷新,也挂起一次,防止卡在UITask中无法切换
     }
 }
-
-
-// __attribute__((noreturn)) void StartDMIMUTASK(void const *argument)
-// {
-//     static float ins_start;
-//     static float ins_dt;
-   
-//     LOGINFO("[freeRTOS] DMINS Task Start");
-//     for (;;)
-//     {
-//         // 1kHz
-//         ins_start = DWT_GetTimeline_ms();
-//         // INS_Task();
-//         ImuTask_Function();
-//         ins_dt = DWT_GetTimeline_ms() - ins_start;
-//         if (ins_dt > 1)
-//             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
-//         osDelay(1);
-//     }
-// }

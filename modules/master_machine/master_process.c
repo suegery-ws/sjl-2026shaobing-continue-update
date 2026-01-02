@@ -15,6 +15,7 @@
 #include "robot_def.h"
 
 static CTRL recv_data;
+static BUBING_CTRL bubing_recv_data;
 static AUTO_SEND_TO_NUC_DATA_t send_data;
 static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
@@ -74,19 +75,41 @@ static void VisionOfflineCallback(void *id)
  */
 static void DecodeVision()
 {
-    uint16_t flag_register;
     DaemonReload(vision_daemon_instance); // 喂狗
     get_protocol_info(vision_usart_instance->recv_buff,&recv_data);
     // TODO: code to resolve flag_register;
 }
 
+static void DecodeVisionbubing()
+{
+   DaemonReload(vision_daemon_instance); // 喂狗
+   get_protocol_info_bubing(vision_usart_instance->recv_buff,&recv_data);
+}
 
+BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle)
+{
+    USART_Init_Config_s conf;
+    conf.module_callback = DecodeVisionbubing;
+    conf.recv_buff_size = VISION_RECV_SIZE_BUBING;
+    conf.usart_handle = _handle;
+    vision_usart_instance = USARTRegister(&conf);
+    
+    // 为master process注册daemon,用于判断视觉通信是否离线
+    Daemon_Init_Config_s daemon_conf = {
+        .callback = VisionOfflineCallback, // 离线时调用的回调函数,会重启串口接收
+        .owner_id = vision_usart_instance, 
+        .reload_count = 10, 
+    };
+    vision_daemon_instance = DaemonRegister(&daemon_conf); 
+ 
+    return &bubing_recv_data;
+}
 
 CTRL *VisionInit(UART_HandleTypeDef *_handle)
 {
     USART_Init_Config_s conf;
-    conf.module_callback = DecodeVision;
-    conf.recv_buff_size = VISION_RECV_SIZE;
+    conf.module_callback = DecodeVisionbubing;
+    conf.recv_buff_size = VISION_RECV_SIZE_BUBING;
     conf.usart_handle = _handle;
     vision_usart_instance = USARTRegister(&conf);
     

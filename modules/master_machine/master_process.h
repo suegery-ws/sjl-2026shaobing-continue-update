@@ -4,13 +4,11 @@
 #include "bsp_usart.h"
 #include "seasky_protocol.h"
 
-#define VISION_RECV_SIZE 35u // 当前为固定值,36字节
+#define VISION_RECV_SIZE 35u 
 #define VISION_SEND_SIZE 34u
+#define VISION_RECV_SIZE_BUBING 32u
 
 #define BUFLENGTH  		128//最大接收的数据
-
-#define PITCH_AUTO_SEN    0.018f                            //
-#define YAW_AUTO_SEN  0.029f                                //
 
 #pragma pack(1)
 typedef enum
@@ -126,6 +124,7 @@ GAME_DATE_t GAME_DATE;
  */
 CTRL *VisionInit(UART_HandleTypeDef *_handle);
 
+BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle);
 /**
  * @brief 发送视觉数据
  *
