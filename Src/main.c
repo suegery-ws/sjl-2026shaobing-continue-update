@@ -32,6 +32,7 @@
 #include "usart.h"
 #include "usb_device.h"
 #include "gpio.h"
+#include "test/test_uart.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -120,6 +121,7 @@ int main(void)
   MX_CRC_Init();
   MX_DAC_Init();
   /* USER CODE BEGIN 2 */
+  // TestUARTTaskStart();
 	RobotInit(); // 唯一的初始化函数
   LOGINFO("[main] SystemInit() and RobotInit() done");
   /* USER CODE END 2 */

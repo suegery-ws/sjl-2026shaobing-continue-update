@@ -152,23 +152,14 @@ void VisionSend()
     // buff和txlen必须为static,才能保证在函数退出后不被释放,使得DMA正确完成发送
     // 析构后的陷阱需要特别注意!
     static uint8_t send_buff[VISION_SEND_SIZE_BUBING];
-    static uint32_t send_count = 0;
     
     // 将数据转化为seasky协议的数据包
     bubing_get_protocol_send_data(&bubing_send_data, send_buff);
     
-    // 调试：每1000次打印一次
-    if(++send_count % 1000 == 0)
-    {
-        LOGINFO("[Vision] Send #%d: yaw=%.2f pitch=%.2f header=0x%02X tail=0x%02X", 
-                send_count, bubing_send_data.yaw, bubing_send_data.pitch, 
-                send_buff[0], send_buff[31]);
-    }
-    
     // 使用IT发送,防止和接收DMA冲突
     // 注意：不检查gState，因为接收DMA会让gState一直是BUSY_RX
     // IT发送会自动处理TX忙的情况
-    USARTSend(vision_usart_instance, send_buff, 32, USART_TRANSFER_IT);
+    USARTSend(vision_usart_instance, send_buff, 32, USART_TRANSFER_DMA);
 }
 
 #endif  //VISION_USE_UART
