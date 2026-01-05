@@ -126,7 +126,7 @@ CTRL *VisionInit(UART_HandleTypeDef *_handle)
 {
     USART_Init_Config_s conf;
     conf.module_callback = DecodeVisionbubing;
-    conf.recv_buff_size = VISION_RECV_SIZE_BUBING;
+    conf.recv_buff_size = VISION_RECV_SIZE;
     conf.usart_handle = _handle;
     vision_usart_instance = USARTRegister(&conf);
     
@@ -152,12 +152,23 @@ void VisionSend()
     // buff和txlen必须为static,才能保证在函数退出后不被释放,使得DMA正确完成发送
     // 析构后的陷阱需要特别注意!
     static uint8_t send_buff[VISION_SEND_SIZE_BUBING];
+    static uint32_t send_count = 0;
+    
     // 将数据转化为seasky协议的数据包
     bubing_get_protocol_send_data(&bubing_send_data, send_buff);
-    USARTSend(vision_usart_instance, send_buff, 32, USART_TRANSFER_DMA); // 和视觉通信使用IT,防止和接收使用的DMA冲突
-    // 此处为HAL设计的缺陷,DMASTOP会停止发送和接收,导致再也无法进入接收中断.
-    // 也可在发送完成中断中重新启动DMA接收,但较为复杂.因此,此处使用IT发送.
-    // 若使用了daemon,则也可以使用DMA发送.
+    
+    // 调试：每1000次打印一次
+    if(++send_count % 1000 == 0)
+    {
+        LOGINFO("[Vision] Send #%d: yaw=%.2f pitch=%.2f header=0x%02X tail=0x%02X", 
+                send_count, bubing_send_data.yaw, bubing_send_data.pitch, 
+                send_buff[0], send_buff[31]);
+    }
+    
+    // 使用IT发送,防止和接收DMA冲突
+    // 注意：不检查gState，因为接收DMA会让gState一直是BUSY_RX
+    // IT发送会自动处理TX忙的情况
+    USARTSend(vision_usart_instance, send_buff, 32, USART_TRANSFER_IT);
 }
 
 #endif  //VISION_USE_UART

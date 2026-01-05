@@ -183,7 +183,7 @@ uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
     if (protocol_heade_Check(&pro, rx_buf))
     {
         // date_length = OFFSET_BYTE + pro.header.data_length;
-        if (CRC8_Check_Sum(&rx_buf[0], 34))//大小为35
+        // if (CRC8_Check_Sum(&rx_buf[0], 34))//大小为35
         {
             // memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);
             memory_from_buffer(rx_buf,rx_data);
@@ -203,7 +203,7 @@ uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原�
     if (protocol_heade_Check(&pro, rx_buf))
     {
         // date_length = OFFSET_BYTE + pro.header.data_length;
-        if (CRC8_Check_Sum(&rx_buf[0], BUBING_DWLENGTH))//大小为32
+        // if (CRC8_Check_Sum(&rx_buf[0], BUBING_DWLENGTH))//大小为32
         {
             memory_from_buffer(rx_buf,rx_data);
             return 1;
