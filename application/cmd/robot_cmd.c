@@ -579,7 +579,7 @@ void RobotCMDTask()
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
-    VisionSetAltitude(gimbal_fetch_data.gimbal_data->Yaw_Data.yaw_absoulte_angle,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle);
+    BubingVisionSetAltitude(gimbal_fetch_data.gimbal_data->Yaw_Data.yaw_absoulte_angle,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置

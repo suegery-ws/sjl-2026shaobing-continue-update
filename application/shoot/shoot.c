@@ -198,7 +198,7 @@ void ShootTask()
     //     DJIMotorSetRef(loader, TurnBackSpeed);             
     // }
 
-    //  trigger_motor_turn_back(loader);//反转处理
+      trigger_motor_turn_back(loader);//反转处理
 
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
     if (shoot_cmd_recv.friction_mode == FRICTION_ON)

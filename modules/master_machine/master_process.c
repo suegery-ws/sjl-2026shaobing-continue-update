@@ -48,6 +48,22 @@ void VisionSetAltitude(float yaw, float pitch,float big_yaw)
 
 }
 
+void BubingVisionSetAltitude(float yaw, float pitch,float big_yaw)
+{
+    bubing_send_data.yaw = yaw;
+    bubing_send_data.pitch = pitch;
+    bubing_send_data.mode = 0;
+    bubing_send_data.a = 0;
+    bubing_send_data.b = 0;
+    bubing_send_data.c = 0;
+    bubing_send_data.blank = 0;
+    bubing_send_data.remaining_time = 0;
+    bubing_send_data.sentry_hp = 0;
+    bubing_send_data.self_outpost_HP = 0;
+    bubing_send_data.state = 0;
+    bubing_send_data.chassis_yaw = 0;
+
+}
 /**
  * @brief 离线回调函数,将在daemon.c中被daemon task调用
  * @attention 由于HAL库的设计问题,串口开启DMA接收之后同时发送有概率出现__HAL_LOCK()导致的死锁,使得无法

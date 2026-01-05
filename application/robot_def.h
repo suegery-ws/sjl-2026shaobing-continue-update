@@ -47,7 +47,7 @@
 #define NUM_PER_CIRCLE 10            // 拨盘一圈的装载量
 #define READY_TRIGGER_SPEED 3.0f    // 拨盘准备触发的速度,单位为rps(转每秒)
 #define TurnBackSpeed -1.0f
-#define BLOCK_TIME 30.0f          // 拨盘卡弹检测时间,单位为ms(毫秒)
+#define BLOCK_TIME 100.0f          // 拨盘卡弹检测时间,单位为ms(毫秒)
 #define BLOCK_TRIGGER_SPEED 0.1f   //拨弹轮反转速度，单位为rps
 #define REVERSE_TIME 30        // 拨盘回复时间,单位为ms(毫秒) //20
 // 机器人底盘修改的参数,单位为mm(毫米)

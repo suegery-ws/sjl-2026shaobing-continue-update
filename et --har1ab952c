@@ -1,0 +1,33 @@
+[33mb516312[m[33m ([m[1;36mHEAD[m[33m)[m HEAD@{0}: checkout: moving from 9b4da721c554f896b138234779145e49e4450935 to b5163121fb48113ed75755124cbcedc164dcf76f
+[33m9b4da72[m HEAD@{1}: commit: 奇怪的版本
+[33mb516312[m[33m ([m[1;36mHEAD[m[33m)[m HEAD@{2}: commit: 第一版可以用的参数，准备拨弹盘相关代码，调试自瞄
+[33m7fecce5[m HEAD@{3}: checkout: moving from 1ab952c11d8fd3761725d1f2512782d7bb2b0ff3 to 7fecce5469cd6b04dd3c601b51559fe97cd2c3ca
+[33m1ab952c[m HEAD@{4}: commit: 抖动问题还没解决
+[33m46c34de[m HEAD@{5}: commit: 偶尔还有云台抖动，尝试改大yaw参数解决，其他基本没问题
+[33m7fecce5[m HEAD@{6}: commit: 视觉导航全好了，准备调试
+[33m2e77d67[m HEAD@{7}: commit: 加入了步兵视觉部分
+[33mfe5db49[m HEAD@{8}: commit: 准备调试视觉部分
+[33mcaf59c1[m HEAD@{9}: commit: 还有单发限位和视觉部分待调试
+[33me2c080c[m HEAD@{10}: commit: 除了单发限位完全成功
+[33m16517df[m HEAD@{11}: commit: 整车还有备忘录中存在的问题
+[33m1e7535e[m HEAD@{12}: commit: dmimu更改完毕，效果位置
+[33m18ac156[m HEAD@{13}: commit: 只剩pitch轴
+[33md8ca07f[m[33m ([m[1;32mpitch4310控制研发[m[33m)[m HEAD@{14}: checkout: moving from pitch4310控制研发 to d8ca07fe68ca8ce7cef0bab95531316939667190
+[33md8ca07f[m[33m ([m[1;32mpitch4310控制研发[m[33m)[m HEAD@{15}: checkout: moving from 01c3c2a18daa78cfbbfd53eeb15ba288985e5b4d to pitch4310控制研发
+[33m01c3c2a[m HEAD@{16}: commit: 通讯版本第一次调试-沙俊霖
+[33mc47287a[m[33m ([m[1;32mmain[m[33m)[m HEAD@{17}: checkout: moving from main to c47287a7132469f6be19fbb1e11df8bec1c1e0dc
+[33mc47287a[m[33m ([m[1;32mmain[m[33m)[m HEAD@{18}: checkout: moving from pitch4310控制研发 to main
+[33md8ca07f[m[33m ([m[1;32mpitch4310控制研发[m[33m)[m HEAD@{19}: commit: 12.4调试开始-沙俊霖
+[33m0e470f6[m HEAD@{20}: commit: 解决完严重报错后的版本
+[33m8b1cbf0[m HEAD@{21}: checkout: moving from c47287a7132469f6be19fbb1e11df8bec1c1e0dc to pitch4310控制研发
+[33mc47287a[m[33m ([m[1;32mmain[m[33m)[m HEAD@{22}: checkout: moving from e5b7da094def3664ff91f76ec62d0d10fa948652 to c47287a7132469f6be19fbb1e11df8bec1c1e0dc
+[33me5b7da0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{23}: checkout: moving from main to e5b7da094def3664ff91f76ec62d0d10fa948652
+[33mc47287a[m[33m ([m[1;32mmain[m[33m)[m HEAD@{24}: checkout: moving from pitch4310控制研发 to main
+[33m8b1cbf0[m HEAD@{25}: commit: 未知原因的严重错误
+[33me5b7da0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{26}: checkout: moving from main to pitch4310控制研发
+[33mc47287a[m[33m ([m[1;32mmain[m[33m)[m HEAD@{27}: checkout: moving from pitch4310控制研发 to main
+[33me5b7da0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{28}: checkout: moving from main to pitch4310控制研发
+[33mc47287a[m[33m ([m[1;32mmain[m[33m)[m HEAD@{29}: commit: 通讯调试版本，只有两个实例
+[33me5b7da0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{30}: checkout: moving from pitch4310控制研发 to main
+[33me5b7da0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{31}: checkout: moving from main to pitch4310控制研发
+[33me5b7da0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{32}: commit (initial): jsdx_framework_sjl

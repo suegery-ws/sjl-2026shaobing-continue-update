@@ -149,7 +149,7 @@ void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Spee
  */
 void VisionSetAltitude(float yaw, float pitch,float big_yaw);
 
-
+void BubingVisionSetAltitude(float yaw, float pitch,float big_yaw);
 
 
 
