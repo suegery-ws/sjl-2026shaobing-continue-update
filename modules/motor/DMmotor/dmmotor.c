@@ -145,7 +145,7 @@ static void DMMotorDecode(CANInstance *motor_can)
     //下面是对编码总值的计算 //可以认为4310和大yaw轴是两个东西
     motor->last_ecd = motor->ecd;            //这个可能写的可能有问题，一开始可能会存在垃圾值
     motor->ecd = measure->position*8192/6.25;//把4310电机看作6020电机，用编码值对他进行运算
-    if(flag == 0)
+    if(flag <= 10)
 	{
         motor->ecd_sum = motor->ecd;
         flag++;
@@ -264,7 +264,7 @@ void DMMotorControl()
             {
             pid_ref1 = PIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO)
             pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
             else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
             pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);
@@ -275,7 +275,7 @@ void DMMotorControl()
             {
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO)
             pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
             else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);

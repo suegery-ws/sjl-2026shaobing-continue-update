@@ -570,7 +570,7 @@ void RobotCMDTask()
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();//由于大小yaw的存在，所以这个函数要改
     // 根据遥控器左侧开关,确定当前使用的控制模式为遥控器调试还是键鼠
-    if (switch_is_mid(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[下],遥控器控制
+    if (switch_is_mid(rc_data[TEMP].rc.switch_left) || switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[下],遥控器控制
     RemoteControlSet();
     else if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
     AUTOKeySet();

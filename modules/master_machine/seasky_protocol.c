@@ -109,21 +109,64 @@ static uint8_t protocol_heade_Check(protocol_rm_struct *pro, uint8_t *rx_buf)
     此函数根据待发送的数据更新数据帧格式以及内容，实现数据的打包操作
     后续调用通信接口的发送函数发送tx_buf中的对应数据
 */
-void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
+void bubing_get_protocol_send_data(BUBING_AUTO_SEND_TO_NUC_DATA_t *send_data,
                             uint8_t *tx_buf)     // 待发送的数据帧
 {
-    uint8_t crc8;
-
-    // 设置帧头和帧尾
-    send_data->FRAME_HEADER = PROTOCOL_CMD_ID;
-    send_data->frame_tail = FRAME_TAIL;
+     uint8_t index = 0;
     
-    // 将整个34字节的结构体数据复制到发送缓冲区
-    memcpy(tx_buf, (uint8_t *)send_data, 34);
+    // 帧头 (1 byte)
+    tx_buf[index++] = SEND_CMD_BUBING;
     
-    // 计算CRC8校验并替换第33字节（索引32）
-    crc8 = crc_8(tx_buf, 32);
-    tx_buf[32] = crc8;
+    // mode (1 byte)
+    tx_buf[index++] = send_data->mode;
+    
+    // pitch (4 bytes)
+    memcpy(&tx_buf[index], &send_data->pitch, sizeof(float));
+    index += sizeof(float);
+    
+    // yaw (4 bytes)
+    memcpy(&tx_buf[index], &send_data->yaw, sizeof(float));
+    index += sizeof(float);
+    
+    // chassis_yaw (4 bytes)
+    memcpy(&tx_buf[index], &send_data->chassis_yaw, sizeof(float));
+    index += sizeof(float);
+    
+    // sentry_hp (2 bytes)
+    memcpy(&tx_buf[index], &send_data->sentry_hp, sizeof(uint16_t));
+    index += sizeof(uint16_t);
+    
+    // remaining_time (4 bytes)
+    memcpy(&tx_buf[index], &send_data->remaining_time, sizeof(uint32_t));
+    index += sizeof(uint32_t);
+    
+    // self_outpost_HP (2 bytes)
+    memcpy(&tx_buf[index], &send_data->self_outpost_HP, sizeof(uint16_t));
+    index += sizeof(uint16_t);
+    
+    // a (1 byte)
+    tx_buf[index++] = send_data->a;
+    
+    // b (1 byte)
+    tx_buf[index++] = send_data->b;
+    
+    // c (1 byte)
+    tx_buf[index++] = send_data->c;
+    
+    // state (1 byte)
+    tx_buf[index++] = send_data->state;
+    
+    // blank (4 bytes)
+    memcpy(&tx_buf[index], &send_data->blank, sizeof(uint32_t));
+    index += sizeof(uint32_t);
+    
+    // crc_check (1 byte) - 计算CRC8校验
+    // tx_buf[index++] = crc_8(tx_buf, index);
+    tx_buf[index++] = 0;
+    
+    // 帧尾 (1 byte)
+    tx_buf[index++] = rece_cmd_bubing;
+    
 
 }
 /*

@@ -441,7 +441,7 @@ void DJIMotorControl()
             pid_ref = DJI2006PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);
             }
             else
-            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE || motor_controller->motor_mode == GIMBAL_MOTOR_ROTATE)
+            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE || motor_controller->motor_mode == GIMBAL_MOTOR_ROTATE || motor_controller->motor_mode == GIMBAL_MOTOR_AUTO)
             pid_ref = PIDCalculate(&motor_controller->relative_angle_PID, pid_measure, pid_ref);
             else if(motor_controller->motor_mode == GIMBAL_MOTOR_GYRO )
             pid_ref = PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);

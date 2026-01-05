@@ -7,6 +7,7 @@
 #define VISION_RECV_SIZE 35u 
 #define VISION_SEND_SIZE 34u
 #define VISION_RECV_SIZE_BUBING 32u
+#define VISION_SEND_SIZE_BUBING 32u
 
 #define BUFLENGTH  		128//最大接收的数据
 

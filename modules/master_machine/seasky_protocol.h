@@ -8,6 +8,9 @@
 #define PROTOCOL_CMD_ID 0XFF
 #define FRAME_TAIL 0x0D
 
+#define SEND_CMD_BUBING 0xff
+#define rece_cmd_bubing 0x0d
+
 #define BUBING_DWLENGTH 31
 #define SHAOBING_DWLENGTH 34
 
@@ -71,6 +74,32 @@ typedef __packed struct
  
 typedef __packed struct
 {
+	uint8_t FRAME_HEADER ;       //帧头
+	uint8_t mode;  //探测的颜色
+	float pitch;
+	float yaw;
+	float chassis_yaw;
+	////////////////////////////////////22
+
+		//////////////裁判/////////////////
+	uint16_t sentry_hp;    //sentry血量self
+	uint32_t remaining_time; //比赛剩余时间
+	uint16_t self_outpost_HP;  //己方前哨战血量
+	uint8_t a;
+	uint8_t b;
+	uint8_t c;
+	uint8_t state;  //己方与兑换区不重叠的补给区bool 0不在 1在
+	////////////////////////////////////32
+	
+	uint32_t blank;               //空白帧，视觉要不要校验由视觉决定
+	uint8_t crc_check;
+	uint8_t frame_tail ;         //帧尾
+
+}BUBING_AUTO_SEND_TO_NUC_DATA_t;  //32
+
+
+typedef __packed struct
+{
 	uint8_t FRAME_HEADER; 
 	uint8_t fire_advice;
     uint8_t is_spining;
@@ -91,6 +120,8 @@ typedef __packed struct
 void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
                             uint8_t *tx_buf);
 
+void bubing_get_protocol_send_data(BUBING_AUTO_SEND_TO_NUC_DATA_t *send_data,
+                            uint8_t *tx_buf);     // 待发送的数据帧
 /*接收数据处理*/
 uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
                            CTRL *rx_data);         // 接收的float数据存储地址

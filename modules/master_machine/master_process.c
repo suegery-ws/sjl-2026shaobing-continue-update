@@ -17,6 +17,7 @@
 static CTRL recv_data;
 static BUBING_CTRL bubing_recv_data;
 static AUTO_SEND_TO_NUC_DATA_t send_data;
+static BUBING_AUTO_SEND_TO_NUC_DATA_t bubing_send_data;
 static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
 
@@ -134,10 +135,10 @@ void VisionSend()
 {
     // buff和txlen必须为static,才能保证在函数退出后不被释放,使得DMA正确完成发送
     // 析构后的陷阱需要特别注意!
-    static uint8_t send_buff[VISION_SEND_SIZE];
+    static uint8_t send_buff[VISION_SEND_SIZE_BUBING];
     // 将数据转化为seasky协议的数据包
-    get_protocol_send_data(&send_data,  send_buff);
-    USARTSend(vision_usart_instance, send_buff, 34, USART_TRANSFER_DMA); // 和视觉通信使用IT,防止和接收使用的DMA冲突
+    bubing_get_protocol_send_data(&bubing_send_data, send_buff);
+    USARTSend(vision_usart_instance, send_buff, 32, USART_TRANSFER_DMA); // 和视觉通信使用IT,防止和接收使用的DMA冲突
     // 此处为HAL设计的缺陷,DMASTOP会停止发送和接收,导致再也无法进入接收中断.
     // 也可在发送完成中断中重新启动DMA接收,但较为复杂.因此,此处使用IT发送.
     // 若使用了daemon,则也可以使用DMA发送.

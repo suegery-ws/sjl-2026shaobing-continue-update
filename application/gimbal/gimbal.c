@@ -38,7 +38,7 @@ void GimbalInit()
                 .Kp = 8, // 8
                 .Ki = 0,
                 .Kd = 0,
-                .DeadBand = 0.001,//另外宏定义死区了，暂时应该没太大影响,不写也行
+                .DeadBand = 0,//另外宏定义死区了，暂时应该没太大影响,不写也行
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
                 .MaxOut = 500,
@@ -139,7 +139,7 @@ void GimbalInit()
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
                 .MaxOut = 3,//底盘跟随云台专用
-                .DeadBand = 0.02
+                .DeadBand = 0
             },
             .relative_angle_PID = {
                 .Kp = 10, // 10

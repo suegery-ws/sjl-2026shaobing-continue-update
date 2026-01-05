@@ -79,7 +79,7 @@ void ChassisInit()
             .follow_speed_PID = {
                 .Kp = 10000.0f,//20000.0f, // 4.5
                 .Ki = 50,//50.0f,   // 0
-                .Kd = 100,//0.0f,   // 0
+                .Kd = 10,//0.0f,   // 0 //100
                 .IntegralLimit = 2000.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 15000.0f,
@@ -145,12 +145,12 @@ void ChassisInit()
     PIDInit(&buffer_PID, &Buffer_pid_conf); // 缓冲能量PID初始化 //待调
     PID_Init_Config_s Angle_pid_conf = {
         .Kp = 8.0f,
-        .Ki = 0.0f,
-        .Kd = 0.0f,
+        .Ki = 0.1f,
+        .Kd = 0.05f,
         .IntegralLimit = 0.2f,
         .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
         .MaxOut = 5.0f,
-        .DeadBand = 0
+        .DeadBand = 0.03
     };
     PIDInit(&angle_PID, &Angle_pid_conf);
 
@@ -313,7 +313,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, chassis_cmd_recv.offset_angle,0 );//前面可能有一个负号，这个用pid,角度环的输出结果就是速度目标值
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = -7;
+        chassis_cmd_recv.wz = -3;
         //这里之后加受击改速策略
         break;
     case CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW:  //自动模式底盘跟随云台
@@ -325,7 +325,7 @@ void ChassisTask()
     case CHASSIS_AUTO_NO_FOLLOW_YAW: //哨兵变速小陀螺
        //变速逻辑后面再加
     case CHASSIS_AUTO_GUIDGENCE:  //哨兵旋转小陀螺自动导航，速度恒定，旋转速度由上位机给出，暂时写恒定
-        chassis_cmd_recv.wz = -7;  //其实可以什么都不用写
+        chassis_cmd_recv.wz = -3;  //其实可以什么都不用写
     
         
     default:
