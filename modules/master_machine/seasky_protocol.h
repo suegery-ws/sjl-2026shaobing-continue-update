@@ -110,7 +110,7 @@ typedef __packed struct
 	float linearx;
 	float linery;
 	float angularz;
-	uint8_t blank;
+	uint16_t blank;
 	uint8_t check_byte;
 	uint8_t frame_tail;
 }BUBING_CTRL; //32

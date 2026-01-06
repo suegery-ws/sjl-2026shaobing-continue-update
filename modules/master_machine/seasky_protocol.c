@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 
+
 void memory_from_buffer(uint8_t *buffer, CTRL *ctrl)
 {
 	//////////////////////////////////////////////////////////////////
@@ -49,9 +50,9 @@ void bubing_memory_from_buffer(uint8_t *buffer, BUBING_CTRL *ctrl)
 	memcpy(&ctrl->linearx, &buffer[3+4*4], 4);
 	memcpy(&ctrl->linery, &buffer[3+5*4], 4);
 	memcpy(&ctrl->angularz, &buffer[3+6*4], 4);
-	memcpy(&ctrl->blank, &buffer[4+6*4], 1);
-    memcpy(&ctrl->check_byte, &buffer[5+6*4], 1);
-    memcpy(&ctrl->frame_tail, &buffer[6+6*4], 1);
+	memcpy(&ctrl->blank, &buffer[5+6*4], 2);
+    memcpy(&ctrl->check_byte, &buffer[6+6*4], 1);
+    memcpy(&ctrl->frame_tail, &buffer[7+6*4], 1);
 }
 
 
@@ -89,22 +90,29 @@ static uint16_t CRC16_Check_Sum(uint8_t *pchMessage, uint32_t dwLength)
 }
 
 /*检验数据帧头*/
-static uint8_t protocol_heade_Check(protocol_rm_struct *pro, uint8_t *rx_buf)
+static uint8_t protocol_heade_Check(uint8_t *rx_buf)
 {
-    if (rx_buf[0] == PROTOCOL_CMD_ID)
+    // 检查帧头是否为PROTOCOL_CMD_ID (0xFF)
+    if (rx_buf[0] != PROTOCOL_CMD_ID)
     {
-        pro->header.sof = rx_buf[0];
-        if (CRC8_Check_Sum(&rx_buf[0], 31)) //dwLength是数据段的长度,包括校验位
-        {
-            // pro->header.data_length = (rx_buf[2] << 8) | rx_buf[1];
-            // pro->header.crc_check = rx_buf[3];
-            // pro->cmd_id = (rx_buf[5] << 8) | rx_buf[4];
-            return 1;
-        }
+        return 0;
     }
-    return 0;
+    
+    // 帧头校验通过
+    return 1;
 }
 
+static uint8_t protocol_tail_Check(uint8_t length,  uint8_t *rx_buf)
+{
+    // 检查帧头是否为PROTOCOL_CMD_ID (0xFF) 
+    if (rx_buf[length - 1] == FRAME_TAIL)
+    {
+        return 1;
+    }
+    
+    // 帧头校验通过
+    return 0;
+}
 /*
     此函数根据待发送的数据更新数据帧格式以及内容，实现数据的打包操作
     后续调用通信接口的发送函数发送tx_buf中的对应数据
@@ -180,7 +188,7 @@ uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
     static protocol_rm_struct pro;
     static uint16_t date_length;
 
-    if (protocol_heade_Check(&pro, rx_buf))
+    if (protocol_heade_Check(rx_buf))
     {
         // date_length = OFFSET_BYTE + pro.header.data_length;
         // if (CRC8_Check_Sum(&rx_buf[0], 34))//大小为35
@@ -197,13 +205,10 @@ uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原�
                                   BUBING_CTRL *rx_data)         // 接收的float数据存储地址
 {
     // 放在静态区,避免反复申请栈上空间
-    static protocol_rm_struct pro;
-    static uint16_t date_length;
+    // static protocol_rm_struct pro;
 
-    if (protocol_heade_Check(&pro, rx_buf))
+    if (protocol_heade_Check( rx_buf) && protocol_tail_Check(32,  rx_buf) )
     {
-        // date_length = OFFSET_BYTE + pro.header.data_length;
-        // if (CRC8_Check_Sum(&rx_buf[0], BUBING_DWLENGTH))//大小为32
         {
             bubing_memory_from_buffer(rx_buf,rx_data);
             return 1;

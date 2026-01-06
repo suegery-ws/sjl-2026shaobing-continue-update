@@ -20,6 +20,7 @@ static AUTO_SEND_TO_NUC_DATA_t send_data;
 static BUBING_AUTO_SEND_TO_NUC_DATA_t bubing_send_data;
 static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
+static int uart_flag = 0;
 
 //数据耦合性最低的写法
 void VisionSetAltitude(float yaw, float pitch,float big_yaw)
@@ -88,7 +89,7 @@ static void DecodeVision()
 static void DecodeVisionbubing()
 {
    DaemonReload(vision_daemon_instance); // 喂狗
-   get_protocol_info_bubing(vision_usart_instance->recv_buff,&bubing_recv_data);
+   uart_flag = get_protocol_info_bubing(vision_usart_instance->recv_buff,&bubing_recv_data);
 }
 
 BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle)
@@ -113,7 +114,7 @@ BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle)
 CTRL *VisionInit(UART_HandleTypeDef *_handle)
 {
     USART_Init_Config_s conf;
-    conf.module_callback = DecodeVisionbubing;
+    conf.module_callback = DecodeVision;
     conf.recv_buff_size = VISION_RECV_SIZE;
     conf.usart_handle = _handle;
     vision_usart_instance = USARTRegister(&conf);
