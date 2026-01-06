@@ -94,7 +94,7 @@ void ChassisInit()
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 8000.0f,
                 .Output_LPF_RC = 0.3, //输出低通滤波时间常数
-                .DeadBand = 0,
+                .DeadBand = 0, //死区
             }
         },
         .controller_setting_init_config = {
