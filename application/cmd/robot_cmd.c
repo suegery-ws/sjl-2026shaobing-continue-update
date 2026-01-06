@@ -167,7 +167,7 @@ double my_cos(double rad)
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
-    // bubing_vision_recv_data = BubingVisionInit(&huart1); // 视觉通信串口，这个没问题
+    bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
     //这边加一个can初始化函数当作视觉部分的初始化
     // tongji_vision_recv_data = TongjiVisionInit(&hcan1); // 同济视觉通信can口初始化
 

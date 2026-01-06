@@ -129,7 +129,7 @@ void ChassisInit()
     chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
     motor_rb = PowerControlInit(&chassis_motor_config); //右后
 
-    referee_data = UITaskInit(&huart6, &ui_data); // 裁判系统初始化,会同时初始化UI 
+    // referee_data = UITaskInit(&huart6, &ui_data); // 裁判系统初始化,会同时初始化UI 
     chassis_data = (Chassis_Data_s *)malloc(sizeof(Chassis_Data_s));//分配反馈数据内存
 
 /* Buffer环暂未测试，逻辑是计算期望buffer与实际buffer的差值，转换为冗余的功率，todo：输入给功率控制部分，待完善 */
