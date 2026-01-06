@@ -113,7 +113,7 @@ typedef __packed struct
 	uint8_t blank;
 	uint8_t check_byte;
 	uint8_t frame_tail;
-}BUBING_CTRL;
+}BUBING_CTRL; //32
 
 
 /*更新发送数据帧，并计算发送数据帧长度*/
@@ -127,7 +127,6 @@ uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
                            CTRL *rx_data);         // 接收的float数据存储地址
 
 uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
-                                  CTRL *rx_data);         // 接收的float数据存储地址						   
-
+                                  BUBING_CTRL *rx_data);         // 接收的float数据存储地址
 						   
 #endif

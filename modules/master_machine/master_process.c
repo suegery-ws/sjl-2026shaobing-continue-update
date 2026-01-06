@@ -21,16 +21,6 @@ static BUBING_AUTO_SEND_TO_NUC_DATA_t bubing_send_data;
 static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
 
-
-
-
-// void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Speed_e bullet_speed)
-// {
-//     send_data.enemy_color = enemy_color;
-//     send_data.work_mode = work_mode;
-//     send_data.bullet_speed = bullet_speed;
-// }
-
 //数据耦合性最低的写法
 void VisionSetAltitude(float yaw, float pitch,float big_yaw)
 {
@@ -45,7 +35,6 @@ void VisionSetAltitude(float yaw, float pitch,float big_yaw)
     send_data.sentry_hp = 0;
     send_data.projectile_allowance_17mm = 0;
     send_data.self_support_point = 0;
-
 }
 
 void BubingVisionSetAltitude(float yaw, float pitch,float big_yaw)
@@ -62,7 +51,6 @@ void BubingVisionSetAltitude(float yaw, float pitch,float big_yaw)
     bubing_send_data.self_outpost_HP = 0;
     bubing_send_data.state = 0;
     bubing_send_data.chassis_yaw = 0;
-
 }
 /**
  * @brief 离线回调函数,将在daemon.c中被daemon task调用
@@ -100,7 +88,7 @@ static void DecodeVision()
 static void DecodeVisionbubing()
 {
    DaemonReload(vision_daemon_instance); // 喂狗
-   get_protocol_info_bubing(vision_usart_instance->recv_buff,&recv_data);
+   get_protocol_info_bubing(vision_usart_instance->recv_buff,&bubing_recv_data);
 }
 
 BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle)

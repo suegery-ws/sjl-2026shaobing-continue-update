@@ -194,7 +194,7 @@ uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据
 }
 
 uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
-                                  CTRL *rx_data)         // 接收的float数据存储地址
+                                  BUBING_CTRL *rx_data)         // 接收的float数据存储地址
 {
     // 放在静态区,避免反复申请栈上空间
     static protocol_rm_struct pro;
@@ -205,7 +205,7 @@ uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原�
         // date_length = OFFSET_BYTE + pro.header.data_length;
         // if (CRC8_Check_Sum(&rx_buf[0], BUBING_DWLENGTH))//大小为32
         {
-            memory_from_buffer(rx_buf,rx_data);
+            bubing_memory_from_buffer(rx_buf,rx_data);
             return 1;
         }
     }
