@@ -117,13 +117,12 @@ static void DMMotorDecode(CANInstance *motor_can)
     DaemonReload(motor->motor_daemon);
 
     measure->last_position = measure->position;
-    measure->pitch_last_position = measure->pitch_position;
-
+    
+    // 解析原始位置数据
     tmp = (uint16_t)((rxbuff[1] << 8) | rxbuff[2]);
-    measure->position = uint_to_float(tmp, DM_P_MIN, DM_P_MAX, 16);
-
-    tmp = (uint16_t)((rxbuff[1] << 8) | rxbuff[2]);
-    measure->pitch_position = uint_to_float(tmp, DM_P_MIN, DM_P_MAX, 16);
+    float raw_position = uint_to_float(tmp, DM_P_MIN, DM_P_MAX, 16);
+    // 使用低通滤波器对位置进行滤波，使数据变化更平稳
+    measure->position = LowPassFilter_Update(&measure->position_filter, raw_position);
 
     tmp = (uint16_t)((rxbuff[3] << 4) | rxbuff[4] >> 4);
     measure->velocity = uint_to_float(tmp, DM_V_MIN, DM_V_MAX, 12);
@@ -175,6 +174,10 @@ DMMotorInstance *DMMotorInit(Motor_Init_Config_s *config)
     PIDInit(&motor->speed_PID, &config->controller_param_init_config.speed_PID);
     PIDInit(&motor->absoulte_angle_PID, &config->controller_param_init_config.absoulte_angle_PID);
     PIDInit(&motor->relative_angle_PID, &config->controller_param_init_config.relative_angle_PID);
+    
+    // 初始化位置低通滤波器 (CAN接收频率约1000Hz，截止频率设为100Hz)
+    LowPassFilter_Init_ByFreq(&motor->measure.position_filter, 1000.0f, 100.0f);
+    
     ///////////////////////////////////////////对反馈和前馈指针的初始化/////////////////////////////////////////////////////////////
     motor->other_angle_feedback_ptr = config->controller_param_init_config.other_angle_feedback_ptr;
     motor->other_speed_feedback_ptr = config->controller_param_init_config.other_speed_feedback_ptr;

@@ -10,7 +10,7 @@
 #include "wholecardata.h"
 #include "robot_cmd.h"
 #include "dmimu.h"
-#
+#include "lowpass_filter.h"
 
 #define DM_MOTOR_CNT 2
 
@@ -40,13 +40,12 @@ typedef struct
     float velocity;
     float last_position;
     float position;
-    float pitch_position;
-    float pitch_last_position;
     float torque;
     float T_Mos;
     float T_Rotor;
     int32_t total_round;//圈数计算
     float angle_single_round;//反馈实时位置
+    LowPassFilter_t position_filter; // 位置低通滤波器
 }DM_Motor_Measure_s;//完美得MIT
 
 typedef struct
