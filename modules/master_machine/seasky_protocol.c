@@ -37,22 +37,74 @@ void memory_from_buffer(uint8_t *buffer, CTRL *ctrl)
 	///////////////////////////////////////////////////////////////////
 }
 
+/**
+ * @brief 解包BUBING_CTRL类型数据
+ * @param buffer 接收到的原始数据缓冲区
+ * @param ctrl 解包后的BUBING_CTRL结构体指针
+ * @note 数据帧格式(32字节):
+ *       [0] 帧头 FRAME_HEADER (1 byte)
+ *       [1] 开火建议 fire_advice (1 byte)
+ *       [2] 是否小陀螺 is_spining (1 byte)
+ *       [3] 是否导航 is_navigating (1 byte)
+ *       [4-7] 俯仰角 pitch (4 bytes, float)
+ *       [8-11] 偏航角 yaw (4 bytes, float)
+ *       [12-15] 距离 distance (4 bytes, float)
+ *       [16-19] 线速度X linearx (4 bytes, float)
+ *       [20-23] 线速度Y linery (4 bytes, float)
+ *       [24-27] 角速度Z angularz (4 bytes, float)
+ *       [28-29] 空白 blank (2 bytes)
+ *       [30] 校验字节 check_byte (1 byte)
+ *       [31] 帧尾 frame_tail (1 byte)
+ */
 void bubing_memory_from_buffer(uint8_t *buffer, BUBING_CTRL *ctrl)
 {
-   ctrl->FRAME_HEADER = buffer[0];
-   //需要的部分
-    memcpy(&ctrl->fire_advice, &buffer[1], 1);
-    memcpy(&ctrl->is_spining, &buffer[2], 1);
-    memcpy(&ctrl->is_navigating, &buffer[3], 1);
-	memcpy(&ctrl->pitch, &buffer[3+1*4], 4);
-	memcpy(&ctrl->yaw, &buffer[3+2*4], 4);
-	memcpy(&ctrl->distance, &buffer[3+3*4], 4);
-	memcpy(&ctrl->linearx, &buffer[3+4*4], 4);
-	memcpy(&ctrl->linery, &buffer[3+5*4], 4);
-	memcpy(&ctrl->angularz, &buffer[3+6*4], 4);
-	memcpy(&ctrl->blank, &buffer[5+6*4], 2);
-    memcpy(&ctrl->check_byte, &buffer[6+6*4], 1);
-    memcpy(&ctrl->frame_tail, &buffer[7+6*4], 1);
+    uint8_t index = 0;
+    
+    // 帧头 (1 byte)
+    ctrl->FRAME_HEADER = buffer[index++];
+    
+    // 开火建议 (1 byte)
+    ctrl->fire_advice = buffer[index++];
+    
+    // 是否小陀螺 (1 byte)
+    ctrl->is_spining = buffer[index++];
+    
+    // 是否导航 (1 byte)
+    ctrl->is_navigating = buffer[index++];
+    
+    // 俯仰角 pitch (4 bytes)
+    memcpy(&ctrl->pitch, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 偏航角 yaw (4 bytes)
+    memcpy(&ctrl->yaw, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 距离 distance (4 bytes)
+    memcpy(&ctrl->distance, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 线速度X linearx (4 bytes)
+    memcpy(&ctrl->linearx, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 线速度Y linery (4 bytes)
+    memcpy(&ctrl->linery, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 角速度Z angularz (4 bytes)
+    memcpy(&ctrl->angularz, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 空白 blank (2 bytes)
+    memcpy(&ctrl->blank, &buffer[index], sizeof(uint16_t));
+    index += sizeof(uint16_t);
+    
+    // 校验字节 check_byte (1 byte)
+    ctrl->check_byte = buffer[index++];
+    
+    // 帧尾 frame_tail (1 byte)
+    ctrl->frame_tail = buffer[index++];
 }
 
 

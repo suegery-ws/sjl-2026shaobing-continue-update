@@ -11,6 +11,7 @@
 // 遥控器数据
 static RC_ctrl_t rc_ctrl[2] = {0};     //[0]:当前数据TEMP,[1]:上一次的数据LAST.用于按键持续按下和切换的判断
 static uint8_t rc_init_flag = 0; // 遥控器初始化标志位
+uint8_t rc_offline_flag = 0;
 
 // 遥控器拥有的串口实例,因为遥控器是单例,所以这里只有一个,就不封装了
 static USARTInstance *rc_usart_instance;
@@ -96,6 +97,7 @@ static void RemoteControlRxCallback()
 {
     DaemonReload(rc_daemon_instance);         // 先喂狗
     sbus_to_rc(rc_usart_instance->recv_buff); // 进行协议解析
+    rc_offline_flag = 0;
 }
 
 /**
@@ -107,7 +109,11 @@ static void RCLostCallback(void *id)
     memset(rc_ctrl, 0, sizeof(rc_ctrl)); // 清空遥控器数据
     USARTServiceInit(rc_usart_instance); // 尝试重新启动接收
     LOGWARNING("[rc] remote control lost");
+    rc_offline_flag = 1;
 }
+
+
+
 
 RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef *rc_usart_handle)
 {

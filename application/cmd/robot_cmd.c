@@ -15,6 +15,7 @@
 #include "bsp_dwt.h"
 #include "bsp_log.h"
 #include "usart.h"
+#include <stdint.h>
 
 // 私有宏,自动将编码器转换成角度值
 #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // 对齐时的角度,0-360
@@ -56,6 +57,7 @@ static Robot_Status_e robot_state; // 机器人整体工作状态
 static attitude_t *IMU_data; //imu数据就直接放命令层了，到时候直接通过发布者发给订阅者
 
 static int16_t mode_shoot_flag = 0; // 发射标志位,12345分别表示不同的拨弹模式
+extern uint8_t rc_offline_flag;
 // BMI088Instance *bmi088_test; // 云台IMU
 // BMI088_Data_t bmi088_data;
 
@@ -168,8 +170,6 @@ void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
     bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
-    //这边加一个can初始化函数当作视觉部分的初始化
-    // tongji_vision_recv_data = TongjiVisionInit(&hcan1); // 同济视觉通信can口初始化
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
@@ -570,10 +570,18 @@ void RobotCMDTask()
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();//由于大小yaw的存在，所以这个函数要改
     // 根据遥控器左侧开关,确定当前使用的控制模式为遥控器调试还是键鼠
-    if (switch_is_mid(rc_data[TEMP].rc.switch_left) || switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[下],遥控器控制
-    RemoteControlSet();
-    else if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
+    // if (switch_is_mid(rc_data[TEMP].rc.switch_left) || switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[下],遥控器控制
+    // RemoteControlSet();
+    // else if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
+    // AUTOKeySet();
+    if(rc_offline_flag == 1)
     AUTOKeySet();
+    else
+    {
+      RemoteControlSet();
+    }
+
+    
 
     chassis_cmd_send.IMU_data = &gimbal_fetch_data.gimbal_imu_data;//把在云台初始化的陀螺仪的地址传到了底盘里面
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况

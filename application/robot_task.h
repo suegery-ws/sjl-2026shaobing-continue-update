@@ -81,13 +81,12 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         ins_dt = DWT_GetTimeline_ms() - ins_start;
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
-        
         dmimu_start = DWT_GetTimeline_ms();
+        VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
         ImuTask_Function();
         dmimu_dt =  DWT_GetTimeline_ms() - dmimu_start;
         if(dmimu_dt > 5)
             LOGERROR("[freeRTOS] DMINS Task is being DELAY! dt = [%f]", &dmimu_dt);
-        // TongjiVisionSend();
         //这边写用同济的发送函数
         osDelay(1);
     }
@@ -102,7 +101,7 @@ __attribute__((noreturn)) void StartMOTORTASK(void const *argument)
     {
         motor_start = DWT_GetTimeline_ms();
         MotorControlTask();
-        VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
+        
         motor_dt = DWT_GetTimeline_ms() - motor_start;
         if (motor_dt > 2) //1
             LOGERROR("[freeRTOS] MOTOR Task is being DELAY! dt = [%f]", &motor_dt);
