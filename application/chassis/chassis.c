@@ -77,14 +77,14 @@ void ChassisInit()
         .controller_param_init_config = {
             .other_speed_feedback_ptr = &feedback,
             .follow_speed_PID = {
-                .Kp = 10000.0f,//20000.0f, // 4.5
-                .Ki = 50,//50.0f,   // 0
-                .Kd = 10,//0.0f,   // 0 //100
+                .Kp = 7500.0f,//7000
+                .Ki = 0,//50.0f,   // 0
+                .Kd = 10,//0.0f,
                 .IntegralLimit = 2000.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .MaxOut = 15000.0f,
                 .Output_LPF_RC = 0.3, //输出低通滤波时间常数
-                .DeadBand = 0.03,
+                .DeadBand = 0,
             },
             .rotate_speed_PID = {
                 .Kp =8000,//2000.0f, // 4.5 //8000
@@ -144,13 +144,13 @@ void ChassisInit()
     };
     PIDInit(&buffer_PID, &Buffer_pid_conf); // 缓冲能量PID初始化 //待调
     PID_Init_Config_s Angle_pid_conf = {
-        .Kp = 8.0f,
-        .Ki = 0.1f,
+        .Kp = 5.9f,
+        .Ki = 0.0f,
         .Kd = 0.05f,
         .IntegralLimit = 0.2f,
         .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
         .MaxOut = 5.0f,
-        .DeadBand = 0.05
+        .DeadBand = 0.01
     };
     PIDInit(&angle_PID, &Angle_pid_conf);
 

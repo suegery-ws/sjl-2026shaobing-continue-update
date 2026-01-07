@@ -125,7 +125,8 @@ static void DMMotorDecode(CANInstance *motor_can)
     measure->position = LowPassFilter_Update(&measure->position_filter, raw_position);
 
     tmp = (uint16_t)((rxbuff[3] << 4) | rxbuff[4] >> 4);
-    measure->velocity = uint_to_float(tmp, DM_V_MIN, DM_V_MAX, 12);
+    float raw_velocity = uint_to_float(tmp, DM_V_MIN, DM_V_MAX, 12);
+    measure->velocity = LowPassFilter_Update(&measure->velocity_filter, raw_velocity);
 
     tmp = (uint16_t)(((rxbuff[4] & 0x0f) << 8) | rxbuff[5]);
     measure->torque = uint_to_float(tmp, DM_T_MIN, DM_T_MAX, 12);
@@ -176,8 +177,8 @@ DMMotorInstance *DMMotorInit(Motor_Init_Config_s *config)
     PIDInit(&motor->relative_angle_PID, &config->controller_param_init_config.relative_angle_PID);
     
     // 初始化位置低通滤波器 (CAN接收频率约1000Hz，截止频率设为100Hz)
-    LowPassFilter_Init_ByFreq(&motor->measure.position_filter, 1000.0f, 100.0f);
-    
+    LowPassFilter_Init_ByFreq(&motor->measure.position_filter, 1000.0f, 30.0f);
+    LowPassFilter_Init_ByFreq(&motor->measure.velocity_filter, 1000.0f, 50.0f);
     ///////////////////////////////////////////对反馈和前馈指针的初始化/////////////////////////////////////////////////////////////
     motor->other_angle_feedback_ptr = config->controller_param_init_config.other_angle_feedback_ptr;
     motor->other_speed_feedback_ptr = config->controller_param_init_config.other_speed_feedback_ptr;

@@ -46,6 +46,7 @@ typedef struct
     int32_t total_round;//圈数计算
     float angle_single_round;//反馈实时位置
     LowPassFilter_t position_filter; // 位置低通滤波器
+    LowPassFilter_t velocity_filter;
 }DM_Motor_Measure_s;//完美得MIT
 
 typedef struct
