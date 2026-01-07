@@ -145,19 +145,19 @@ static uint16_t CRC16_Check_Sum(uint8_t *pchMessage, uint32_t dwLength)
 static uint8_t protocol_heade_Check(uint8_t *rx_buf)
 {
     // 检查帧头是否为PROTOCOL_CMD_ID (0xFF)
-    if (rx_buf[0] != PROTOCOL_CMD_ID)
+    if (rx_buf[0] == SEND_CMD_BUBING)
     {
-        return 0;
+        return 1;
     }
     
     // 帧头校验通过
-    return 1;
+    return 0;
 }
 
 static uint8_t protocol_tail_Check(uint8_t length,  uint8_t *rx_buf)
 {
     // 检查帧头是否为PROTOCOL_CMD_ID (0xFF) 
-    if (rx_buf[length - 1] == FRAME_TAIL)
+    if (rx_buf[length - 1] == rece_cmd_bubing)
     {
         return 1;
     }
@@ -257,9 +257,8 @@ uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原�
                                   BUBING_CTRL *rx_data)         // 接收的float数据存储地址
 {
     // 放在静态区,避免反复申请栈上空间
-    // static protocol_rm_struct pro;
-
-    if (protocol_heade_Check( rx_buf) && protocol_tail_Check(32,  rx_buf) )
+    // if (protocol_heade_Check( rx_buf) )
+    if (protocol_heade_Check(rx_buf) && protocol_tail_Check(32,  rx_buf) )
     {
         {
             bubing_memory_from_buffer(rx_buf,rx_data);

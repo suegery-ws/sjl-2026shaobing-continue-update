@@ -21,6 +21,7 @@ static BUBING_AUTO_SEND_TO_NUC_DATA_t bubing_send_data;
 static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
 static int uart_flag = 0;
+static int fsong = 0;
 
 //数据耦合性最低的写法
 void VisionSetAltitude(float yaw, float pitch,float big_yaw)
@@ -89,7 +90,41 @@ static void DecodeVision()
 static void DecodeVisionbubing()
 {
    DaemonReload(vision_daemon_instance); // 喂狗
+   
+   // 一次性格式化所有数据到字符串缓冲区
+   static char hex_str[200]; // 静态缓冲区，避免栈溢出
+   int offset = 0;
+   
+   // 格式化前16字节
+   for(int i = 0; i < 16 && i < VISION_RECV_SIZE_BUBING; i++)
+   {
+       offset += sprintf(hex_str + offset, "%02X ", vision_usart_instance->recv_buff[i]);
+   }
+   offset += sprintf(hex_str + offset, "\n                           ");
+   
+   // 格式化后16字节
+   for(int i = 16; i < VISION_RECV_SIZE_BUBING; i++)
+   {
+       offset += sprintf(hex_str + offset, "%02X ", vision_usart_instance->recv_buff[i]);
+   }
+   
+   // 一次性打印所有数据
+   LOGINFO("[Vision] Recv[%d]:\n%s", fsong, hex_str);
+   
+   // 打印帧头和帧尾
+   LOGINFO("[Vision] Header:0x%02X Tail:0x%02X", 
+           vision_usart_instance->recv_buff[0], 
+           vision_usart_instance->recv_buff[VISION_RECV_SIZE_BUBING - 1]);
+   
    uart_flag = get_protocol_info_bubing(vision_usart_instance->recv_buff,&bubing_recv_data);
+   
+   // 打印校验结果
+   if(uart_flag)
+       LOGINFO(" -> PASSED\r\n");
+   else
+       LOGWARNING(" -> FAILED\r\n");
+   
+   fsong++;
 }
 
 BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle)
