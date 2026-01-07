@@ -109,12 +109,12 @@ static void DecodeVisionbubing()
    }
    
    // 一次性打印所有数据
-   LOGINFO("[Vision] Recv[%d]:\n%s", fsong, hex_str);
+//    LOGINFO("[Vision] Recv[%d]:\n%s", fsong, hex_str);
    
-   // 打印帧头和帧尾
-   LOGINFO("[Vision] Header:0x%02X Tail:0x%02X", 
-           vision_usart_instance->recv_buff[0], 
-           vision_usart_instance->recv_buff[VISION_RECV_SIZE_BUBING - 1]);
+//    // 打印帧头和帧尾
+//    LOGINFO("[Vision] Header:0x%02X Tail:0x%02X", 
+//            vision_usart_instance->recv_buff[0], 
+//            vision_usart_instance->recv_buff[VISION_RECV_SIZE_BUBING - 1]);
    
    uart_flag = get_protocol_info_bubing(vision_usart_instance->recv_buff,&bubing_recv_data);
    
