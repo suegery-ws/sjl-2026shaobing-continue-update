@@ -67,6 +67,8 @@ static void VisionOfflineCallback(void *id)
     USARTServiceInit(vision_usart_instance);
 #endif // !VISION_USE_UART
     LOGWARNING("[vision] vision offline, restart communication.");
+    uart_flag = 0;
+
 }
 
 #ifdef VISION_USE_UART
@@ -85,6 +87,7 @@ static void DecodeVision()
     DaemonReload(vision_daemon_instance); // 喂狗
     get_protocol_info(vision_usart_instance->recv_buff,&recv_data);
     // TODO: code to resolve flag_register;
+
 }
 
 static void DecodeVisionbubing()

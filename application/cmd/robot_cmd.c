@@ -396,7 +396,6 @@ static void RemoteControlSet()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
     if(rc_data[TEMP].rc.dial>500)
     {
-    //    osDelay(10);
        mode_shoot_flag++;
        
        if(mode_shoot_flag == 3)
@@ -421,7 +420,6 @@ static void RemoteControlSet()
 
     shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
     shoot_cmd_send.bullet_speed = SMALL_AMU_18;//设置弹速
-    // osDelay(10);
 }
 
 
@@ -437,8 +435,6 @@ static void AUTOKeySet()
     gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*PITCH_AUTO_SEN;
     gimbal_cmd_send.big_yaw = bubing_vision_recv_data->yaw*YAW_AUTO_SEN;
     shoot_cmd_send.shoot_mode = SHOOT_OFF;
-
-
 }
 
 
