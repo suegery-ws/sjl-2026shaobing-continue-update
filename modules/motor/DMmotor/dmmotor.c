@@ -533,7 +533,7 @@ void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_
     fp32 bias_angle = 0.0f;
     fp32 add = 0.0f;
     static int as = 0;
-    if(gimbal_motor->pid_ref == 0 || as == 0)
+    if(gimbal_motor->pid_ref == 0 && as == 0)
     {
         gimbal_motor->pid_ref =  dm_imu_data->oula_data.roll;
         as++;
