@@ -156,10 +156,10 @@ void ShootTask()
         loader->motor_settings.close_loop_type = ANGLE_LOOP|SPEED_LOOP; // 开启速度环和角度环双闭环控制
         loader->motor_settings.outer_loop_type = ANGLE_LOOP;
         loader->motor_controller.motor_mode = GIMBAL_MOTOR_GYRO; //写这个的目的完全是想要用绝对角度的pid控制，算是前面留的石了
-        DJIMotorSetRef(loader, (loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE)); // 控制量增加一发弹丸的角度
-        if(loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE <= -6.28f)
+        DJIMotorSetRef(loader, (loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE)); // 控制量增加一发弹丸的角度
+        if(loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE >= 6.28f)
         {
-            DJIMotorSetRef(loader, (loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE + 6.28f)); // 控制量增加一发弹丸的角度
+            DJIMotorSetRef(loader, (loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE - 6.28f)); // 控制量增加一发弹丸的角度
         }
         // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
         // dead_time = 150;      
@@ -172,7 +172,7 @@ void ShootTask()
         DJIMotorSetRef(loader, loader->motor_controller.pid_ref); // 达到指定位置之前保持位置不变，持续pid控制
         shoot_feedback_data.feedback_shoot_flag = 2;// 达到指定位置之前保持位置不变，持续pid控制
     }
-    if( loader->motor_controller.absoulte_angle_PID.Err >= -0.05f && shoot_cmd_recv.shoot_flag == 2)
+    if( (fabsf(loader->motor_controller.absoulte_angle_PID.Err) <= 0.02f) && shoot_cmd_recv.shoot_flag == 2)
     {
         DJI2006MotorInhert(&shoot_cmd_recv, loader);
         shoot_feedback_data.feedback_shoot_flag = 0; //发射完成反馈给cmd
@@ -204,13 +204,13 @@ void ShootTask()
         // 根据收到的弹速设置设定摩擦轮电机参考值,需实测后填入
         switch (shoot_cmd_recv.bullet_speed)
         {
-        case BIG_AMU_20: //20m/s
-            DJIMotorSetRef(friction_l, 952);
-            DJIMotorSetRef(friction_r, 952);
-            break;
         case SMALL_AMU_18: //18m/s
             DJIMotorSetRef(friction_l, 857);
             DJIMotorSetRef(friction_r, 857);
+            break;
+        case BIG_AMU_20: //20m/s
+            DJIMotorSetRef(friction_l, 952);
+            DJIMotorSetRef(friction_r, 952);
             break;
         case SMALL_AMU_25: //25m/s
             DJIMotorSetRef(friction_l, 1190);

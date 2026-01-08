@@ -473,7 +473,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_GYRO)
     {
         //gyro模式下，陀螺仪角度控制，小陀螺，无限位
-        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);//add_yaw_angle
+        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);
     }
     if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_ENCONDE)
     {
@@ -486,7 +486,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
         //encode模式下，编码器角度控制，有限位，以后加一个限位函数,
     }
     }
-    if(gimbal_motor->flag == 2)//说明这个是pitch4310电机,由于头顶上加装了一个陀螺仪，所以可以用陀螺仪进行控制
+    if(gimbal_motor->flag == 2)//说明这个是pitch4310电机
     {
         if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO)
     {

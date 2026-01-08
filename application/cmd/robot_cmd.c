@@ -362,7 +362,6 @@ static void RemoteControlSet()
     ///////////////////////////////////发射机构////////////////////////////////////////////////////////////////////////////////////////////////shoot
     // 发射参数
     static int a = 0;
-    static int b = 0;
     shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;
     shoot_cmd_send.shoot_flag = shoot_fetch_data.feedback_shoot_flag;
     if((switch_is_up(rc_data[TEMP].rc.switch_left))&&(!switch_is_up(rc_data[LAST].rc.switch_left))&&(shoot_cmd_send.friction_mode == FRICTION_OFF))//默认摩擦轮关闭，上拨一下打开，再拨到上面关闭
@@ -386,19 +385,16 @@ static void RemoteControlSet()
        shoot_cmd_send.load_mode = LOAD_STOP;
     }
     else
-    {shoot_cmd_send.load_mode = mode_flag;} //模式切换
+    {
+        shoot_cmd_send.load_mode = mode_flag;
+    } //模式切换
 
     if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
     {
         shoot_cmd_send.shoot_flag = 1;
         a++;
     }
-    else
-    {
-        shoot_cmd_send.shoot_flag = 2;
-        b++;
-    }
-
+    
     shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
     shoot_cmd_send.bullet_speed = SMALL_AMU_18;//设置弹速
 }

@@ -417,12 +417,12 @@ void DJIMotorControl()
         //对2006电机做出特殊处理
         if (motor->motor_type == M2006 && motor_controller->shoot_mode == LOAD_1_BULLET)
         {
-            if(measure->total_angle == 0 && pid_ref <-6.6f)
+            if(measure->total_angle == 0 && pid_ref > 6.6f)
             {
-                pid_ref = -0.785;
+                pid_ref = 0.785;
             }
-            else if(pid_ref < -6.28)
-            pid_ref = pid_ref + 6.28f;
+            else if(pid_ref > 6.28)
+            pid_ref = pid_ref - 6.28f;
         }
         // pid_ref会顺次通过被启用的闭环充当数据的载体
         // 计算位置环,只有启用位置环且外层闭环为位置时会计算速度环输出
@@ -511,12 +511,10 @@ void DJIMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DJIMotorInstance* gim
     {
      if ( gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_GYRO)
     {
-        //gyro模式下，陀螺仪角度控制，小陀螺
         DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure);
     }
-     if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ENCONDE)
+     if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ENCONDE) //基本只用这个
     {
-        //enconde模式下，电机编码角度控制，跟随云台
         DJIGimbalRefLimit(motor_measure,gimbal_cmd,motor_controller,gimbal_posture_data);
     }    
 	 if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_AUTO)
@@ -550,6 +548,7 @@ void DJIMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorInstance* Instanc
             break;
         case GIMBAL_MOTOR_AUTO:
             Instance->motor_controller.motor_mode = GIMBAL_MOTOR_AUTO;
+            break;
         case GIMBAL_MOTOR_ROTATE:
             Instance->motor_controller.motor_mode = GIMBAL_MOTOR_ROTATE;
             break;
@@ -570,7 +569,7 @@ void DJIModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorIns
     {
                if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_RAW) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_RAW))
              {
-                motor_controller->pid_ref = yaw_posture_data->yaw_relative_angle; //raw模式下直接输出0
+                motor_controller->pid_ref = motor_measure->total_angle; //raw模式下直接输出0
              }
                if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_GYRO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_GYRO))
               {
@@ -583,6 +582,10 @@ void DJIModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorIns
               if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ROTATE) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_ROTATE))
               {
                 motor_controller->pid_ref = motor_measure->total_angle;
+              }
+              if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_AUTO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_AUTO))
+              {
+                 motor_controller->pid_ref = motor_measure->total_angle;
               }
               //这里以后要加一个自瞄模式的处理函数
     }
