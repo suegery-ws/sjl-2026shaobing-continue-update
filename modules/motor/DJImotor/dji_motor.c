@@ -282,9 +282,9 @@ static void DecodeDJIMotor(CANInstance *_instance)
     if(motor->motor_type == M2006)
     {
         if (measure->dji2006_last_ecd - measure->last_ecd > 4096)
-        measure->total_round--;
-        else if (measure->dji2006_last_ecd - measure->last_ecd < -4096)
         measure->total_round++;
+        else if (measure->dji2006_last_ecd - measure->last_ecd < -4096)
+        measure->total_round--;
     }
     else 
     {
@@ -414,16 +414,16 @@ void DJIMotorControl()
         pid_ref = motor_controller->pid_ref; // 保存设定值,防止motor_controller->pid_ref在计算过程中被修改
         if (motor_setting->motor_reverse_flag == MOTOR_DIRECTION_REVERSE)
             pid_ref *= -1; // 设置反转  这个只针对拨弹轮电机有意义
-
-        // if (motor->motor_type == M2006 && motor_controller->shoot_mode == LOAD_1_BULLET)
-        // {
-        //     if(measure->total_angle == 0 && pid_ref <-6.6f)
-        //     {
-        //         pid_ref = -0.785;
-        //     }
-        //     else if(pid_ref < -6.28)
-        //     pid_ref = pid_ref + 6.28f;
-        
+        //对2006电机做出特殊处理
+        if (motor->motor_type == M2006 && motor_controller->shoot_mode == LOAD_1_BULLET)
+        {
+            if(measure->total_angle == 0 && pid_ref <-6.6f)
+            {
+                pid_ref = -0.785;
+            }
+            else if(pid_ref < -6.28)
+            pid_ref = pid_ref + 6.28f;
+        }
         // pid_ref会顺次通过被启用的闭环充当数据的载体
         // 计算位置环,只有启用位置环且外层闭环为位置时会计算速度环输出
         if ((motor_setting->close_loop_type & ANGLE_LOOP) && motor_setting->outer_loop_type == ANGLE_LOOP)
@@ -674,14 +674,14 @@ void DJI2006MotorInhert(Shoot_Ctrl_Cmd_s* shoot_cmd_recv,DJIMotorInstance* Insta
 }
 
 
-//拨弹轮反转控制
+//备用一个版本
 void trigger_motor_turn_back(DJIMotorInstance* motor)
 {
     if( block_time < BLOCK_TIME)
     {
-       motor->motor_controller.pid_ref = motor->motor_controller.pid_ref;//开启反转
+       motor->motor_controller.pid_ref = motor->motor_controller.pid_ref;
     }
-    else//如果卡弹时间>700，拨弹开启反转
+    else//如果卡弹时间>BLOCK_TIME，拨弹开启反转
     {
         motor->motor_controller.pid_ref = -motor->motor_controller.pid_ref;//开启反转
     }

@@ -56,7 +56,7 @@ static Shoot_Upload_Data_s shoot_fetch_data; // 从发射获取的反馈信息
 static Robot_Status_e robot_state; // 机器人整体工作状态
 static attitude_t *IMU_data; //imu数据就直接放命令层了，到时候直接通过发布者发给订阅者
 
-static int16_t mode_shoot_flag = 0; // 发射标志位,12345分别表示不同的拨弹模式
+static int16_t mode_flag = 0; // 发射标志位,12345分别表示不同的拨弹模式
 extern uint8_t rc_offline_flag;
 // BMI088Instance *bmi088_test; // 云台IMU
 // BMI088_Data_t bmi088_data;
@@ -271,12 +271,7 @@ static void RemoteControlSet()
     static int16_t big_yaw_channel = 0;
     static int16_t vx_channel=0, vy_channel=0;
     static float vx_set_channel=0, vy_set_channel=0;
-    static first_order_filter_type_t vx_filter, vy_filter;
     static int16_t flag = 0; //单发限位标志位
-    // const fp32 num[2] = {0.2f,0.2f}; // 一阶低通滤波参数,时间常数,需要调整
-    
-    // first_order_filter_init(&vx_filter, 0.5, num);
-    // first_order_filter_init(&vy_filter, 0.5, num+1);
 
     chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
@@ -306,15 +301,6 @@ static void RemoteControlSet()
     }//感觉用不到
     gimbal_behavior_to_motor();
 
-    // 云台参数,确定云台控制数据
-    // if (switch_is_mid(rc_data[TEMP].rc.switch_left)) // 左侧开关状态为[中],视觉模式
-    // {
-    //     // 待添加,视觉会发来和目标的误差,同样将其转化为total angle的增量进行控制
-    //     // ...
-    // }
-    // 左侧开关状态为[下],或视觉未识别到目标,纯遥控器拨杆控制
-    // if (switch_is_down(rc_data[TEMP].rc.switch_left) || vision_recv_data->target_state == NO_TARGET)
-    // { // 按照摇杆的输出大小进行角度增量,增益系数需调整
     if(gimbal_cmd_send.gimbal_mode == GIMBAL_ZERO_FORCE)//无力模式///////////////////////////////////////////////////////云台
        {
             gimbal_cmd_send.yaw = 0;
@@ -353,11 +339,6 @@ static void RemoteControlSet()
     gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
        }
 
-        // gimbal_cmd_send.yaw += 0.005f * (float)rc_data[TEMP].rc.rocker_l_;
-        // gimbal_cmd_send.pitch += 0.001f * (float)rc_data[TEMP].rc.rocker_l1;
-        // gimbal_cmd_send.big_yaw += 0.005f * (float)rc_data[TEMP].rc.rocker_l_;//是否动用这个还需要判断条件//湖大老代码
-    // }
-    // 云台软件限位
 
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整  ////////////////////////////////////////////////////////////底盘
     if(chassis_cmd_send.chassis_mode == CHASSIS_ZERO_FORCE)
@@ -382,9 +363,8 @@ static void RemoteControlSet()
     // 发射参数
     static int a = 0;
     static int b = 0;
-    shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;//发射的数据继承
+    shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;
     shoot_cmd_send.shoot_flag = shoot_fetch_data.feedback_shoot_flag;
-        // osDelay(10);//之后可以改用DWTDELAY
     if((switch_is_up(rc_data[TEMP].rc.switch_left))&&(!switch_is_up(rc_data[LAST].rc.switch_left))&&(shoot_cmd_send.friction_mode == FRICTION_OFF))//默认摩擦轮关闭，上拨一下打开，再拨到上面关闭
     {
        shoot_cmd_send.friction_mode = FRICTION_ON;
@@ -394,34 +374,34 @@ static void RemoteControlSet()
        shoot_cmd_send.friction_mode = FRICTION_OFF;
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    //判断mode_flag
     if(rc_data[TEMP].rc.dial>500)
     {
-       mode_shoot_flag++;
-       
-       if(mode_shoot_flag == 3)
-       {
-        mode_shoot_flag = 0;
-        shoot_cmd_send.load_mode = LOAD_STOP;
-       }
-       else
-       {shoot_cmd_send.load_mode = mode_shoot_flag;} //连发模式切换
+       mode_flag++;
+    }   
+    
+    if(mode_flag == 3)
+    {
+       mode_flag = 0;
+       shoot_cmd_send.load_mode = LOAD_STOP;
+    }
+    else
+    {shoot_cmd_send.load_mode = mode_flag;} //模式切换
 
-       if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
-       {
-         shoot_cmd_send.shoot_flag = 1;
-         a++;
-       }
-       else
-       {
-         shoot_cmd_send.shoot_flag = 2;
-         b++;
-       }
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
+    {
+        shoot_cmd_send.shoot_flag = 1;
+        a++;
+    }
+    else
+    {
+        shoot_cmd_send.shoot_flag = 2;
+        b++;
     }
 
     shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
     shoot_cmd_send.bullet_speed = SMALL_AMU_18;//设置弹速
 }
-
 
 static void AUTOKeySet()
 {
