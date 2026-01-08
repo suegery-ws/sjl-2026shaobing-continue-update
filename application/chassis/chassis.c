@@ -77,7 +77,7 @@ void ChassisInit()
         .controller_param_init_config = {
             .other_speed_feedback_ptr = &feedback,
             .follow_speed_PID = {
-                .Kp = 7500.0f,//7000
+                .Kp = 7000.0f,//7000
                 .Ki = 0,//50.0f,   // 0
                 .Kd = 10,//0.0f,
                 .IntegralLimit = 2000.0f,
@@ -150,7 +150,7 @@ void ChassisInit()
         .IntegralLimit = 0.2f,
         .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
         .MaxOut = 5.0f,
-        .DeadBand = 0.01
+        .DeadBand = 0.03
     };
     PIDInit(&angle_PID, &Angle_pid_conf);
 
