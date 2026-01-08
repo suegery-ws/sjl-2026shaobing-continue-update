@@ -168,7 +168,7 @@ static void DecodeDJIMotor(CANInstance *_instance)
         measure->total_round--;
     else if (measure->ecd - measure->last_ecd < -4096)
         measure->total_round++;
-    measure->total_angle = measure->total_round * 360 + measure->angle_single_round;
+    measure->total_angle = measure->total_round * 6.28 + measure->angle_single_round;
 }
 
 static void DJIMotorLostCallback(void *motor_ptr)

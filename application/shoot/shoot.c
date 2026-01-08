@@ -71,14 +71,14 @@ void ShootInit()
         .controller_param_init_config = {
             .absoulte_angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
-                .Kp = 10, // 10
+                .Kp = 80, // 10
                 .Ki = 0,
                 .Kd = 0,
                 .MaxOut = 100,
                 .DeadBand = 0,
             },
             .speed_PID = {
-                .Kp = 20, // 10
+                .Kp = 50, // 10
                 .Ki = 0, // 1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
@@ -163,7 +163,7 @@ void ShootTask()
         }
         // hibernate_time = DWT_GetTimeline_ms();                                              // 记录触发指令的时间
         // dead_time = 150;      
-        // shoot_feedback_data.feedback_shoot_flag = 2;                                                 // 完成1发弹丸发射的时间
+        shoot_feedback_data.feedback_shoot_flag = 2;                                                 // 完成1发弹丸发射的时间
         break;
     }
     if(shoot_cmd_recv.shoot_flag == 2)
@@ -172,7 +172,7 @@ void ShootTask()
         DJIMotorSetRef(loader, loader->motor_controller.pid_ref); // 达到指定位置之前保持位置不变，持续pid控制
         shoot_feedback_data.feedback_shoot_flag = 2;// 达到指定位置之前保持位置不变，持续pid控制
     }
-    if( (fabsf(loader->motor_controller.absoulte_angle_PID.Err) <= 0.02f) && shoot_cmd_recv.shoot_flag == 2)
+    if( (fabsf(loader->motor_controller.absoulte_angle_PID.Err) <= 0.1f) && shoot_cmd_recv.shoot_flag == 2)
     {
         DJI2006MotorInhert(&shoot_cmd_recv, loader);
         shoot_feedback_data.feedback_shoot_flag = 0; //发射完成反馈给cmd

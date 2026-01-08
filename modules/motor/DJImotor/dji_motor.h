@@ -29,6 +29,7 @@
 #include "robot_def.h"
 #include "user_lib.h"
 #include "wholecardata.h"
+#include <stdint.h>
 
 
 #define DJI_MOTOR_CNT 12
@@ -54,13 +55,13 @@
 typedef struct
 {
     uint16_t last_ecd;        // 上一次读取的编码器值
-    uint16_t dji2006_last_ecd;
     uint16_t ecd;             // 0-8191,刻度总共有8192格
     float angle_single_round; // 单圈角度
     float speed_aps;          // 角速度,单位为:度/秒
     float speed_vector;       // 线速度,单位为:m/s
     int16_t real_current;     // 实际电流
     uint8_t temperature;      // 温度 Celsius
+    int8_t total_round_flag;
 
     float total_angle;   // 总角度,注意方向
     int32_t total_round; // 总圈数,注意方向

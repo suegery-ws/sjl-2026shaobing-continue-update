@@ -8,7 +8,7 @@ static uint8_t idx = 0; // register idx,是该文件的全局电机索引,在注
 /* DJI电机的实例,此处仅保存指针,内存的分配将通过电机实例初始化时通过malloc()进行 */
 static DJIMotorInstance *dji_motor_instance[DJI_MOTOR_CNT] = {NULL}; // 会在control任务中遍历该指针数组进行pid计算4
 static int8_t block_time = 0; 
-static int8_t reverse_time = 0;                            // 已注册的电机实例数量
+static int8_t reverse_time = 0;                          
 /////////////////////////////////////////这部分函数可以再dji和dm通用，只对add值做出更改//////////////////////////////////////////////////////////////////////////////
 
  void DJIGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,Motor_Controller_s* gimbal_motor_control,Gimbal_Data_s* gimbal_posture_data,DJI_Motor_Measure_s* gimbal_motor_measure)  //有限位
@@ -267,9 +267,10 @@ static void DecodeDJIMotor(CANInstance *_instance)
     motor->dt = DWT_GetDeltaT(&motor->feed_cnt);
 
     // 解析数据并对电流和速度进行滤波,电机的反馈报文具体格式见电机说明手册
-    measure->dji2006_last_ecd = measure->ecd;
-    measure->ecd = ((uint16_t)rxbuff[0]) << 8 | rxbuff[1];
+    // measure->dji2006_last_ecd = measure->ecd; //这个才是对的
     measure->last_ecd = measure->ecd;
+    measure->ecd = ((uint16_t)rxbuff[0]) << 8 | rxbuff[1];
+    // measure->last_ecd = measure->ecd; //这么写本身不对，主要是这辆车可以这么干
     measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;
     measure->speed_aps = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_aps +
                          RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3])); //RAD
@@ -277,22 +278,21 @@ static void DecodeDJIMotor(CANInstance *_instance)
     measure->real_current = (1.0f - CURRENT_SMOOTH_COEF) * measure->real_current +
                             CURRENT_SMOOTH_COEF * (float)((int16_t)(rxbuff[4] << 8 | rxbuff[5]));
     measure->temperature = rxbuff[6];
+    
 
     // 多圈角度计算,前提是假设两次采样间电机转过的角度小于180°,自己画个图就清楚计算过程了
-    if(motor->motor_type == M2006)
+
+    if (measure->ecd - measure->last_ecd > 4096)
+    measure->total_round--;
+    else if (measure->ecd - measure->last_ecd < -4096)
+    measure->total_round++;
+    
+    if(abs(measure->total_round) == 1 && measure->total_round_flag == 0)
     {
-        if (measure->dji2006_last_ecd - measure->last_ecd > 4096)
-        measure->total_round++;
-        else if (measure->dji2006_last_ecd - measure->last_ecd < -4096)
-        measure->total_round--;
+        measure->total_round = 0;
+        measure->total_round_flag++;
     }
-    else 
-    {
-        if (measure->ecd - measure->last_ecd > 4096)
-        measure->total_round--;
-        else if (measure->ecd - measure->last_ecd < -4096)
-        measure->total_round++;
-    }
+
     measure->total_angle = (measure->total_round * 6.28 + measure->angle_single_round);
     //以下是对2006的特殊处理
     if(motor->motor_type == M2006)

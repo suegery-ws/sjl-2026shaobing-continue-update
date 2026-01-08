@@ -14,6 +14,25 @@
 #define BUBING_DWLENGTH 31
 #define SHAOBING_DWLENGTH 34
 
+typedef __packed struct
+{
+	uint8_t FRAME_HEADER; 
+	uint8_t fire_advice;
+    uint8_t is_spining;
+	uint8_t is_navigating;
+	float pitch;
+	float yaw;
+	float distance;
+	float linearx;
+	float linery;
+	float angularz;
+	uint16_t blank;
+	uint8_t check_byte;
+	uint8_t frame_tail;
+}BUBING_CTRL; //32
+
+
+
 typedef struct
 {
 	struct
@@ -98,22 +117,7 @@ typedef __packed struct
 }BUBING_AUTO_SEND_TO_NUC_DATA_t;  //32
 
 
-typedef __packed struct
-{
-	uint8_t FRAME_HEADER; 
-	uint8_t fire_advice;
-    uint8_t is_spining;
-	uint8_t is_navigating;
-	float pitch;
-	float yaw;
-	float distance;
-	float linearx;
-	float linery;
-	float angularz;
-	uint16_t blank;
-	uint8_t check_byte;
-	uint8_t frame_tail;
-}BUBING_CTRL; //32
+
 
 
 /*更新发送数据帧，并计算发送数据帧长度*/

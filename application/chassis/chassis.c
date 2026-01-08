@@ -150,7 +150,7 @@ void ChassisInit()
         .IntegralLimit = 0.2f,
         .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
         .MaxOut = 5.0f,
-        .DeadBand = 0.03
+        .DeadBand = 0.05
     };
     PIDInit(&angle_PID, &Angle_pid_conf);
 
