@@ -313,7 +313,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, chassis_cmd_recv.offset_angle,0 );//前面可能有一个负号，这个用pid,角度环的输出结果就是速度目标值
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = -3;
+        chassis_cmd_recv.wz = -7;
         //这里之后加受击改速策略
         break;
     case CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW:  //自动模式底盘跟随云台
@@ -325,7 +325,7 @@ void ChassisTask()
     case CHASSIS_AUTO_NO_FOLLOW_YAW: //哨兵变速小陀螺
        //变速逻辑后面再加
     case CHASSIS_AUTO_GUIDGENCE:  //哨兵旋转小陀螺自动导航，速度恒定，旋转速度由上位机给出，暂时写恒定
-        chassis_cmd_recv.wz = -3;  //其实可以什么都不用写
+        chassis_cmd_recv.wz = -7;  //其实可以什么都不用写
     
         
     default:

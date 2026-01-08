@@ -521,7 +521,7 @@ void DJIMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DJIMotorInstance* gim
     }    
 	 if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_AUTO)
     {
-        DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure);
+         DJIGimbalRefLimit(motor_measure,gimbal_cmd,motor_controller,gimbal_posture_data);
     }
     }
     if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ROTATE)
