@@ -7,6 +7,9 @@
 #include "message_center.h"
 #include "bsp_dwt.h"
 #include "general_def.h"
+#include "stm32f407xx.h"
+#include "stm32f4xx_hal_gpio.h"
+#include <stdint.h>
 
 /* 对于双发射机构的机器人,将下面的数据封装成结构体即可,生成两份shoot应用实例 */
 static DJIMotorInstance *friction_l, *friction_r, *loader; // 拨盘电机
@@ -17,6 +20,9 @@ static Shoot_Ctrl_Cmd_s shoot_cmd_recv; // 来自cmd的发射控制信息
 static Subscriber_t *shoot_sub;
 static Shoot_Upload_Data_s shoot_feedback_data; // 来自cmd的发射控制信息
 static float pid_ref = 0;
+static int8_t pa6 = 0;
+static int8_t pa7 = 0;
+static int8_t pa1 = 0;
 // dwt定时,计算冷却用
 static float hibernate_time = 0, dead_time = 0;
 
@@ -78,7 +84,7 @@ void ShootInit()
                 .DeadBand = 0,
             },
             .speed_PID = {
-                .Kp = 25, // 10
+                .Kp = 35, // 10
                 .Ki = 0, // 1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
@@ -224,6 +230,10 @@ void ShootTask()
         DJIMotorSetRef(friction_l, 0);
         DJIMotorSetRef(friction_r, 0);
     }
+    
+    pa6 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_6);
+    pa7 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_7);
+    pa1 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_1);
 
     // 反馈数据,实现单发限位状态机
     PubPushMessage(shoot_pub, (void *)&shoot_feedback_data);

@@ -14,6 +14,19 @@
 #define BUBING_DWLENGTH 31
 #define SHAOBING_DWLENGTH 34
 
+
+////////////////////////////////////////////////////////////上位机给下位机/////////////////////////////////////////////////
+
+typedef __packed struct
+{
+	uint8_t FRAME_HEADER; 
+	float linearx;
+	float linery;
+	float angularz;
+	uint8_t check_byte;
+	uint8_t frame_tail;
+}DAOHANG_CTRL; //15
+
 typedef __packed struct
 {
 	uint8_t FRAME_HEADER; 
@@ -30,8 +43,6 @@ typedef __packed struct
 	uint8_t check_byte;
 	uint8_t frame_tail;
 }BUBING_CTRL; //32
-
-
 
 typedef struct
 {
@@ -63,6 +74,7 @@ typedef struct
 	uint8_t frame_tail ;         //帧尾
 } CTRL;
 
+////////////////////////////////////////////////////////////下位机给上位机/////////////////////////////////////////////////
 
 typedef __packed struct
 {
@@ -116,9 +128,15 @@ typedef __packed struct
 
 }BUBING_AUTO_SEND_TO_NUC_DATA_t;  //32
 
-
-
-
+typedef __packed struct
+{
+	uint8_t FRAME_HEADER; 
+	float roll;
+	float pitch;
+	float yaw;
+	uint8_t check_byte;
+	uint8_t frame_tail;
+}DAOHANG_AUTO_SEND_TO_NUC_DATA_t; //15
 
 /*更新发送数据帧，并计算发送数据帧长度*/
 void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
@@ -126,11 +144,17 @@ void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
 
 void bubing_get_protocol_send_data(BUBING_AUTO_SEND_TO_NUC_DATA_t *send_data,
                             uint8_t *tx_buf);     // 待发送的数据帧
+
+void daohang_get_protocol_send_data(DAOHANG_AUTO_SEND_TO_NUC_DATA_t *send_data,
+                            uint8_t *tx_buf);     // 待发送的数据帧
 /*接收数据处理*/
 uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
                            CTRL *rx_data);         // 接收的float数据存储地址
 
 uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
                                   BUBING_CTRL *rx_data);         // 接收的float数据存储地址
+
+uint16_t get_protocol_info_daohang(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
+                                  DAOHANG_CTRL *rx_data);         // 接收的float数据存储地址
 						   
 #endif

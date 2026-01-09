@@ -107,6 +107,31 @@ void bubing_memory_from_buffer(uint8_t *buffer, BUBING_CTRL *ctrl)
     ctrl->frame_tail = buffer[index++];
 }
 
+void daohang_memory_from_buffer(uint8_t *buffer, DAOHANG_CTRL *ctrl)
+{
+    uint8_t index = 0;
+    
+    // 帧头 (1 byte)
+    ctrl->FRAME_HEADER = buffer[index++];
+    
+    // 线速度X linearx (4 bytes)
+    memcpy(&ctrl->linearx, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 线速度Y linery (4 bytes)
+    memcpy(&ctrl->linery, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 角速度Z angularz (4 bytes)
+    memcpy(&ctrl->angularz, &buffer[index], sizeof(float));
+    index += sizeof(float);
+    
+    // 校验字节 check_byte (1 byte)
+    ctrl->check_byte = buffer[index++];
+    
+    // 帧尾 frame_tail (1 byte)
+    ctrl->frame_tail = buffer[index++];
+}
 
 /*获取CRC8校验码*/
 uint8_t Get_CRC8_Check(uint8_t *pchMessage,uint16_t dwLength)
@@ -227,8 +252,36 @@ void bubing_get_protocol_send_data(BUBING_AUTO_SEND_TO_NUC_DATA_t *send_data,
     // 帧尾 (1 byte)
     tx_buf[index++] = rece_cmd_bubing;
     
-
 }
+
+void daohang_get_protocol_send_data(DAOHANG_AUTO_SEND_TO_NUC_DATA_t *send_data,
+                            uint8_t *tx_buf)    // 待发送的数据帧
+{
+    uint8_t index = 0;
+    
+    // 帧头 (1 byte)
+    tx_buf[index++] = PROTOCOL_CMD_ID;
+
+    // chassis_yaw (4 bytes)
+    memcpy(&tx_buf[index], &send_data->roll, sizeof(float));
+    index += sizeof(float);
+    
+    // pitch (4 bytes)
+    memcpy(&tx_buf[index], &send_data->pitch, sizeof(float));
+    index += sizeof(float);
+    
+    // yaw (4 bytes)
+    memcpy(&tx_buf[index], &send_data->yaw, sizeof(float));
+    index += sizeof(float);
+    
+    // crc_check (1 byte) - 计算CRC8校验
+    // tx_buf[index++] = crc_8(tx_buf, index);
+    tx_buf[index++] = 0;
+    
+    // 帧尾 (1 byte)
+    tx_buf[index++] = FRAME_TAIL;
+}
+
 /*
     此函数用于处理接收数据，
     返回数据内容的id
@@ -268,6 +321,19 @@ uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原�
     return 0;
 }
 
+
+uint16_t get_protocol_info_daohang(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
+                                  DAOHANG_CTRL *rx_data)
+{
+    if (protocol_heade_Check(rx_buf) && protocol_tail_Check(15,  rx_buf) )
+    {
+        {
+            daohang_memory_from_buffer(rx_buf,rx_data);
+            return 1;
+        }
+    }
+    return 0;
+}
 
 
 

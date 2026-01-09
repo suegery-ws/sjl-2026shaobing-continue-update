@@ -16,12 +16,16 @@
 
 static CTRL recv_data;
 static BUBING_CTRL bubing_recv_data;
+static DAOHANG_CTRL daohang_recv_data;
+///////////////////////////////////////////////
 static AUTO_SEND_TO_NUC_DATA_t send_data;
 static BUBING_AUTO_SEND_TO_NUC_DATA_t bubing_send_data;
+static DAOHANG_AUTO_SEND_TO_NUC_DATA_t daohang_send_data;
+///////////////////////////////////////////////
 static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
 static int uart_flag = 0;
-static int fsong = 0;
+static int fsong = 0; //累计发送次数
 
 //数据耦合性最低的写法
 void VisionSetAltitude(float yaw, float pitch,float big_yaw)
@@ -54,6 +58,15 @@ void BubingVisionSetAltitude(float yaw, float pitch,float big_yaw)
     bubing_send_data.state = 0;
     bubing_send_data.chassis_yaw = 0;
 }
+
+void DaohangVisionSetAltitude(float yaw, float pitch)
+{
+    daohang_send_data.yaw = yaw;
+    daohang_send_data.pitch = pitch;
+    daohang_send_data.roll = 0;
+}
+
+
 /**
  * @brief 离线回调函数,将在daemon.c中被daemon task调用
  * @attention 由于HAL库的设计问题,串口开启DMA接收之后同时发送有概率出现__HAL_LOCK()导致的死锁,使得无法
@@ -82,11 +95,22 @@ static void VisionOfflineCallback(void *id)
  * @todo  1.提高可读性,将get_protocol_info的第四个参数增加一个float类型buffer
  *        2.添加标志位解码
  */
+
+static void DecodeVisiondanghang()
+{
+    DaemonReload(vision_daemon_instance); // 喂狗
+    uart_flag = get_protocol_info_daohang(vision_usart_instance->recv_buff, &daohang_recv_data);         // 接收的float数据存储地址
+    fsong++;
+}
+
+
+
 static void DecodeVision()
 {
     DaemonReload(vision_daemon_instance); // 喂狗
-    get_protocol_info(vision_usart_instance->recv_buff,&recv_data);
+    uart_flag = get_protocol_info(vision_usart_instance->recv_buff,&recv_data);
     // TODO: code to resolve flag_register;
+    fsong++;
 
 }
 
@@ -128,6 +152,26 @@ static void DecodeVisionbubing()
        LOGWARNING(" -> FAILED\r\n");
    
    fsong++;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+DAOHANG_CTRL *DaohangVisionInit(UART_HandleTypeDef *_handle)
+{
+    USART_Init_Config_s conf;
+    conf.module_callback = DecodeVisiondanghang;
+    conf.recv_buff_size = DAOHANG_RECV_SIZE;
+    conf.usart_handle = _handle;
+    vision_usart_instance = USARTRegister(&conf);
+    
+    // 为master process注册daemon,用于判断视觉通信是否离线
+    Daemon_Init_Config_s daemon_conf = {
+        .callback = VisionOfflineCallback, // 离线时调用的回调函数,会重启串口接收
+        .owner_id = vision_usart_instance, 
+        .reload_count = 10, 
+    };
+    vision_daemon_instance = DaemonRegister(&daemon_conf); 
+ 
+    return &daohang_recv_data;
 }
 
 BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle)
@@ -187,6 +231,18 @@ void VisionSend()
     // 注意：不检查gState，因为接收DMA会让gState一直是BUSY_RX
     // IT发送会自动处理TX忙的情况
     USARTSend(vision_usart_instance, send_buff, 32, USART_TRANSFER_DMA);
+}
+
+void DaohangVisionSend()
+{
+    static uint8_t daohang_send_buff[DAOHANG_SEND_SIZE];
+    
+    daohang_get_protocol_send_data(&daohang_send_data,daohang_send_buff);
+
+    USARTSend(vision_usart_instance, daohang_send_buff, 15, USART_TRANSFER_DMA);
+
+
+
 }
 
 #endif  //VISION_USE_UART

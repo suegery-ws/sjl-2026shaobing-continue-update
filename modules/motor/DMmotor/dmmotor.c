@@ -268,10 +268,8 @@ void DMMotorControl()
             {
             pid_ref1 = PIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_ROTATE)
             pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
-            else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
-            pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);
         }
            if(motor->flag == 3)
         {

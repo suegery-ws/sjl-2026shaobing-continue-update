@@ -44,10 +44,10 @@ void GimbalInit()
                 .MaxOut = 500,
             },
             .relative_angle_PID = {
-                .Kp = 120.0f, // 10
+                .Kp = 300.0f, // 100
                 .Ki = 0.0f,
-                .Kd = -0.8f,
-                .DeadBand = 0.001,
+                .Kd = 2.0f,
+                .DeadBand = 0.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 0.0f,
                 .MaxOut = 50.0f, //数据待更改//用弧度制就注定pid给的比较大
@@ -314,7 +314,6 @@ void GimbalTask()
         DMMotorChangeFeed(big_yaw_motor, SPEED_LOOP,OTHER_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data,dm_gimbal_imu_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
-        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data,dm_gimbal_imu_data);
         break;
     default:
         break;

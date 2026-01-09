@@ -6,10 +6,14 @@
 
 #define VISION_RECV_SIZE 35u 
 #define VISION_SEND_SIZE 34u
+///////////////////////////////////////////
 #define VISION_RECV_SIZE_BUBING 32u
 #define VISION_SEND_SIZE_BUBING 32u
+///////////////////////////////////////////
+#define DAOHANG_RECV_SIZE 15u
+#define DAOHANG_SEND_SIZE 15u
+/////////////////////////////////////////
 
-#define BUFLENGTH  		128//最大接收的数据
 
 #pragma pack(1)
 typedef enum
@@ -126,12 +130,15 @@ GAME_DATE_t GAME_DATE;
 CTRL *VisionInit(UART_HandleTypeDef *_handle);
 
 BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle);
+
+DAOHANG_CTRL *DaohangVisionInit(UART_HandleTypeDef *_handle);
 /**
  * @brief 发送视觉数据
  *
  */
 void VisionSend();
 
+void DaohangVisionSend();
 /**
  * @brief 设置视觉发送标志位
  *
@@ -151,6 +158,7 @@ void VisionSetAltitude(float yaw, float pitch,float big_yaw);
 
 void BubingVisionSetAltitude(float yaw, float pitch,float big_yaw);
 
+void DaohangVisionSetAltitude(float yaw, float pitch);
 
 
 #endif // !MASTER_PROCESS_H
