@@ -277,6 +277,8 @@ static void RemoteControlSet()
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
     gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
     gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
+    shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;
+    shoot_cmd_send.shoot_flag = shoot_fetch_data.feedback_shoot_flag;
     
     // 控制底盘和云台运行模式,云台待添加,云台是否始终使用IMU数据?
     if (switch_is_down(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[下],无力模式,底盘和云台均不动
@@ -361,9 +363,10 @@ static void RemoteControlSet()
         //应该能用
     ///////////////////////////////////发射机构////////////////////////////////////////////////////////////////////////////////////////////////shoot
     // 发射参数
-    static int a = 0;
-    shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;
-    shoot_cmd_send.shoot_flag = shoot_fetch_data.feedback_shoot_flag;
+    static int mode_flag_time = 0;
+    static int dead_line_time = 0;
+    static int line_flag = 0;
+    
     if((switch_is_up(rc_data[TEMP].rc.switch_left))&&(!switch_is_up(rc_data[LAST].rc.switch_left))&&(shoot_cmd_send.friction_mode == FRICTION_OFF))//默认摩擦轮关闭，上拨一下打开，再拨到上面关闭
     {
        shoot_cmd_send.friction_mode = FRICTION_ON;
@@ -376,25 +379,41 @@ static void RemoteControlSet()
     //判断mode_flag
     if(rc_data[TEMP].rc.dial>500)
     {
-       mode_flag++;
+        
+       if((mode_flag_time + dead_line_time >= DWT_GetTimeline_ms()) || line_flag == 0)
+       {
+         line_flag++;
+       }
+       else 
+       {
+         mode_flag++;
+         dead_line_time = 5;
+         mode_flag_time = DWT_GetTimeline_ms();
+       }
     }   
     
-    if(mode_flag == 3)
+    if(mode_flag == 2)
     {
        mode_flag = 0;
        shoot_cmd_send.load_mode = LOAD_STOP;
     }
-    else
-    {
-        shoot_cmd_send.load_mode = mode_flag;
-    } //模式切换
+        shoot_cmd_send.load_mode = mode_flag; //模式切换
 
-    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位 //之后这里可以让上位机再发一个flag，即刻做到精准的单发限位
     {
         shoot_cmd_send.shoot_flag = 1;
-        a++;
     }
-    
+
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET)
+    {
+        shoot_cmd_send.shoot_flag = 0; //防止模式切换后shoot_flag卡在2里面出不来了
+    }
+
+    if(switch_is_down(rc_data[TEMP].rc.switch_left))
+    {
+        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    }
+
     shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
     shoot_cmd_send.bullet_speed = SMALL_AMU_18;//设置弹速
 }

@@ -271,7 +271,7 @@ static void DecodeDJIMotor(CANInstance *_instance)
     measure->last_ecd = measure->ecd;
     measure->ecd = ((uint16_t)rxbuff[0]) << 8 | rxbuff[1];
     // measure->last_ecd = measure->ecd; //这么写本身不对，主要是这辆车可以这么干
-    measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;
+    measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;//映射当前编码值给弧度值
     measure->speed_aps = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_aps +
                          RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3])); //RAD
     measure->speed_vector = (rxbuff[2] << 8 | rxbuff[3])*M3508_MOTOR_RPM_TO_VECTOR; //M/S
@@ -702,4 +702,14 @@ void trigger_motor_turn_back(DJIMotorInstance* motor)
     {
         block_time = 0;
     }
+}
+
+void shoot_mode_message_change(DJIMotorInstance* loader, Shoot_Ctrl_Cmd_s* shoot_cmd_recv, Shoot_Upload_Data_s* shoot_feedback_data)
+{
+   if((shoot_cmd_recv->load_mode = LOAD_1_BULLET) && (shoot_cmd_recv->load_mode != LOAD_1_BULLET))
+   {
+     loader->motor_controller.pid_ref = loader->measure.total_angle;
+     shoot_feedback_data->feedback_shoot_flag = 0;
+   }
+   
 }

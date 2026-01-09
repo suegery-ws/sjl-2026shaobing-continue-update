@@ -172,4 +172,6 @@ void DJIGetChassisMotorData(Chassis_Data_s* chassis_data, Chassis_Ctrl_Cmd_s* ch
 void DJI2006MotorInhert(Shoot_Ctrl_Cmd_s* shoot_cmd_recv,DJIMotorInstance* Instance);
 
 void trigger_motor_turn_back(DJIMotorInstance* motor);
+
+void shoot_mode_message_change(DJIMotorInstance* loader, Shoot_Ctrl_Cmd_s* shoot_cmd_recv, Shoot_Upload_Data_s* shoot_feedback_data);
 #endif // !DJI_MOTOR_H
