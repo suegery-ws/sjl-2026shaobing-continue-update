@@ -1,4 +1,5 @@
 #include "dji_motor.h"
+#include "motor_def.h"
 #include "robot_cmd.h"
 #include "robot_def.h"
 #include "user_lib.h"
@@ -267,14 +268,13 @@ static void DecodeDJIMotor(CANInstance *_instance)
     motor->dt = DWT_GetDeltaT(&motor->feed_cnt);
 
     // 解析数据并对电流和速度进行滤波,电机的反馈报文具体格式见电机说明手册
-    // measure->dji2006_last_ecd = measure->ecd; //这个才是对的
     measure->last_ecd = measure->ecd;
     measure->ecd = ((uint16_t)rxbuff[0]) << 8 | rxbuff[1];
-    // measure->last_ecd = measure->ecd; //这么写本身不对，主要是这辆车可以这么干
     measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;//映射当前编码值给弧度值
     measure->speed_aps = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_aps +
-                         RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3])); //RAD
-    measure->speed_vector = (rxbuff[2] << 8 | rxbuff[3])*M3508_MOTOR_RPM_TO_VECTOR; //M/S
+                         RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3])); //RAD/s
+    measure->speed_vector = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_vector + (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3]))*M3508_MOTOR_RPM_TO_VECTOR*SPEED_SMOOTH_COEF; //M/S //底盘电机的速度
+    measure->fric_speed_vector = (1.0f - SPEED_SMOOTH_COEF) * measure->fric_speed_vector + (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3]))*FRIC_RPM_TO_SPEED*SPEED_SMOOTH_COEF;
     measure->real_current = (1.0f - CURRENT_SMOOTH_COEF) * measure->real_current +
                             CURRENT_SMOOTH_COEF * (float)((int16_t)(rxbuff[4] << 8 | rxbuff[5]));
     measure->temperature = rxbuff[6];
@@ -455,8 +455,14 @@ void DJIMotorControl()
 
             if (motor_setting->speed_feedback_source == OTHER_FEED)
                 pid_measure = *motor_controller->other_speed_feedback_ptr;
-            else // MOTOR_FEED
+            // MOTOR_FEED
+            else
                 pid_measure = measure->speed_aps;//aps
+            
+            if(motor->motor_controller.flag == 7 || motor->motor_controller.flag == 8)
+            {
+                pid_measure = measure->fric_speed_vector;
+            }
             // 更新pid_ref进入下一个环
             pid_ref = PIDCalculate(&motor_controller->speed_PID, pid_measure, pid_ref);
         }

@@ -35,20 +35,20 @@ void ShootInit()
         },
         .controller_param_init_config = {
             .speed_PID = {
-                .Kp = 20, // 20
-                .Ki = 1, // 1
-                .Kd = 0,
+                .Kp = 6000, // 20
+                .Ki = 18, // 1
+                .Kd = -1,
                 .Improve = PID_Integral_Limit,
-                .IntegralLimit = 10000,
-                .MaxOut = 15000,
+                .IntegralLimit = 16300,
+                .MaxOut = 10000,
             },
             .current_PID = {
-                .Kp = 0.7, // 0.7
+                .Kp = 20, // 0.7
                 .Ki = 0, // 0.1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 10000,
-                .MaxOut = 15000,
+                .MaxOut = 20,
             },
         },
         .controller_setting_init_config = {
@@ -56,16 +56,18 @@ void ShootInit()
             .speed_feedback_source = MOTOR_FEED,
 
             .outer_loop_type = SPEED_LOOP,
-            .close_loop_type = SPEED_LOOP | CURRENT_LOOP,//速度环就够了
+            .close_loop_type = SPEED_LOOP,//速度环就够了
             .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
         },
         .motor_type = M3508};
     friction_config.can_init_config.tx_id = 1,
     friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+    friction_config.controller_param_init_config.flag = 7,
      friction_l = DJIMotorInit(&friction_config);
 
     friction_config.can_init_config.tx_id = 2; // 右摩擦轮,改txid和方向就行
-    friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
+    friction_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+    friction_config.controller_param_init_config.flag = 8,
      friction_r = DJIMotorInit(&friction_config);
 
     // 拨盘电机
@@ -210,16 +212,16 @@ void ShootTask()
         switch (shoot_cmd_recv.bullet_speed)
         {
         case SMALL_AMU_18: //18m/s
-            DJIMotorSetRef(friction_l, 857);
-            DJIMotorSetRef(friction_r, 857);
+            DJIMotorSetRef(friction_l, 18);
+            DJIMotorSetRef(friction_r, -18);
             break;
         case BIG_AMU_20: //20m/s
-            DJIMotorSetRef(friction_l, 952);
-            DJIMotorSetRef(friction_r, 952);
+            DJIMotorSetRef(friction_l, 20);
+            DJIMotorSetRef(friction_r, -20);
             break;
         case SMALL_AMU_25: //25m/s
-            DJIMotorSetRef(friction_l, 1190);
-            DJIMotorSetRef(friction_r, 1190);
+            DJIMotorSetRef(friction_l, 25);
+            DJIMotorSetRef(friction_r, -25);
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
             break;

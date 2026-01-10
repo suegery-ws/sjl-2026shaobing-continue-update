@@ -158,7 +158,7 @@ static void DecodeDJIMotor(CANInstance *_instance)
     measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;
     measure->speed_aps = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_aps +
                          RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3]));
-    measure->speed_vector =  (int16_t)(rxbuff[2] << 8 | rxbuff[3]) * M3508_MOTOR_RPM_TO_VECTOR;
+    measure->speed_vector =  (float)(int16_t)(rxbuff[2] << 8 | rxbuff[3]) * M3508_MOTOR_RPM_TO_VECTOR;
     measure->real_current = (1.0f - CURRENT_SMOOTH_COEF) * measure->real_current +
                             CURRENT_SMOOTH_COEF * (float)((int16_t)(rxbuff[4] << 8 | rxbuff[5]));
     measure->temperature = rxbuff[6];

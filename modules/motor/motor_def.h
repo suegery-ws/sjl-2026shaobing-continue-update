@@ -146,7 +146,7 @@ typedef struct
     PID_Init_Config_s relative_angle_PID;
     PID_Init_Config_s absoulte_angle_PID;//专门给云台加了两个个角度环，主要是在初始化云台的时候云台电机到底是什么模式还没定，现在这个框架就只能在不同电机的发送函数里面加不同的PID运算了
 
-    int8_t flag; //预留标志位，表示电机的种类
+    int8_t flag; //预留标志位，表示电机的编号
 
     fp32 motor_limit_left; //电机限幅左
     fp32 motor_limit_right; //电机限幅右

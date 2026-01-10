@@ -428,7 +428,7 @@ static void RemoteControlSet()
     }
 
     shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
-    shoot_cmd_send.bullet_speed = BIG_AMU_20;//设置弹速
+    shoot_cmd_send.bullet_speed = SMALL_AMU_18;//设置弹速
 }
 
 static void AUTOKeySet()

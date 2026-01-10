@@ -47,8 +47,10 @@
 #define M2006_round_to_rad 0.174 //2006圈数转换成拨弹盘角度的比例 2PI/36
 
 //m3508 rmp change to chassis speed,
-//m3508转化成底盘速度(m/s)的比例，
+//底盘m3508转化成电机速度(m/s)的比例，
 #define M3508_MOTOR_RPM_TO_VECTOR 0.000415809748903494517209f
+//摩擦轮3508转换成电机速度(m/s)的比例
+#define FRIC_RPM_TO_SPEED           0.00314159265358793f
 #define CHASSIS_MOTOR_RPM_TO_VECTOR_SEN M3508_MOTOR_RPM_TO_VECTOR
 
 /* DJI电机CAN反馈信息*/
@@ -58,7 +60,8 @@ typedef struct
     uint16_t ecd;             // 0-8191,刻度总共有8192格
     float angle_single_round; // 单圈角度
     float speed_aps;          // 角速度,单位为:度/秒
-    float speed_vector;       // 线速度,单位为:m/s
+    float speed_vector;       // 线速度,单位为:m/s，属于底盘电机
+    float fric_speed_vector;  // 线速度，属于摩擦轮电机
     int16_t real_current;     // 实际电流
     uint8_t temperature;      // 温度 Celsius
     int8_t total_round_flag;

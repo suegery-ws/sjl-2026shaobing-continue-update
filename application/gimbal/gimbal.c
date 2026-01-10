@@ -85,11 +85,11 @@ void GimbalInit()
         },
         .controller_param_init_config = {
             .absoulte_angle_PID = {
-                .Kp = 23.0f, // 10
-                .Ki = 0.00f,
-                .Kd = 0.1f,
+                .Kp = 32.0f, // 10
+                .Ki = 1.00f,
+                .Kd = 0.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                .IntegralLimit = -0.05,
+                .IntegralLimit = 100,
                 .MaxOut = 6,
             },
             .relative_angle_PID = {
@@ -101,12 +101,12 @@ void GimbalInit()
                 .MaxOut = 5, //数据待更改
             },
             .speed_PID = {
-                .Kp = 1.0f,  // 50
+                .Kp = 1.5f,  // 50
                 .Ki = 0.0f, // 350
                 .Kd = 0.0f,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 5000.0f,
-                .MaxOut = 5.0f,
+                .MaxOut = 10.0f,
             },
             .other_angle_feedback_ptr = (&dm_gimbal_imu_data->oula_data.roll),
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
