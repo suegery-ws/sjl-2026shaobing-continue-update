@@ -49,9 +49,13 @@
 //m3508 rmp change to chassis speed,
 //底盘m3508转化成电机速度(m/s)的比例，
 #define M3508_MOTOR_RPM_TO_VECTOR 0.000415809748903494517209f
+#define CHASSIS_MOTOR_RPM_TO_VECTOR_SEN M3508_MOTOR_RPM_TO_VECTOR
 //摩擦轮3508转换成电机速度(m/s)的比例
 #define FRIC_RPM_TO_SPEED           0.00314159265358793f
-#define CHASSIS_MOTOR_RPM_TO_VECTOR_SEN M3508_MOTOR_RPM_TO_VECTOR
+//自动模式下小yaw每次运动的大小
+#define YAW_EVERY_TIMR_ADD_L  0.0008f 
+#define YAW_EVERY_TIMR_ADD_R  -0.0008f
+
 
 /* DJI电机CAN反馈信息*/
 typedef struct

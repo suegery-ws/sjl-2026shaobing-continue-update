@@ -275,8 +275,8 @@ void daohang_get_protocol_send_data(DAOHANG_AUTO_SEND_TO_NUC_DATA_t *send_data,
     index += sizeof(float);
     
     // crc_check (1 byte) - 计算CRC8校验
-    // tx_buf[index++] = crc_8(tx_buf, index);
-    tx_buf[index++] = 0;
+    tx_buf[index++] = crc_8(tx_buf, index);
+    // tx_buf[index++] = 0;
     
     // 帧尾 (1 byte)
     tx_buf[index++] = FRAME_TAIL;

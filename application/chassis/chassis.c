@@ -329,10 +329,12 @@ void ChassisTask()
     case CHASSIS_AUTO_GUIDGENCE:  //哨兵旋转小陀螺自动导航，速度恒定，旋转速度由上位机给出，暂时写恒定
         chassis_cmd_recv.wz = -7;  //其实可以什么都不用写
         break;
-        
+    case CHASSIS_NO_MOVE : //突发奇想，如果我保持地盘角度不变呢
+        chassis_cmd_recv.wz = PIDCalculate(&angle_PID, chassis_data->chassis_posture_data.car_yaw_posture,0 );
+        break;
     default:
         break;
-    }//暂时就先只有这两种模式了
+    }
 
     // 根据云台和底盘的角度offset将控制量映射到底盘坐标系上
     // 底盘逆时针旋转为角度正方向;云台命令的方向以云台指向的方向为x,采用右手系(x指向正北时y在正东)

@@ -64,8 +64,8 @@ void GimbalInit()
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = &gimbal_IMU_data->Gyro[2],
             .flag = 1,
-            .motor_limit_left = 4.96f, //6.00
-            .motor_limit_right = 4.49f, //3.35
+            .motor_limit_left = 6.00f, //6.00 //4.96
+            .motor_limit_right = 3.35f, //3.35 //4.49
         },
         .controller_setting_init_config = {
             .outer_loop_type = ANGLE_LOOP,
@@ -214,7 +214,7 @@ void GimbalTask()
         DJIModeChangeControlTransmit(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
         DJIMotorRefVerify(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
         break;
-     case GIMBAL_MOTOR_ROTATE: 
+    case GIMBAL_MOTOR_ROTATE: 
         DJIMotorEnable(yaw_motor);
         DJIMotorinhert(&gimbal_cmd_recv, yaw_motor);
         DJIMotorChangeFeed(yaw_motor, ANGLE_LOOP, MOTOR_FEED);
@@ -223,7 +223,16 @@ void GimbalTask()
         DJIModeChangeControlTransmit(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
         DJIMotorRefVerify(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
         break;
-     case GIMBAL_MOTOR_AUTO: 
+    case GIMBAL_MOTOR_AUTO: //自动瞄准模式
+        DJIMotorEnable(yaw_motor);
+        DJIMotorinhert(&gimbal_cmd_recv, yaw_motor);
+        DJIMotorChangeFeed(yaw_motor, ANGLE_LOOP, MOTOR_FEED);
+        DJIMotorChangeFeed(yaw_motor, SPEED_LOOP, MOTOR_FEED);
+        DJIGetYawMotorData(Gimbal_motor_posture_data,yaw_motor,gimbal_IMU_data);
+        DJIModeChangeControlTransmit(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
+        DJIMotorRefVerify(&gimbal_cmd_recv,yaw_motor,Gimbal_motor_posture_data);
+        break;
+    case GIMBAL_MOTOR_AUTO_XUNLUO: //自动巡逻模式
         DJIMotorEnable(yaw_motor);
         DJIMotorinhert(&gimbal_cmd_recv, yaw_motor);
         DJIMotorChangeFeed(yaw_motor, ANGLE_LOOP, MOTOR_FEED);
@@ -252,7 +261,7 @@ void GimbalTask()
         DMModeChangeControlTransmit(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
         DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data,dm_gimbal_imu_data);
         break;
-    case GIMBAL_MOTOR_ENCONDE: //基本不做
+    case GIMBAL_MOTOR_ENCONDE: //基本不用
         DMMotorEnable(pitch_motor);
         DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP,MOTOR_FEED);
@@ -261,7 +270,16 @@ void GimbalTask()
         DMModeChangeControlTransmit(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
         DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data,dm_gimbal_imu_data);
         break;
-     case GIMBAL_MOTOR_AUTO: 
+    case GIMBAL_MOTOR_AUTO: 
+        DMMotorEnable(pitch_motor);
+        DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
+        DMMotorChangeFeed(pitch_motor, ANGLE_LOOP,OTHER_FEED);
+        DMMotorChangeFeed(pitch_motor, SPEED_LOOP,OTHER_FEED);
+        DMGet4310MotorData(Gimbal_motor_posture_data,pitch_motor,gimbal_IMU_data,dm_gimbal_imu_data);
+        DMModeChangeControlTransmit(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data);
+        DMMotorRefVerify(&gimbal_cmd_recv,pitch_motor,Gimbal_motor_posture_data,dm_gimbal_imu_data);
+        break;
+    case GIMBAL_MOTOR_AUTO_XUNLUO:
         DMMotorEnable(pitch_motor);
         DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP,OTHER_FEED);
@@ -289,7 +307,7 @@ void GimbalTask()
         DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
         DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data,dm_gimbal_imu_data);
         break;
-    case GIMBAL_MOTOR_ENCONDE: 
+    case GIMBAL_MOTOR_ENCONDE: //这个基本不用
         DMMotorEnable(big_yaw_motor);
         DMMotorinhert(&gimbal_cmd_recv, big_yaw_motor);
         DMMotorChangeFeed(big_yaw_motor, ANGLE_LOOP,MOTOR_FEED);
@@ -306,13 +324,22 @@ void GimbalTask()
         DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data,dm_gimbal_imu_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
         break;
-     case GIMBAL_MOTOR_AUTO: 
+    case GIMBAL_MOTOR_AUTO: 
         DMMotorEnable(big_yaw_motor);
         DMMotorinhert(&gimbal_cmd_recv, big_yaw_motor);
         DMMotorChangeFeed(big_yaw_motor, ANGLE_LOOP,OTHER_FEED);
         DMMotorChangeFeed(big_yaw_motor, SPEED_LOOP,OTHER_FEED);
         DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data,dm_gimbal_imu_data);
         DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
+        break;
+    case GIMBAL_MOTOR_AUTO_XUNLUO:
+        DMMotorEnable(big_yaw_motor);
+        DMMotorinhert(&gimbal_cmd_recv, big_yaw_motor);
+        DMMotorChangeFeed(big_yaw_motor, ANGLE_LOOP,OTHER_FEED);
+        DMMotorChangeFeed(big_yaw_motor, SPEED_LOOP,OTHER_FEED);
+        DMGet4310MotorData(Gimbal_motor_posture_data,big_yaw_motor,gimbal_IMU_data,dm_gimbal_imu_data);
+        DMModeChangeControlTransmit(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data);
+        DMMotorRefVerify(&gimbal_cmd_recv,big_yaw_motor,Gimbal_motor_posture_data,dm_gimbal_imu_data);
         break;
     default:
         break;

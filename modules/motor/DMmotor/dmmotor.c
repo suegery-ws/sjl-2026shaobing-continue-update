@@ -23,7 +23,7 @@ fp32 motor4310_ecd_to_rad_change(int32_t ecd, int32_t offset_ecd)
 	if(ecd>=0)
 	{
 	int32_t relative_ecd = ecd - offset_ecd;
-	  if (relative_ecd > HALF4310_ECD_RANGE)
+	if (relative_ecd > HALF4310_ECD_RANGE)
     {
         relative_ecd -= ECD4310_RANGE;
     }
@@ -37,21 +37,6 @@ fp32 motor4310_ecd_to_rad_change(int32_t ecd, int32_t offset_ecd)
 
 fp32 motor4310_gyro_control_change(float rad, float offset_rad)
 {
-	// if(rad>=0)
-	// {
-	// float relative_rad = rad - offset_rad;
-	//   if (relative_rad > HALF4310_RAD_RANGE)
-    // {
-    //     relative_rad -= RAD4310_RANGE;
-    // }
-    // else if (relative_rad < -HALF4310_RAD_RANGE)
-    // {
-    //     relative_rad += RAD4310_RANGE;
-    // }
-    // return relative_rad ;
-	// }
-
-	// if(rad<0)
 	
 	float relative_rad = offset_rad - rad;
 	  if (relative_rad > HALF4310_ECD_RANGE)
@@ -82,8 +67,20 @@ static float uint_to_float(int x_int, float x_min, float x_max, int bits)
     return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
 }
 
+void DMGimbalnXunLuoNoLimitRef(DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data)  //无限位，小陀螺模式
+{
+    static fp32 angle_set;
+    static fp32 add;
+    add = BIG_YAW_EVERY_L;
+    angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
+    gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
+     if(gimbal_motor->pid_ref == 0)
+    {
+        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle;
+    }
+}
 
- void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data)  //无限位，小陀螺模式
+void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data)  //无限位，小陀螺模式
 {
     static fp32 angle_set;
     static fp32 add;
@@ -92,9 +89,9 @@ static float uint_to_float(int x_int, float x_min, float x_max, int bits)
     gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
      if(gimbal_motor->pid_ref == 0)
     {
-        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle;
+        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //拍完视频考虑删掉
     }
- }
+}
 
 
 static void DMMotorSetMode(DMMotor_Mode_e cmd, DMMotorInstance *motor)
@@ -260,15 +257,13 @@ void DMMotorControl()
                 pid_measure = *motor->other_angle_feedback_ptr;//从陀螺仪的取值
             else
                 pid_measure = motor->measure.position; // MOTOR_FEED,对total angle闭环,防止在边界处出现突跃//为什么用总角度，因为有多圈，基本不用
-            // 更新pid_ref进入下一个环
-            //  rc_deadband_limit(pid_measure1,pid_measure,0.02f);//死区处理//限制一下反馈值，因为不管用·陀螺仪还是编码器反馈都不稳定，但陀螺仪更好
             if(motor->flag == 2)
         {
             if( motor->motor_mode == GIMBAL_MOTOR_ENCONDE)
             {
-            pid_ref1 = PIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
+            pid_ref1 = PIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//根本用不了这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_ROTATE)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_ROTATE || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
             pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
         }
            if(motor->flag == 3)
@@ -277,10 +272,10 @@ void DMMotorControl()
             {
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO)
-            pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制
             else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
-            pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);
+            pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//这个用来特殊控制大yaw
         }
            
         }
@@ -381,6 +376,9 @@ void DMMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance)
         case GIMBAL_MOTOR_ROTATE:
             Instance->motor_mode = GIMBAL_MOTOR_ROTATE;
             break;
+        case GIMBAL_MOTOR_AUTO_XUNLUO:
+            Instance->motor_mode = GIMBAL_MOTOR_AUTO_XUNLUO;
+            break;
      }
     }
     if(Instance->flag == 2)
@@ -401,6 +399,9 @@ void DMMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance)
             break;
         case GIMBAL_MOTOR_ROTATE:
             Instance->motor_mode = GIMBAL_MOTOR_ROTATE;
+            break;
+        case GIMBAL_MOTOR_AUTO_XUNLUO:
+            Instance->motor_mode = GIMBAL_MOTOR_AUTO_XUNLUO;
             break;
      }
     }
@@ -434,6 +435,11 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
               {
                 Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
               }
+              if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_AUTO_XUNLUO))
+              {
+                Instance->pid_ref = big_yaw_posture_data->big_yaw_absoulte_angle;
+              }
+
 }
     if(Instance->flag == 2)
 {
@@ -457,6 +463,10 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
               {
                 Instance->pid_ref = pitch_posture_data->pitch_absoulte_angle;
               }
+              if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_AUTO_XUNLUO))
+              {
+                Instance->pid_ref = pitch_posture_data->pitch_absoulte_angle;
+              }
 }
 
 }
@@ -475,31 +485,37 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     }
     if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_ENCONDE)
     {
-         DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
-        //encode模式下，编码器角度控制，有限位，以后加一个限位函数,
+        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data); //这个不会被用到
     }
     if(gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO)
     {
-         DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);
-        //encode模式下，编码器角度控制，有限位，以后加一个限位函数,
+        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);
     }
+    if(gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+    {
+        DMGimbalnXunLuoNoLimitRef(gimbal_motor,gimbal_data);
     }
+
+    }
+
     if(gimbal_motor->flag == 2)//说明这个是pitch4310电机
     {
-        if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO)
+    if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO)
     {
         //gyro模式下，陀螺仪角度控制，小陀螺，无限位
         DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
     }
     if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ENCONDE)
     {
-        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
-        //encode模式下，编码器角度控制，有限位，以后加一个限位函数,
+        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);//这个根本不用
     }
     if(gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO)
     {
         DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
-        //encode模式下，编码器角度控制，有限位，以后加一个限位函数,
+    }
+    if(gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+    {
+        DMGimbalAutoXunLuoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
     }
 
     }
@@ -555,4 +571,34 @@ void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_
     }
     gimbal_motor->pid_ref = gimbal_motor->pid_ref + add;
     
+}
+
+void DMGimbalAutoXunLuoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data)  //有限位
+{
+    fp32 bias_angle = 0.0f;
+    static fp32 add = 0.0f;
+    static int as = 0;
+    if(gimbal_motor->pid_ref == 0 && as == 0)
+    {
+        gimbal_motor->pid_ref =  dm_imu_data->oula_data.roll;
+        as++;
+    }
+    if(gimbal_motor->pid_ref >= PITCH_MID_POS)
+    {
+        add = PITCH_4310_EVERY_RAD_ADD_UP;
+    }
+    else 
+    {
+        add = PITCH_4310_EVERY_RAD_ADD_DOWN;
+    }
+    bias_angle = (gimbal_motor->pid_ref - dm_imu_data->oula_data.roll);
+    if (dm_imu_data->oula_data.roll + bias_angle + add > gimbal_motor->motor_limit_left) //向上达到最大
+    {
+       add = PITCH_4310_EVERY_RAD_ADD_DOWN;
+    }
+    else if (dm_imu_data->oula_data.roll + bias_angle + add  < gimbal_motor->motor_limit_right) //向下达到最低
+    {
+       add = PITCH_4310_EVERY_RAD_ADD_UP;
+    }
+    gimbal_motor->pid_ref = gimbal_motor->pid_ref + add;
 }

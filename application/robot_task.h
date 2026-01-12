@@ -58,10 +58,6 @@ void OSTaskInit()
 
     // osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
     // uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
-
-    // HTMotorControlInit(); // 没有注册HT电机则不会执行
-    // osThreadDef(imutask, StartDMIMUTASK, osPriorityNormal, 0, 1024);
-    // dmimuTaskHandle = osThreadCreate(osThread(imutask), NULL);
 }
 
 
@@ -82,9 +78,9 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
         dmimu_start = DWT_GetTimeline_ms();
-        VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
-        // BubingVisionSend(); //15字节导航测试版
-        ImuTask_Function();
+        // VisionSend(); 
+        DaohangVisionSend(); //15字节导航测试版
+        ImuTask_Function(); //达妙陀螺仪数据
         dmimu_dt =  DWT_GetTimeline_ms() - dmimu_start;
         if(dmimu_dt > 5)
             LOGERROR("[freeRTOS] DMINS Task is being DELAY! dt = [%f]", &dmimu_dt);

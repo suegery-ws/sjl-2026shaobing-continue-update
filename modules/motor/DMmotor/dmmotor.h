@@ -27,11 +27,16 @@
 #endif
 
 #define HALF4310_ECD_RANGE  4096
-#define PITCH_MID_POS 3.73
+#define PITCH_MID_POS 0
 #define ECD4310_RANGE 8192
 
 #define HALF4310_RAD_RANGE  3.14f
 #define RAD4310_RANGE       6.28f
+
+#define PITCH_4310_EVERY_RAD_ADD_UP 0.0008
+#define PITCH_4310_EVERY_RAD_ADD_DOWN -0.0008
+#define BIG_YAW_EVERY_L -0.0025
+#define BIG_YAW_EVERY_R 0.0025
 
 typedef struct 
 {
@@ -133,4 +138,9 @@ void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *moto
 void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data);
 
 void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data);  //有限位
+
+void DMGimbalAutoXunLuoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data);  //有限位
+
+void DMGimbalnXunLuoNoLimitRef(DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data); //无限位，小陀螺模式
+
 #endif // !DMMOTOR

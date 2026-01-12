@@ -38,7 +38,7 @@ static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
 static RC_ctrl_t *rc_data_last;         // 上一时刻遥控器数据,用于按键边沿检测
 // static CTRL *vision_recv_data; // 视觉接收数据指针,初始化时返回
 static BUBING_CTRL *bubing_vision_recv_data;
-// static DAOHANG_CTRL* daoohang_vision_recv_data;
+static DAOHANG_CTRL* daoohang_vision_recv_data;
 // static Vision_Send_s vision_send_data;  // 视觉发送数据
 static cboard_recv_message_t *tongji_vision_recv_data; // 同济视觉接收数据指针,初始化时返回
 static cboard_send_message1_t tongji_vision_send_data_1;  // 同济视觉发送数据1
@@ -171,7 +171,8 @@ double my_cos(double rad)
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
-    bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
+    // bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
+    daoohang_vision_recv_data = DaohangVisionInit(&huart6);
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
@@ -239,11 +240,17 @@ static void gimbal_behavior_to_motor()
 		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_GYRO;
         gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
     }    
-	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄模式
+	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄打弹模式，目前大yaw固定，后期加入跟随，小yaw和pitch会自己动
     {
         gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_AUTO;
 		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO;
         gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_AUTO;
+    }
+    else if(gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO_XUNLUO)
+    {
+        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_AUTO_XUNLUO;
+        gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO_XUNLUO;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_AUTO_XUNLUO;
     }
     
 }
@@ -291,12 +298,12 @@ static void RemoteControlSet()
     }
     else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘跟随云台模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;  
+        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;  
         gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;    
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW_YAW;
+        chassis_cmd_send.chassis_mode = CHASSIS_NO_MOVE;
         gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
     }
     else // 右侧开关状态异常,默认跟随模式
@@ -351,7 +358,7 @@ static void RemoteControlSet()
         chassis_cmd_send.vx = 0;
         chassis_cmd_send.vy = 0;
     }
-    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW )
+    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || chassis_cmd_send.chassis_mode == CHASSIS_NO_MOVE)
     {
         
 		rc_deadband_limit(rc_data[TEMP].rc.rocker_r_, vx_channel, CHASSIS_RC_DEADLINE);
@@ -435,28 +442,38 @@ static void RemoteControlSet()
 
 static void AUTOKeySet()
 {
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
     gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
     gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
-    chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW_YAW;
-    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO;
+    chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+    // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO; 后面加入检测时间逻辑，这个是瞄准发射模式
+    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
     gimbal_behavior_to_motor();
-    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
-    gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
-    // chassis_cmd_send.vx = daoohang_vision_recv_data->linearx*CHASSIS_VX_RC_SEN;
-    // chassis_cmd_send.vy = daoohang_vision_recv_data->linery*CHASSIS_VY_RC_SEN;
-    shoot_cmd_send.shoot_mode = SHOOT_ON;
-    shoot_cmd_send.shoot_rate = 11;
-    shoot_cmd_send.bullet_speed = SMALL_AMU_25;
-    shoot_cmd_send.friction_mode = FRICTION_ON;
+    //自动瞄准模式
+    // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
+    // gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
+    //自动巡逻模式云台
+    gimbal_cmd_send.pitch = 0;
+    gimbal_cmd_send.big_yaw = 0;
+    gimbal_cmd_send.yaw = 0;
+    //自动巡逻模式底盘，可能需要把底盘的坐标映射给去掉
+    chassis_cmd_send.vx = daoohang_vision_recv_data->linearx*CHASSIS_VX_RC_SEN;
+    chassis_cmd_send.vy = daoohang_vision_recv_data->linery*CHASSIS_VY_RC_SEN;
+    //////////////////////////////////////////自动模式瞄准部分////////////////////////////////////////////////////////
+    // shoot_cmd_send.shoot_mode = SHOOT_ON;
+    // shoot_cmd_send.shoot_rate = 11;
+    // shoot_cmd_send.bullet_speed = SMALL_AMU_25;
+    // shoot_cmd_send.friction_mode = FRICTION_ON;
 
-    if(bubing_vision_recv_data->fire_advice == 1)
-    shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-    else
-    shoot_cmd_send.load_mode = LOAD_STOP;
-
-    // shoot_cmd_send.shoot_mode = SHOOT_OFF;
+    // if(bubing_vision_recv_data->fire_advice == 1)
+    // shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    // else
+    // shoot_cmd_send.load_mode = LOAD_STOP;
+    
+    shoot_cmd_send.shoot_mode = SHOOT_OFF;
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
 
@@ -605,8 +622,8 @@ void RobotCMDTask()
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
-    // DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
-    BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
+    DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
+    // BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置

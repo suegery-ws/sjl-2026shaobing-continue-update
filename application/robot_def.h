@@ -120,7 +120,7 @@ typedef enum
     CHASSIS_AUTO_NO_FOLLOW_YAW,      //自瞄模式下的小陀螺，即底盘不跟随云台，但是云台可以自己转动并且会按照云台的方向进行运动 --5
     CHASSIS_NO_FOLLOW_YAW,      //和云台间没有任何联系，转过的角度自己给
     CHASSIS_OPEN,               //此模式下预设值成比例直接写进速度环
-    CHASSIS_NO_MOVE,            //nuc控制下强行使电机无力
+    CHASSIS_NO_MOVE,            //保证chassis_yaw等于0
 } chassis_mode_e; //顺序带来的影响未知（底盘行为模式），一个行为模式就够了
 
 
@@ -135,8 +135,9 @@ typedef enum
     GIMBAL_ABSOLUTE_ANGLE, //绝对角度模式，绝对角度模式只动大云台
     GIMBAL_RELATIVE_ANGLE, //相对角度模式，相对角度模式只动小云台
     GIMBAL_MOTIONLESS,     //跟随底盘
-	GIMBAL_AUTO,           //自动模式,视觉控制
-	GIMBAL_AIM_DEBUG       //调试模式,用于调试瞄准，暂时用不到
+	GIMBAL_AUTO,           //自动模式,自动瞄准设计
+	GIMBAL_AIM_DEBUG,      //调试模式,用于调试瞄准，暂时用不到
+    GIMBAL_AUTO_XUNLUO,    //自动巡逻模式，大yaw转圈，小yaw和pitch上下平移
 
 } gimbal_mode_e; //云台行为模式
 
@@ -145,8 +146,10 @@ typedef enum
     GIMBAL_MOTOR_RAW = 0, //电机原始值控制
     GIMBAL_MOTOR_GYRO,    //电机陀螺仪角度控制
     GIMBAL_MOTOR_ENCONDE, //电机编码值角度控制
-    GIMBAL_MOTOR_AUTO,     //自瞄控制
+    GIMBAL_MOTOR_AUTO,     //自瞄控制，为了拍视频熬出来的，大yaw固定，小yaw和pitch可以自由转动，后面考虑大yaw跟随
     GIMBAL_MOTOR_ROTATE,   //小陀螺控制
+    GIMBAL_MOTOR_AUTO_XUNLUO, //自动巡逻模式，大yaw转圈，小yaw和pitch上下平移
+
 } gimbal_motor_mode_e; //云台电机控制模式
 
 // 发射模式设置

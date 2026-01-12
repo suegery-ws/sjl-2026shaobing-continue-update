@@ -158,7 +158,7 @@ static void DecodeDJIMotor(CANInstance *_instance)
     measure->angle_single_round = ECD_RAD_COEF_DJI * (float)measure->ecd;
     measure->speed_aps = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_aps +
                          RPM_2_RAD_PER_SEC * SPEED_SMOOTH_COEF * (float)((int16_t)(rxbuff[2] << 8 | rxbuff[3]));
-    measure->speed_vector =  (float)(int16_t)(rxbuff[2] << 8 | rxbuff[3]) * M3508_MOTOR_RPM_TO_VECTOR;
+    measure->speed_vector = (1.0f - SPEED_SMOOTH_COEF) * measure->speed_vector + (float)(int16_t)(rxbuff[2] << 8 | rxbuff[3]) * M3508_MOTOR_RPM_TO_VECTOR*SPEED_SMOOTH_COEF;
     measure->real_current = (1.0f - CURRENT_SMOOTH_COEF) * measure->real_current +
                             CURRENT_SMOOTH_COEF * (float)((int16_t)(rxbuff[4] << 8 | rxbuff[5]));
     measure->temperature = rxbuff[6];
@@ -265,7 +265,7 @@ void PowerControl()
                 pid_measure_1 = measure->speed_aps /RPM_2_RAD_PER_SEC;
                }
             // 更新pid_ref进入下一个环
-            if(motor_controller->chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || motor_controller->chassis_mode == CHASSIS_NO_FOLLOW_YAW)
+            if(motor_controller->chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || motor_controller->chassis_mode == CHASSIS_NO_FOLLOW_YAW || motor_controller->chassis_mode == CHASSIS_NO_MOVE)
             {
                 pid_ref = PIDCalculate(&motor_controller->follow_speed_PID, pid_measure, pid_ref);
             }

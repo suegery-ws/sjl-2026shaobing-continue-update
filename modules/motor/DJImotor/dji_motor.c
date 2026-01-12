@@ -17,72 +17,37 @@ static int8_t reverse_time = 0;
     if(gimbal_motor_control->flag == 1)
     {
     fp32 bias_angle = 0.0f;
-    fp32 add = 0.0f;
-    // if (gimbal_motor == NULL)
-    // {
-    //     return;
-    // }
-    //now angle error
-    //当前控制误差角度
-    add = gimbal_cmd->yaw;
-    bias_angle = rad_format(gimbal_motor_control->pid_ref - gimbal_motor_measure->total_angle);//这边原函数减的是绝对角度，我认为是相对角度，之后调试再看
+    static fp32 add = 0; //每次的增量
+    static int8_t yaw_reverse_flag = 0; //定义
+     if(gimbal_motor_control->pid_ref == 0)
+    {
+        gimbal_motor_control->pid_ref = gimbal_motor_measure->total_angle;
+    }
+    if(gimbal_motor_control->pid_ref >= YAW_6020_OFF_SET_RAD)
+    {
+        add = YAW_EVERY_TIMR_ADD_L;
+    }
+    else 
+    {
+        add = YAW_EVERY_TIMR_ADD_R;
+    } 
+    bias_angle = rad_format(gimbal_motor_control->pid_ref - gimbal_motor_measure->total_angle);
     //relative angle + angle error + add_angle > max_relative angle
     //云台相对角度+ 误差角度 + 新增角度 如果大于 最大机械角度
-    if (gimbal_motor_measure->total_angle + bias_angle + add > gimbal_motor_control->motor_limit_left)
+    if (gimbal_motor_measure->total_angle + bias_angle + add > (gimbal_motor_control->motor_limit_left - 0.15)) //向左转到最大
     {
-        //如果是往最大机械角度控制方向左
-        if (add > 0.0f)
-        {
-            //calculate max add_angle
-            //计算出一个最大的添加角度，
-            add = gimbal_motor_control->motor_limit_left - gimbal_motor_measure->total_angle - bias_angle;
-        }
+        add = YAW_EVERY_TIMR_ADD_R;
     }
-    else if (gimbal_motor_measure->total_angle + bias_angle + add  < gimbal_motor_control->motor_limit_right)
+    else if (gimbal_motor_measure->total_angle + bias_angle + add  < (gimbal_motor_control->motor_limit_right + 0.15)) //向右转到最大
     {
-        if (add < 0.0f)
-        {
-            add = gimbal_motor_control->motor_limit_right - gimbal_motor_measure->total_angle - bias_angle;
-        }
+        add = YAW_EVERY_TIMR_ADD_L;
     }
     
     gimbal_motor_control->pid_ref = gimbal_motor_control->pid_ref + add;
-    }
-    if(gimbal_motor_control->flag == 2)
-    {
-    fp32 bias_angle = 0.0f;
-    fp32 add = 0.0f;
-    // if (gimbal_motor == NULL)
-    // {
-    //     return;
-    // }
-    //now angle error
-    //当前控制误差角度
-    add = gimbal_cmd->pitch;
-    bias_angle = rad_format(gimbal_motor_control->pid_ref - gimbal_motor_measure->total_angle);//这边原函数减的是绝对角度，我认为是相对角度，之后调试再看
-    //relative angle + angle error + add_angle > max_relative angle
-    //云台相对角度+ 误差角度 + 新增角度 如果大于 最大机械角度
-    if (gimbal_motor_measure->total_angle + bias_angle + add > gimbal_motor_control->motor_limit_left)
-    {
-        //如果是往最大机械角度控制方向左
-        if (add > 0.0f)
-        {
-            //calculate max add_angle
-            //计算出一个最大的添加角度，
-            add = gimbal_motor_control->motor_limit_left - gimbal_motor_measure->total_angle - bias_angle;
-        }
-    }
-    else if (gimbal_motor_measure->total_angle + bias_angle + add  < gimbal_motor_control->motor_limit_right)
-    {
-        if (add < 0.0f)
-        {
-            add = gimbal_motor_control->motor_limit_right - gimbal_motor_measure->total_angle - bias_angle;
-        }
-    }
-    
-    gimbal_motor_control->pid_ref = gimbal_motor_control->pid_ref + add;
+
     }
 }
+
 
  void DJIGimbalRefLimit(DJI_Motor_Measure_s* gimbal_motor_measure,Gimbal_Ctrl_Cmd_s* gimbal_cmd,Motor_Controller_s* gimbal_motor_control,Gimbal_Data_s* gimbal_posture_data)//有限幅的函数
 {
@@ -441,7 +406,7 @@ void DJIMotorControl()
             pid_ref = DJI2006PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);
             }
             else
-            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE || motor_controller->motor_mode == GIMBAL_MOTOR_ROTATE || motor_controller->motor_mode == GIMBAL_MOTOR_AUTO)
+            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE || motor_controller->motor_mode == GIMBAL_MOTOR_ROTATE || motor_controller->motor_mode == GIMBAL_MOTOR_AUTO || motor_controller->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO) //之后再给自瞄一套
             pid_ref = PIDCalculate(&motor_controller->relative_angle_PID, pid_measure, pid_ref);
             else if(motor_controller->motor_mode == GIMBAL_MOTOR_GYRO )
             pid_ref = PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);
@@ -507,7 +472,7 @@ void DJIMotorControl()
 //个人认为限幅问题和自不自动没半毛钱关系，完全就是怎么好限怎么来
 void DJIMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DJIMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_posture_data)
 {
-    Gimbal_Ctrl_Cmd_s* gimbal_cmd = gimbal_cmd_recv; //cmd层传过来的数据//这个是欧美打法
+    Gimbal_Ctrl_Cmd_s* gimbal_cmd = gimbal_cmd_recv; //cmd层传过来的数据
     Motor_Controller_s* motor_controller = &gimbal_motor->motor_controller;
     Pitch_Data_s* pitch_posture_data = &gimbal_posture_data->Pitch_Data;
     Yaw_Data_s* yaw_posture_data = &gimbal_posture_data->Yaw_Data;
@@ -515,9 +480,9 @@ void DJIMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DJIMotorInstance* gim
     //////////////////////////////////////////////////////////////////////////////////////
     if(motor_controller->flag == 1)
     {
-     if ( gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_GYRO)
+     if ( gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_GYRO)//这个根本用不到
     {
-        DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure);
+        DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure); //这个根本用不到
     }
      if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ENCONDE) //基本只用这个
     {
@@ -527,13 +492,15 @@ void DJIMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DJIMotorInstance* gim
     {
          DJIGimbalRefLimit(motor_measure,gimbal_cmd,motor_controller,gimbal_posture_data);
     }
-    }
     if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ROTATE)
     {
         DJIGimbalRefLimit(motor_measure,gimbal_cmd,motor_controller,gimbal_posture_data);
     }
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-   
+    if (gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+    {
+        DJIGimbalAutoRefLimit(gimbal_cmd,motor_controller,gimbal_posture_data, motor_measure);//这个还算有点用
+    }
+    }
 
 }
 
@@ -557,6 +524,9 @@ void DJIMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorInstance* Instanc
             break;
         case GIMBAL_MOTOR_ROTATE:
             Instance->motor_controller.motor_mode = GIMBAL_MOTOR_ROTATE;
+            break;
+        case GIMBAL_MOTOR_AUTO_XUNLUO:
+            Instance->motor_controller.motor_mode = GIMBAL_MOTOR_AUTO_XUNLUO;
             break;
      }
     }
@@ -583,7 +553,7 @@ void DJIModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorIns
               }
               if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ENCONDE) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_ENCONDE))
               {
-                motor_controller->pid_ref = motor_measure->total_angle; //
+                motor_controller->pid_ref = motor_measure->total_angle; 
               }
               if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_ROTATE) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_ROTATE))
               {
@@ -591,9 +561,12 @@ void DJIModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DJIMotorIns
               }
               if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_AUTO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_AUTO))
               {
-                 motor_controller->pid_ref = motor_measure->total_angle;
+                motor_controller->pid_ref = motor_measure->total_angle; //自瞄模式打弹
               }
-              //这里以后要加一个自瞄模式的处理函数
+              if((gimbal_cmd->yaw_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_AUTO_XUNLUO))
+              {
+                motor_controller->pid_ref = motor_measure->total_angle; //自瞄模式打弹
+              }
     }
     
 }
