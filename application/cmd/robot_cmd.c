@@ -59,6 +59,7 @@ static attitude_t *IMU_data; //imu数据就直接放命令层了，到时候直�
 
 static int16_t mode_flag = 0; // 发射标志位,12345分别表示不同的拨弹模式
 extern uint8_t rc_offline_flag;
+extern uint8_t last_rc_offline_flag;
 // BMI088Instance *bmi088_test; // 云台IMU
 // BMI088_Data_t bmi088_data;
 
@@ -272,6 +273,7 @@ static void RemoteControlSet()
     static int16_t big_yaw_channel = 0;
     static int16_t vx_channel=0, vy_channel=0;
     static float vx_set_channel=0, vy_set_channel=0;
+
     static int16_t flag = 0; //单发限位标志位
 
     chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
@@ -289,7 +291,7 @@ static void RemoteControlSet()
     }
     else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘跟随云台模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;  
+        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;  
         gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;    
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
@@ -427,8 +429,8 @@ static void RemoteControlSet()
         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
     }
 
-    shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
-    shoot_cmd_send.bullet_speed = SMALL_AMU_18;//设置弹速
+    shoot_cmd_send.shoot_rate = 3;//射频固定8发每秒
+    shoot_cmd_send.bullet_speed = SMALL_AMU_25;//设置弹速
 }
 
 static void AUTOKeySet()
@@ -440,11 +442,22 @@ static void AUTOKeySet()
     chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW_YAW;
     gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO;
     gimbal_behavior_to_motor();
-    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*PITCH_AUTO_SEN;
-    gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*YAW_AUTO_SEN;
+    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
+    gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
     // chassis_cmd_send.vx = daoohang_vision_recv_data->linearx*CHASSIS_VX_RC_SEN;
     // chassis_cmd_send.vy = daoohang_vision_recv_data->linery*CHASSIS_VY_RC_SEN;
-    shoot_cmd_send.shoot_mode = SHOOT_OFF;
+    shoot_cmd_send.shoot_mode = SHOOT_ON;
+    shoot_cmd_send.shoot_rate = 11;
+    shoot_cmd_send.bullet_speed = SMALL_AMU_25;
+    shoot_cmd_send.friction_mode = FRICTION_ON;
+
+    if(bubing_vision_recv_data->fire_advice == 1)
+    shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    else
+    shoot_cmd_send.load_mode = LOAD_STOP;
+
+    // shoot_cmd_send.shoot_mode = SHOOT_OFF;
+
 }
 
 
@@ -581,6 +594,12 @@ void RobotCMDTask()
     {
       RemoteControlSet();
     }
+    
+    if(rc_offline_flag == 0 && last_rc_offline_flag == 1)
+    {
+        shoot_cmd_send.friction_mode = FRICTION_OFF;
+    }
+
 
     chassis_cmd_send.IMU_data = &gimbal_fetch_data.gimbal_imu_data;//把在云台初始化的陀螺仪的地址传到了底盘里面
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况

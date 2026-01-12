@@ -64,9 +64,8 @@ void GimbalInit()
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = &gimbal_IMU_data->Gyro[2],
             .flag = 1,
-            .motor_limit_left = 6.00f,
-            .motor_limit_right = 3.35f,
-            
+            .motor_limit_left = 4.96f, //6.00
+            .motor_limit_right = 4.49f, //3.35
         },
         .controller_setting_init_config = {
             .outer_loop_type = ANGLE_LOOP,
@@ -142,7 +141,7 @@ void GimbalInit()
                 .DeadBand = 0
             },
             .relative_angle_PID = {
-                .Kp = 10, // 10
+                .Kp = 15, // 10
                 .Ki = 0,
                 .Kd = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,

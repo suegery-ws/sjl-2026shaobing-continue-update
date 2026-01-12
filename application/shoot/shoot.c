@@ -28,7 +28,7 @@ static float hibernate_time = 0, dead_time = 0;
 
 void ShootInit()
 {
-    // 左摩擦轮
+    // 摩擦轮
     Motor_Init_Config_s friction_config = {
         .can_init_config = {
             .can_handle = &hcan2,
@@ -43,12 +43,12 @@ void ShootInit()
                 .MaxOut = 10000,
             },
             .current_PID = {
-                .Kp = 20, // 0.7
+                .Kp = 2000, // 0.7
                 .Ki = 0, // 0.1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 10000,
-                .MaxOut = 20,
+                .MaxOut = 10000,
             },
         },
         .controller_setting_init_config = {
@@ -220,8 +220,8 @@ void ShootTask()
             DJIMotorSetRef(friction_r, -20);
             break;
         case SMALL_AMU_25: //25m/s
-            DJIMotorSetRef(friction_l, 25);
-            DJIMotorSetRef(friction_r, -25);
+            DJIMotorSetRef(friction_l, 23.3);
+            DJIMotorSetRef(friction_r, -23.3);
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
             break;
