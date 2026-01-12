@@ -53,8 +53,8 @@
 //摩擦轮3508转换成电机速度(m/s)的比例
 #define FRIC_RPM_TO_SPEED           0.00314159265358793f
 //自动模式下小yaw每次运动的大小
-#define YAW_EVERY_TIMR_ADD_L  0.0008f 
-#define YAW_EVERY_TIMR_ADD_R  -0.0008f
+#define YAW_EVERY_TIMR_ADD_L  0.02f 
+#define YAW_EVERY_TIMR_ADD_R  -0.02f
 
 
 /* DJI电机CAN反馈信息*/

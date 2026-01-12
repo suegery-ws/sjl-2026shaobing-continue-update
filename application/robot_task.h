@@ -47,7 +47,7 @@ void OSTaskInit()
     insTaskHandle = osThreadCreate(osThread(instask), NULL); // 由于是阻塞读取传感器,为姿态解算设置较高优先级,确保以1khz的频率执行
     // // 后续修改为读取传感器数据准备好的中断处理,
 
-    osThreadDef(motortask, StartMOTORTASK, osPriorityAboveNormal, 0, 256);
+    osThreadDef(motortask, StartMOTORTASK, osPriorityAboveNormal, 0, 512);
     motorTaskHandle = osThreadCreate(osThread(motortask), NULL);
 
     osThreadDef(daemontask, StartDAEMONTASK, osPriorityNormal, 0, 128);
@@ -138,7 +138,7 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument)
         robot_dt = DWT_GetTimeline_ms() - robot_start;
         if (robot_dt > 5) //原版本是5
             LOGERROR("[freeRTOS] ROBOT core Task is being DELAY! dt = [%f]", &robot_dt);
-        osDelay(5);
+        osDelay(3);//5
     }
 }
 
