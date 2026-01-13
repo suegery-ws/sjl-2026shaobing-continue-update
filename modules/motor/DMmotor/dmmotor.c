@@ -578,25 +578,28 @@ void DMGimbalAutoXunLuoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* g
     fp32 bias_angle = 0.0f;
     static fp32 add = 0.0f;
     static int as = 0;
+    static int af = 0;
     if(gimbal_motor->pid_ref == 0 && as == 0)
     {
         gimbal_motor->pid_ref =  dm_imu_data->oula_data.roll;
         as++;
     }
-    if(gimbal_motor->pid_ref >= PITCH_MID_POS)
+    if(gimbal_motor->pid_ref >= PITCH_MID_POS && af == 0)
     {
         add = PITCH_4310_EVERY_RAD_ADD_UP;
+        af++;
     }
-    else 
+    if(gimbal_motor->pid_ref < PITCH_MID_POS && af == 0)
     {
         add = PITCH_4310_EVERY_RAD_ADD_DOWN;
+        af++;
     }
     bias_angle = (gimbal_motor->pid_ref - dm_imu_data->oula_data.roll);
-    if (dm_imu_data->oula_data.roll + bias_angle + add > gimbal_motor->motor_limit_left) //向上达到最大
+    if (dm_imu_data->oula_data.roll + bias_angle + add >= gimbal_motor->motor_limit_left) //向上达到最大
     {
        add = PITCH_4310_EVERY_RAD_ADD_DOWN;
     }
-    else if (dm_imu_data->oula_data.roll + bias_angle + add  < gimbal_motor->motor_limit_right) //向下达到最低
+    else if (dm_imu_data->oula_data.roll + bias_angle + add  <= gimbal_motor->motor_limit_right) //向下达到最低
     {
        add = PITCH_4310_EVERY_RAD_ADD_UP;
     }

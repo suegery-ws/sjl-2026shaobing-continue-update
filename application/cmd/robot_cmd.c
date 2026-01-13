@@ -171,8 +171,8 @@ double my_cos(double rad)
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
-    // bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
-    daoohang_vision_recv_data = DaohangVisionInit(&huart6);
+    bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
+    // daoohang_vision_recv_data = DaohangVisionInit(&huart6);
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
@@ -242,9 +242,9 @@ static void gimbal_behavior_to_motor()
     }    
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄打弹模式，目前大yaw固定，后期加入跟随，小yaw和pitch会自己动
     {
-        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_AUTO;
-		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_AUTO;
+        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_AUTO; //相当于encode
+		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO; //相当于rotatae
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_AUTO; //相当于gyro
     }
     else if(gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO_XUNLUO)
     {
@@ -448,31 +448,31 @@ static void AUTOKeySet()
     gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
     gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
     chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
-    // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO; 后面加入检测时间逻辑，这个是瞄准发射模式
-    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
+    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO; //后面加入检测时间逻辑，这个是瞄准发射模式
+    // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
     gimbal_behavior_to_motor();
     //自动瞄准模式
-    // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
-    // gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
+    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
+    gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
     //自动巡逻模式云台
-    gimbal_cmd_send.pitch = 0;
-    gimbal_cmd_send.big_yaw = 0;
-    gimbal_cmd_send.yaw = 0;
+    // gimbal_cmd_send.pitch = 0;
+    // gimbal_cmd_send.big_yaw = 0;
+    // gimbal_cmd_send.yaw = 0;
     //自动巡逻模式底盘，可能需要把底盘的坐标映射给去掉
-    chassis_cmd_send.vx = daoohang_vision_recv_data->linearx*CHASSIS_VX_RC_SEN;
-    chassis_cmd_send.vy = daoohang_vision_recv_data->linery*CHASSIS_VY_RC_SEN;
+    // chassis_cmd_send.vx = -daoohang_vision_recv_data->linery;
+    // chassis_cmd_send.vy = daoohang_vision_recv_data->linearx;
     //////////////////////////////////////////自动模式瞄准部分////////////////////////////////////////////////////////
-    // shoot_cmd_send.shoot_mode = SHOOT_ON;
-    // shoot_cmd_send.shoot_rate = 11;
-    // shoot_cmd_send.bullet_speed = SMALL_AMU_25;
-    // shoot_cmd_send.friction_mode = FRICTION_ON;
+    shoot_cmd_send.shoot_mode = SHOOT_ON;
+    shoot_cmd_send.shoot_rate = 11;
+    shoot_cmd_send.bullet_speed = SMALL_AMU_25;
+    shoot_cmd_send.friction_mode = FRICTION_ON;
 
-    // if(bubing_vision_recv_data->fire_advice == 1)
-    // shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-    // else
-    // shoot_cmd_send.load_mode = LOAD_STOP;
+    if(bubing_vision_recv_data->fire_advice == 1)
+    shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    else
+    shoot_cmd_send.load_mode = LOAD_STOP;
     
-    shoot_cmd_send.shoot_mode = SHOOT_OFF;
+    // shoot_cmd_send.shoot_mode = SHOOT_OFF;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

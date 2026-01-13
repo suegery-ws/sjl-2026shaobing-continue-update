@@ -16,29 +16,31 @@ static int8_t reverse_time = 0;
 {
     if(gimbal_motor_control->flag == 1)
     {
-    fp32 bias_angle = 0.0f;
+    static fp32 yaw_bias_angle = 0.0f;
     static fp32 add = 0; //每次的增量
-    static int8_t yaw_reverse_flag = 0; //定义
+    static int8_t yaw_reverse_flag = 0; 
      if(gimbal_motor_control->pid_ref == 0)
     {
         gimbal_motor_control->pid_ref = gimbal_motor_measure->total_angle;
     }
-    if(gimbal_motor_control->pid_ref >= YAW_6020_OFF_SET_RAD)
+    if(gimbal_motor_control->pid_ref >= YAW_6020_OFF_SET_RAD && yaw_reverse_flag == 0)
     {
         add = YAW_EVERY_TIMR_ADD_L;
+        yaw_reverse_flag++;
     }
-    else 
+    if(gimbal_motor_control->pid_ref >= YAW_6020_OFF_SET_RAD && yaw_reverse_flag == 0)
     {
         add = YAW_EVERY_TIMR_ADD_R;
+        yaw_reverse_flag++;
     } 
-    bias_angle = rad_format(gimbal_motor_control->pid_ref - gimbal_motor_measure->total_angle);
+    yaw_bias_angle = rad_format(gimbal_motor_control->pid_ref - gimbal_motor_measure->total_angle);
     //relative angle + angle error + add_angle > max_relative angle
     //云台相对角度+ 误差角度 + 新增角度 如果大于 最大机械角度
-    if (gimbal_motor_measure->total_angle + bias_angle + add > (gimbal_motor_control->motor_limit_left - 0.15)) //向左转到最大
+    if (gimbal_motor_measure->total_angle + yaw_bias_angle + add > (gimbal_motor_control->motor_limit_left)) //向左转到最大
     {
         add = YAW_EVERY_TIMR_ADD_R;
     }
-    else if (gimbal_motor_measure->total_angle + bias_angle + add  < (gimbal_motor_control->motor_limit_right + 0.15)) //向右转到最大
+    if (gimbal_motor_measure->total_angle + yaw_bias_angle + add  < (gimbal_motor_control->motor_limit_right)) //向右转到最大
     {
         add = YAW_EVERY_TIMR_ADD_L;
     }

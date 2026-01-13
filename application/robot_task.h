@@ -78,8 +78,8 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
         dmimu_start = DWT_GetTimeline_ms();
-        // VisionSend(); 
-        DaohangVisionSend(); //15字节导航测试版
+        VisionSend(); 
+        // DaohangVisionSend(); //15字节导航测试版
         ImuTask_Function(); //达妙陀螺仪数据
         dmimu_dt =  DWT_GetTimeline_ms() - dmimu_start;
         if(dmimu_dt > 5)
@@ -138,7 +138,7 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument)
         robot_dt = DWT_GetTimeline_ms() - robot_start;
         if (robot_dt > 5) //原版本是5
             LOGERROR("[freeRTOS] ROBOT core Task is being DELAY! dt = [%f]", &robot_dt);
-        osDelay(3);//5
+        osDelay(5);//5
     }
 }
 

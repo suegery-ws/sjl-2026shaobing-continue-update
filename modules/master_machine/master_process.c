@@ -16,6 +16,8 @@
 
 static CTRL recv_data;
 static BUBING_CTRL bubing_recv_data;
+///////////////////////////////////////////////
+static DAOHANG_CTRL last_daohang_recv_data;
 static DAOHANG_CTRL daohang_recv_data;
 ///////////////////////////////////////////////
 static AUTO_SEND_TO_NUC_DATA_t send_data;
@@ -101,6 +103,7 @@ static void DecodeVisiondanghang()
     DaemonReload(vision_daemon_instance); // 喂狗
     uart_flag = get_protocol_info_daohang(vision_usart_instance->recv_buff, &daohang_recv_data);         // 接收的float数据存储地址
     fsong++;
+
 }
 
 
@@ -240,9 +243,6 @@ void DaohangVisionSend()
     daohang_get_protocol_send_data(&daohang_send_data,daohang_send_buff);
 
     USARTSend(vision_usart_instance, daohang_send_buff, 15, USART_TRANSFER_DMA);
-
-
-
 }
 
 #endif  //VISION_USE_UART
