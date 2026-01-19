@@ -17,6 +17,7 @@
 #include "ins_task.h"
 #include "master_process.h"
 #include "stdint.h"
+#include "dmimu.h"
 
 /* 开发板类型定义,烧录时注意不要弄错对应功能;修改定义后需要重新编译,只能存在一个定义! */
 #define ONE_BOARD // 单板控制整车
@@ -267,6 +268,7 @@ typedef struct
     attitude_t gimbal_imu_data;
     float yaw_motor_single_round_angle; //相对角度
     Gimbal_Data_s* gimbal_data;
+    dm_imu_data_t* small_gimbal_data;
 } Gimbal_Upload_Data_s;
 
 typedef struct

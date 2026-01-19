@@ -13,6 +13,7 @@
 #include "daemon.h"
 #include "bsp_log.h"
 #include "robot_def.h"
+#include <stdint.h>
 
 static CTRL recv_data;
 static BUBING_CTRL bubing_recv_data;
@@ -71,6 +72,21 @@ void DaohangVisionSetAltitude(float yaw, float pitch)
     daohang_send_data.roll = 0;
 }
 
+void UsbVsioionSetAltiitude(float yaw, float pitch, float* q)
+{
+    uint8_t i = 0;
+    usb_send_data.pitch = pitch;
+    usb_send_data.yaw = yaw;
+    usb_send_data.pitch_vel = 0;
+    usb_send_data.bullet_count = 0;
+    usb_send_data.bullet_speed = 0;
+    for(i = 0; i < 4 ; i++)
+    {
+       usb_send_data.q[i] = q[i];
+    }
+    usb_send_data.yaw_vel= 0;
+    usb_send_data.mode = 0;
+}
 
 /**
  * @brief 离线回调函数,将在daemon.c中被daemon task调用

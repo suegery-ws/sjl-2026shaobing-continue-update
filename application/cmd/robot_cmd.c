@@ -624,7 +624,8 @@ void RobotCMDTask()
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
     // DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
-    BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
+    // BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
+    UsbVsioionSetAltiitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.small_gimbal_data->quar_data.q);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置

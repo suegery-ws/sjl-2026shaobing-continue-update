@@ -349,6 +349,7 @@ void GimbalTask()
     gimbal_feedback_data.gimbal_imu_data = *gimbal_IMU_data;
     gimbal_feedback_data.yaw_motor_single_round_angle = big_yaw_motor->measure.angle_single_round;//这个反馈的是哨兵的相对角度
     gimbal_feedback_data.gimbal_data = Gimbal_motor_posture_data;
+    gimbal_feedback_data.small_gimbal_data = dm_gimbal_imu_data;
     // 推送消息
     PubPushMessage(gimbal_pub, (void *)&gimbal_feedback_data);
 }
