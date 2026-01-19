@@ -36,10 +36,9 @@ static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反�
 
 static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
 static RC_ctrl_t *rc_data_last;         // 上一时刻遥控器数据,用于按键边沿检测
-// static CTRL *vision_recv_data; // 视觉接收数据指针,初始化时返回
 static BUBING_CTRL *bubing_vision_recv_data;
 static DAOHANG_CTRL* daoohang_vision_recv_data;
-// static Vision_Send_s vision_send_data;  // 视觉发送数据
+static USB_CTRL* usb_recv_data;
 static cboard_recv_message_t *tongji_vision_recv_data; // 同济视觉接收数据指针,初始化时返回
 static cboard_send_message1_t tongji_vision_send_data_1;  // 同济视觉发送数据1
 static cboard_send_message2_t tongji_vision_send_data_2;  // 同济视觉发送数据2
@@ -171,7 +170,8 @@ double my_cos(double rad)
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
-    bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
+    usb_recv_data = USBVisionInit(&huart6); //这个不占用串口，把handle放里面完全是因为要消除警告
+    // bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
     // daoohang_vision_recv_data = DaohangVisionInit(&huart6);
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));

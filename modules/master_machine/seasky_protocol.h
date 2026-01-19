@@ -19,6 +19,19 @@
 
 typedef __packed struct
 {
+  uint8_t head;
+  uint8_t mode;  // 0: 不控制, 1: 控制云台但不开火，2: 控制云台且开火
+  float yaw;
+  float yaw_vel;
+  float yaw_acc;
+  float pitch;
+  float pitch_vel;
+  float pitch_acc;
+  uint16_t crc16;
+}USB_CTRL; //29
+
+typedef __packed struct
+{
 	uint8_t FRAME_HEADER; 
 	float linearx;
 	float linery;
@@ -78,7 +91,7 @@ typedef struct
 
 typedef __packed struct
 {
-	uint8_t FRAME_HEADER ;       //帧头
+	uint8_t FRAME_HEADER ; //帧头
 	uint8_t mode;  //探测的颜色
 	float roll;
 	float pitch;
@@ -138,8 +151,23 @@ typedef __packed struct
 	uint8_t frame_tail;
 }DAOHANG_AUTO_SEND_TO_NUC_DATA_t; //15
 
+
+typedef __packed struct
+{
+	uint8_t head;
+    uint8_t mode;  // 0: 空闲, 1: 自瞄, 2: 小符, 3: 大符
+    float q[4];    // wxyz顺序
+    float yaw;
+    float yaw_vel;
+    float pitch;
+    float pitch_vel;
+    float bullet_speed;
+    uint16_t bullet_count;  // 子弹累计发送次数
+    uint16_t crc16;
+}USB_AUTO_SEND_TO_NUC_DATA_t; //31
+
 /*更新发送数据帧，并计算发送数据帧长度*/
-void get_protocol_send_data(AUTO_SEND_TO_NUC_DATA_t *send_data,
+void get_usb_protocol_send_data(USB_AUTO_SEND_TO_NUC_DATA_t *send_data,
                             uint8_t *tx_buf);
 
 void bubing_get_protocol_send_data(BUBING_AUTO_SEND_TO_NUC_DATA_t *send_data,
@@ -148,8 +176,8 @@ void bubing_get_protocol_send_data(BUBING_AUTO_SEND_TO_NUC_DATA_t *send_data,
 void daohang_get_protocol_send_data(DAOHANG_AUTO_SEND_TO_NUC_DATA_t *send_data,
                             uint8_t *tx_buf);     // 待发送的数据帧
 /*接收数据处理*/
-uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
-                           CTRL *rx_data);         // 接收的float数据存储地址
+uint16_t get_usb_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
+                           USB_CTRL *rx_data);         // 接收的float数据存储地址
 
 uint16_t get_protocol_info_bubing(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
                                   BUBING_CTRL *rx_data);         // 接收的float数据存储地址

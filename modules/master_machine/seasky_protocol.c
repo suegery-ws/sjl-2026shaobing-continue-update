@@ -19,21 +19,17 @@
 
 
 
-void memory_from_buffer(uint8_t *buffer, CTRL *ctrl)
+void usb_memory_from_buffer(uint8_t *buffer, USB_CTRL *ctrl)
 {
 	//////////////////////////////////////////////////////////////////
-    ctrl->frame_header = buffer[0];
 	//需要的部分
-    memcpy(&ctrl->x, &buffer[1], 4);
-    memcpy(&ctrl->y, &buffer[1+1 * 4], 4);
-    memcpy(&ctrl->distance, &buffer[1+2 * 4], 4);
-	memcpy(&ctrl->shoot_mode, &buffer[1+3*4], 4);
-	memcpy(&ctrl->ahead, &buffer[1+4*4], 4);
-	memcpy(&ctrl->ahead_y, &buffer[1+5*4], 4);
-	memcpy(&ctrl->angle, &buffer[1+6*4], 4);
-	memcpy(&ctrl->mode, &buffer[1+7*4], 4);
-	memcpy(&ctrl->blank, &buffer[1+7*4], 4);
-	memcpy(&ctrl->frame_tail, &buffer[1+7*4+1], 4);
+    memcpy(&ctrl->mode, &buffer[1], 1);
+    memcpy(&ctrl->yaw, &buffer[1+1 * 4], 4);
+    memcpy(&ctrl->yaw_vel, &buffer[1+2 * 4], 4);
+	memcpy(&ctrl->yaw_acc, &buffer[1+3*4], 4);
+	memcpy(&ctrl->pitch, &buffer[1+4*4], 4);
+	memcpy(&ctrl->pitch_vel, &buffer[1+5*4], 4);
+	memcpy(&ctrl->pitch_acc, &buffer[1+6*4], 4);
 	///////////////////////////////////////////////////////////////////
 }
 
@@ -194,10 +190,64 @@ static uint8_t protocol_tail_Check(uint8_t length,  uint8_t *rx_buf)
     此函数根据待发送的数据更新数据帧格式以及内容，实现数据的打包操作
     后续调用通信接口的发送函数发送tx_buf中的对应数据
 */
+
+void get_usb_protocol_send_data(USB_AUTO_SEND_TO_NUC_DATA_t *send_data,
+                            uint8_t *tx_buf)
+{
+    uint8_t index = 0;
+    uint8_t i = 0;
+    
+    tx_buf[index++] = PROTOCOL_CMD_ID;
+    
+    // mode (1 byte)
+    tx_buf[index++] = send_data->mode;
+    
+    // q[4]
+    for(i =0 ; i<4 ; i++)
+    {
+    memcpy(&tx_buf[index], &send_data->q[0], sizeof(float));
+    index++;
+    }
+    
+    // yaw (4 bytes)
+    memcpy(&tx_buf[index], &send_data->yaw, sizeof(float));
+    index += sizeof(float);
+    
+    // yaw_vel (4 bytes)
+    memcpy(&tx_buf[index], &send_data->yaw_vel, sizeof(float));
+    index += sizeof(float);
+    
+    // pitch (2 bytes)
+    memcpy(&tx_buf[index], &send_data->pitch, sizeof(float));
+    index += sizeof(float);
+    
+    // pitch_vel (4 bytes)
+    memcpy(&tx_buf[index], &send_data->pitch_vel, sizeof(float));
+    index += sizeof(float);
+    
+    // bullet_speed (2 bytes)
+    memcpy(&tx_buf[index], &send_data->bullet_speed, sizeof(float));
+    index += sizeof(float);
+    
+    // bullet_count (2 bytes)
+    memcpy(&tx_buf[index], &send_data->bullet_count, sizeof(uint16_t));
+    index += sizeof(uint16_t);
+     
+    // crcr16 (2 bytes)
+    send_data->crc16 = crc_16(tx_buf, 29);
+    memcpy(&tx_buf[index], &send_data->crc16, sizeof(uint16_t));
+    index += sizeof(uint16_t);
+    
+    // tx_buf[29] = 0;
+    // tx_buf[30] = 0;
+    
+
+}
+
 void bubing_get_protocol_send_data(BUBING_AUTO_SEND_TO_NUC_DATA_t *send_data,
                             uint8_t *tx_buf)     // 待发送的数据帧
 {
-     uint8_t index = 0;
+    uint8_t index = 0;
     
     // 帧头 (1 byte)
     tx_buf[index++] = SEND_CMD_BUBING;
@@ -286,20 +336,18 @@ void daohang_get_protocol_send_data(DAOHANG_AUTO_SEND_TO_NUC_DATA_t *send_data,
     此函数用于处理接收数据，
     返回数据内容的id
 */
-uint16_t get_protocol_info(uint8_t *rx_buf,          // 接收到的原始数据 // 接收数据的16位寄存器地址
-                           CTRL *rx_data)         // 接收的float数据存储地址
+uint16_t get_usb_protocol_info(uint8_t *rx_buf,          
+                           USB_CTRL *rx_data)         
 {
     // 放在静态区,避免反复申请栈上空间
     static protocol_rm_struct pro;
     static uint16_t date_length;
 
-    if (protocol_heade_Check(rx_buf))
+    if (protocol_heade_Check(rx_buf) && CRC16_Check_Sum(rx_buf,27))
     {
-        // date_length = OFFSET_BYTE + pro.header.data_length;
-        // if (CRC8_Check_Sum(&rx_buf[0], 34))//大小为35
         {
             // memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);
-            memory_from_buffer(rx_buf,rx_data);
+            usb_memory_from_buffer(rx_buf,rx_data);
             return 1;
         }
     }

@@ -24,6 +24,9 @@ static AUTO_SEND_TO_NUC_DATA_t send_data;
 static BUBING_AUTO_SEND_TO_NUC_DATA_t bubing_send_data;
 static DAOHANG_AUTO_SEND_TO_NUC_DATA_t daohang_send_data;
 ///////////////////////////////////////////////
+static USB_CTRL usb_recv_data;
+static USB_AUTO_SEND_TO_NUC_DATA_t usb_send_data;
+///////////////////////////////////////////////
 static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
 static int uart_flag = 0;
@@ -251,16 +254,19 @@ void DaohangVisionSend()
 
  #include "bsp_usb.h"
  static uint8_t *vis_recv_buff;
+ static uint8_t usb_flag = 0;
+ static uint8_t usbsong = 0;
 
 static void DecodeVision(uint16_t recv_len)
 {
     uint16_t flag_register;
-    get_protocol_info(vis_recv_buff, &flag_register, (uint8_t *)&recv_data.pitch);
+    usb_flag = get_usb_protocol_info(vis_recv_buff,&usb_recv_data);
+    usbsong++;
     // TODO: code to resolve flag_register;
 }
 
 /* 视觉通信初始化 */
-Vision_Recv_s *VisionInit(UART_HandleTypeDef *_handle)
+USB_CTRL *USBVisionInit(UART_HandleTypeDef *_handle)
 {
     UNUSED(_handle); // 仅为了消除警告
     USB_Init_Config_s conf = {.rx_cbk = DecodeVision};
@@ -274,19 +280,15 @@ Vision_Recv_s *VisionInit(UART_HandleTypeDef *_handle)
     };
     vision_daemon_instance = DaemonRegister(&daemon_conf);
 
-    return &recv_data;
+    return &usb_recv_data;
 }
 
 void VisionSend()
 {
-    static uint16_t flag_register;
-    static uint8_t send_buff[VISION_SEND_SIZE];
-    static uint16_t tx_len;
-    // TODO: code to set flag_register
-    flag_register = 30 << 8 | 0b00000001;
-    // 将数据转化为seasky协议的数据包
-    get_protocol_send_data(0x02, flag_register, &send_data.yaw, 3, send_buff, &tx_len);
-    USBTransmit(send_buff, tx_len);
+    static uint8_t send_buff[USB_SEND_SIZE];
+    get_usb_protocol_send_data( &usb_send_data,
+                            send_buff);
+    USBTransmit(send_buff, USB_SEND_SIZE);
 }
 
 #endif // VISION_USE_VCP

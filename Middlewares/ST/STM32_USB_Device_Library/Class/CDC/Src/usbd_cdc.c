@@ -761,7 +761,7 @@ uint8_t USBD_CDC_SetTxBuffer(USBD_HandleTypeDef *pdev,
   if (hcdc == NULL)
   {
     return (uint8_t)USBD_FAIL;
-  }
+  } //这边也设置一个检查点
 
   hcdc->TxBuffer = pbuff;
   hcdc->TxLength = length;

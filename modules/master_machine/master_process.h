@@ -13,7 +13,8 @@
 #define DAOHANG_RECV_SIZE 15u
 #define DAOHANG_SEND_SIZE 15u
 /////////////////////////////////////////
-
+#define USB_RECV_SIZE 29u
+#define USB_SEND_SIZE 31u 
 
 #pragma pack(1)
 typedef enum
@@ -132,6 +133,8 @@ CTRL *VisionInit(UART_HandleTypeDef *_handle);
 BUBING_CTRL *BubingVisionInit(UART_HandleTypeDef *_handle);
 
 DAOHANG_CTRL *DaohangVisionInit(UART_HandleTypeDef *_handle);
+
+USB_CTRL *USBVisionInit(UART_HandleTypeDef *_handle);
 /**
  * @brief 发送视觉数据
  *
