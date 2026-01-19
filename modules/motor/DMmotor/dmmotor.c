@@ -84,13 +84,17 @@ void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_m
 {
     static fp32 angle_set;
     static fp32 add;
+    if(gimbal_cmd->big_yaw == 0)
+    {
+        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //这个加入之后可以解决底盘跟随云台
+    }
     add = gimbal_cmd->big_yaw;
     angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
     gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
-     if(gimbal_motor->pid_ref == 0)
-    {
-        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //拍完视频考虑删掉
-    }
+    //  if(gimbal_motor->pid_ref == 0)
+    // {
+    //     gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //拍完视频考虑删掉
+    // }
 }
 
 
@@ -132,17 +136,23 @@ static void DMMotorDecode(CANInstance *motor_can)
     measure->T_Rotor = (float)rxbuff[7];
 
     //以下是对哨兵多圈计算的插入
-    if(measure->position>=6.25&&measure->position<=12.5)
-	measure->position-=6.25;
-    if(measure->position<=0&&measure->position>-6.25)
-	measure->position+=6.25;
-    if(measure->position<=-6.25&&measure->position>-12.5)
-	measure->position+=12.5;
+    // if(measure->position>=6.25&&measure->position<=12.5)
+	// measure->position-=6.25;
+    // if(measure->position<=0&&measure->position>-6.25)
+	// measure->position+=6.25;
+    // if(measure->position<=-6.25&&measure->position>-12.5)
+	// measure->position+=12.5;
+    if(measure->position>=6.285&&measure->position<=12.57)
+	measure->position-=6.285;
+    if(measure->position<=0&&measure->position>-6.285)
+	measure->position+=6.285;
+    if(measure->position<=-6.285&&measure->position>-12.57)
+	measure->position+=12.57;
     
     //下面是对编码总值的计算 //可以认为4310和大yaw轴是两个东西
     motor->last_ecd = motor->ecd;            //这个可能写的可能有问题，一开始可能会存在垃圾值
-    motor->ecd = measure->position*8192/6.25;//把4310电机看作6020电机，用编码值对他进行运算
-    if(flag <= 10)
+    motor->ecd = measure->position*8192/6.285;//把4310电机看作6020电机，用编码值对他进行运算
+    if(flag <= 100)
 	{
         motor->ecd_sum = motor->ecd;
         flag++;
@@ -461,7 +471,8 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
               }
               if((gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO) && (gimbal_cmd->last_pitch_motor_mode != GIMBAL_MOTOR_AUTO))
               {
-                Instance->pid_ref = pitch_posture_data->pitch_absoulte_angle;
+                // Instance->pid_ref = pitch_posture_data->pitch_absoulte_angle;
+                Instance->pid_ref = -0.035;
               }
               if((gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO) && (gimbal_cmd->last_yaw_motor_mode != GIMBAL_MOTOR_AUTO_XUNLUO))
               {
@@ -476,6 +487,28 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
 {
     Gimbal_Ctrl_Cmd_s* gimbal_cmd = gimbal_cmd_recv; //cmd层传过来的数据
     // DM_Motor_Measure_s* gimbal_motor_measure = &gimbal_motor->measure; //电机反馈至
+
+    if(gimbal_motor->flag == 2)//说明这个是pitch4310电机
+    {
+    if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO)
+    {
+        //gyro模式下，陀螺仪角度控制，小陀螺，无限位
+        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
+    }
+    if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ENCONDE)
+    {
+        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);//这个根本不用
+    }
+    if(gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO)
+    {
+        DMGimbalNUCAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
+    }
+    if(gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+    {
+        DMGimbalAutoXunLuoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
+    }
+
+    }
     if(gimbal_motor->flag == 3) //说明这个是大yaw的4310电机
     { 
     if (gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_GYRO)
@@ -498,27 +531,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
 
     }
 
-    if(gimbal_motor->flag == 2)//说明这个是pitch4310电机
-    {
-    if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_GYRO)
-    {
-        //gyro模式下，陀螺仪角度控制，小陀螺，无限位
-        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
-    }
-    if (gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_ENCONDE)
-    {
-        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);//这个根本不用
-    }
-    if(gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO)
-    {
-        DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
-    }
-    if(gimbal_cmd->pitch_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
-    {
-        DMGimbalAutoXunLuoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data);
-    }
-
-    }
+    
 }
 
 void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *motor,attitude_t* gimbal_IMU_data ,dm_imu_data_t* dm_imu_data)
@@ -541,6 +554,37 @@ void DMGet4310MotorData(Gimbal_Data_s* gimbal_posture_data,DMMotorInstance *moto
 }
 }
 
+void DMGimbalNUCAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data)  //自瞄调不出来，只能我改了
+{ 
+    fp32 bias_angle = 0.0f;
+    fp32 add = 0.0f;
+    static int as = 0;
+    if(gimbal_motor->pid_ref == 0 && as <= 100)
+    {
+        gimbal_motor->pid_ref =  -0.036;
+        as++;
+    }
+    add = gimbal_cmd->pitch;
+    bias_angle = (gimbal_motor->pid_ref - dm_imu_data->oula_data.roll);//这边原函数减的是绝对角度，我认为是相对角度，之后调试再看
+    if (dm_imu_data->oula_data.roll + bias_angle + add > gimbal_motor->motor_limit_left)
+    {
+        //如果是往最大机械角度控制方向左
+        if (add > 0.0f)
+        {
+            add = gimbal_motor->motor_limit_left - dm_imu_data->oula_data.roll - bias_angle;
+        }
+    }
+    else if (dm_imu_data->oula_data.roll + bias_angle + add  < gimbal_motor->motor_limit_right)
+    {
+        if (add < 0.0f)
+        {
+            add = gimbal_motor->motor_limit_right - dm_imu_data->oula_data.roll - bias_angle;
+        }
+    }
+    // gimbal_motor->pid_ref = gimbal_motor->pid_ref + add;
+    gimbal_motor->pid_ref = -0.02;
+    
+}
 
 void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data)  //有限位
 { 

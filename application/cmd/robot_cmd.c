@@ -436,7 +436,7 @@ static void RemoteControlSet()
         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
     }
 
-    shoot_cmd_send.shoot_rate = 3;//射频固定8发每秒
+    shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
     shoot_cmd_send.bullet_speed = SMALL_AMU_25;//设置弹速
 }
 
@@ -452,7 +452,8 @@ static void AUTOKeySet()
     // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
     gimbal_behavior_to_motor();
     //自动瞄准模式
-    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
+    // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
+    gimbal_cmd_send.pitch = 0;
     gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
     //自动巡逻模式云台
     // gimbal_cmd_send.pitch = 0;
@@ -463,7 +464,7 @@ static void AUTOKeySet()
     // chassis_cmd_send.vy = daoohang_vision_recv_data->linearx;
     //////////////////////////////////////////自动模式瞄准部分////////////////////////////////////////////////////////
     shoot_cmd_send.shoot_mode = SHOOT_ON;
-    shoot_cmd_send.shoot_rate = 11;
+    shoot_cmd_send.shoot_rate = 6;
     shoot_cmd_send.bullet_speed = SMALL_AMU_25;
     shoot_cmd_send.friction_mode = FRICTION_ON;
 
@@ -622,8 +623,8 @@ void RobotCMDTask()
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
-    DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
-    // BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
+    // DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
+    BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
