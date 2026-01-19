@@ -205,8 +205,8 @@ void get_usb_protocol_send_data(USB_AUTO_SEND_TO_NUC_DATA_t *send_data,
     // q[4]
     for(i =0 ; i<4 ; i++)
     {
-    memcpy(&tx_buf[index], &send_data->q[0], sizeof(float));
-    index++;
+    memcpy(&tx_buf[index], &send_data->q[i], sizeof(float));  
+    index += sizeof(float);
     }
     
     // yaw (4 bytes)
@@ -234,7 +234,7 @@ void get_usb_protocol_send_data(USB_AUTO_SEND_TO_NUC_DATA_t *send_data,
     index += sizeof(uint16_t);
      
     // crcr16 (2 bytes)
-    send_data->crc16 = crc_16(tx_buf, 29);
+    send_data->crc16 = crc_16(tx_buf, index);  // 使用实际长度 index，而不是固定值 29
     memcpy(&tx_buf[index], &send_data->crc16, sizeof(uint16_t));
     index += sizeof(uint16_t);
     

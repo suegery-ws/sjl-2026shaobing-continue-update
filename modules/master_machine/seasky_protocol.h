@@ -11,10 +11,6 @@
 #define SEND_CMD_BUBING 0xff
 #define rece_cmd_bubing 0x0d
 
-#define BUBING_DWLENGTH 31
-#define SHAOBING_DWLENGTH 34
-
-
 ////////////////////////////////////////////////////////////上位机给下位机/////////////////////////////////////////////////
 
 typedef __packed struct
@@ -28,7 +24,7 @@ typedef __packed struct
   float pitch_vel;
   float pitch_acc;
   uint16_t crc16;
-}USB_CTRL; //29
+}USB_CTRL; //28
 
 typedef __packed struct
 {
@@ -164,7 +160,7 @@ typedef __packed struct
     float bullet_speed;
     uint16_t bullet_count;  // 子弹累计发送次数
     uint16_t crc16;
-}USB_AUTO_SEND_TO_NUC_DATA_t; //31
+}USB_AUTO_SEND_TO_NUC_DATA_t; //42
 
 /*更新发送数据帧，并计算发送数据帧长度*/
 void get_usb_protocol_send_data(USB_AUTO_SEND_TO_NUC_DATA_t *send_data,

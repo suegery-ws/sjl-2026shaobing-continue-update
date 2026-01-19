@@ -271,7 +271,8 @@ void DaohangVisionSend()
  #include "bsp_usb.h"
  static uint8_t *vis_recv_buff;
  static uint8_t usb_flag = 0;
- static uint8_t usbsong = 0;
+ static uint32_t usbsong = 0;
+ static uint32_t usbfa = 0;
 
 static void DecodeVision(uint16_t recv_len)
 {
@@ -305,6 +306,7 @@ void VisionSend()
     get_usb_protocol_send_data( &usb_send_data,
                             send_buff);
     USBTransmit(send_buff, USB_SEND_SIZE);
+    usbfa++;
 }
 
 #endif // VISION_USE_VCP
