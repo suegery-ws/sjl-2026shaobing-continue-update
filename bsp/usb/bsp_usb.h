@@ -15,6 +15,7 @@
 #include "usbd_conf.h"
 #include "usbd_desc.h"
 #include "usbd_cdc_if.h"
+#include <stdint.h>
 
 typedef struct
 {
