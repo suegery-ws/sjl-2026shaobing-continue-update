@@ -303,9 +303,37 @@ USB_CTRL *USBVisionInit(UART_HandleTypeDef *_handle)
 void VisionSend()
 {
     static uint8_t send_buff[USB_SEND_SIZE];
-    get_usb_protocol_send_data( &usb_send_data,
-                            send_buff);
-    USBTransmit(send_buff, USB_SEND_SIZE);
+    static uint32_t last_send_time = 0;
+    static uint32_t send_fail_count = 0;
+    static uint32_t usb_send_result = 0;
+    
+    get_usb_protocol_send_data( &usb_send_data, send_buff);
+    
+    // 限制发送频率，避免过于频繁
+    uint32_t current_time = HAL_GetTick();
+    if (current_time - last_send_time < 10) {  // 10ms 最小间隔
+        return;
+    }
+    
+    // 尝试发送，并处理错误
+    usb_send_result = USBTransmit(send_buff, USB_SEND_SIZE);
+    
+    if (usb_send_result == USBD_OK) {
+        send_fail_count = 0;  // 重置失败计数
+        last_send_time = current_time;
+    } else if (usb_send_result == USBD_BUSY) {
+        send_fail_count++;
+        // 如果连续失败太多次，暂时停止发送
+        if (send_fail_count > 100) {
+            send_fail_count = 0;  // 重置计数器
+            // 可以选择记录错误或重启 USB
+            LOGWARNING("[Vision] USB send failed too many times, skipping");
+        }
+    } else {
+        // 其他错误，记录并跳过
+        LOGERROR("[Vision] USB send error: %d", usb_send_result);
+    }
+    
     usbfa++;
 }
 

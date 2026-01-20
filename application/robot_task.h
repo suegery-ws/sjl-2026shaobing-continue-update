@@ -67,12 +67,22 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
     static float ins_dt;
     static float dmimu_start;
     static float dmimu_dt;
+    // static uint32_t last_check = 0;
+    // static float remaining_time = 0;
     INS_Init(); // 确保BMI088被正确初始化.
     LOGINFO("[freeRTOS] INS Task Start");
     for (;;)
     {
         // 1kHz
         ins_start = DWT_GetTimeline_ms();
+        // if (HAL_GetTick() - last_check > 1000) {  // 每秒检查一次
+        //     remaining_time = uxTaskGetStackHighWaterMark(insTaskHandle);
+        //     if (remaining_time < 20) 
+        //     {
+        //         LOGERROR("[INS] Stack almost full! Remaining: %u", remaining_time);
+        //     }
+        //     last_check = HAL_GetTick();
+        // }
         INS_Task();
         ins_dt = DWT_GetTimeline_ms() - ins_start;
         if (ins_dt > 1)
@@ -83,7 +93,7 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         ImuTask_Function(); //达妙陀螺仪数据
         dmimu_dt =  DWT_GetTimeline_ms() - dmimu_start;
         if(dmimu_dt > 5)
-            LOGERROR("[freeRTOS] DMINS Task is being DELAY! dt = [%f]", &dmimu_dt);
+            // LOGERROR("[freeRTOS] DMINS Task is being DELAY! dt = [%f]", &dmimu_dt);
         //这边写用同济的发送函数
         osDelay(1);
     }

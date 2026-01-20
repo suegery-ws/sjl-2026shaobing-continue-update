@@ -12,6 +12,11 @@
 #include "bsp_usb.h"
 #include "bsp_log.h"
 #include "bsp_dwt.h"
+#include "usbd_cdc_if.h"
+#include <stdint.h>
+
+/* External USB device handle declaration */
+extern USBD_HandleTypeDef hUsbDeviceFS;
 
 static uint8_t *bsp_usb_rx_buffer; // 接收到的数据会被放在这里,buffer size为2048
 static uint8_t usb_fasong_flag = 0;
@@ -26,7 +31,42 @@ uint8_t *USBInit(USB_Init_Config_s usb_conf)
     return bsp_usb_rx_buffer;
 }
 
-void USBTransmit(uint8_t *buffer, uint16_t len)
+uint8_t USBTransmit(uint8_t *buffer, uint16_t len)
 {
+    static uint32_t last_transmit_time = 0;
+    uint32_t current_time = HAL_GetTick();
+    
+    // 防止过于频繁的发送调用
+    if (current_time - last_transmit_time < 5) {  // 5ms 最小间隔
+        usb_fasong_flag = USBD_BUSY;
+        return USBD_BUSY;
+    }
+    
+    // 检查缓冲区有效性
+    if (buffer == NULL || len == 0 || len > 64) {  // USB Full Speed 最大包长 64 字节
+        usb_fasong_flag = USBD_FAIL;
+        return USBD_FAIL;
+    }
+    
+    last_transmit_time = current_time;
+    
+    // 检查 USB 设备状态
+    if (hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) {
+        usb_fasong_flag = USBD_FAIL;
+        return USBD_FAIL;
+    }
+    
     usb_fasong_flag = CDC_Transmit_FS(buffer, len); // 发送
+    if(usb_fasong_flag == USBD_OK)
+    {
+        return USBD_OK;
+    }
+    // 如果发送失败，记录错误但不阻塞
+    if (usb_fasong_flag != USBD_OK) {
+        static uint32_t error_count = 0;
+        error_count++;
+        if (error_count % 100 == 0) {  // 每 100 次错误记录一次
+            LOGWARNING("[USB] Transmit error: %d, count: %d", usb_fasong_flag, error_count);
+        }
+    }
 }
