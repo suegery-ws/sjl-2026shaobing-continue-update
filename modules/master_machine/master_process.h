@@ -141,6 +141,8 @@ USB_CTRL *USBVisionInit(UART_HandleTypeDef *_handle);
  */
 void VisionSend();
 
+void UsbVisionSend();
+
 void DaohangVisionSend();
 /**
  * @brief 设置视觉发送标志位

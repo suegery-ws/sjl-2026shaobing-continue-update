@@ -32,7 +32,7 @@ static DaemonInstance *vision_daemon_instance;
 static USARTInstance *vision_usart_instance;
 static int uart_flag = 0;
 static int fsong = 0; //累计发送次数
-
+static int usbfa = 0;
 //数据耦合性最低的写法
 void VisionSetAltitude(float yaw, float pitch,float big_yaw)
 {
@@ -127,10 +127,10 @@ static void DecodeVisiondanghang()
 
 
 
-static void DecodeVision()
+static void DecodeVision()//usb
 {
     DaemonReload(vision_daemon_instance); // 喂狗
-    uart_flag = get_protocol_info(vision_usart_instance->recv_buff,&recv_data);
+    uart_flag = get_usb_protocol_info(vision_usart_instance->recv_buff,&usb_recv_data);
     // TODO: code to resolve flag_register;
     fsong++;
 
@@ -174,6 +174,25 @@ static void DecodeVisionbubing()
        LOGWARNING(" -> FAILED\r\n");
    
    fsong++;
+}
+
+USB_CTRL *USBVisionInit(UART_HandleTypeDef *_handle)
+{
+    USART_Init_Config_s conf;
+    conf.module_callback = DecodeVision;
+    conf.recv_buff_size = USB_RECV_SIZE;
+    conf.usart_handle = _handle;
+    vision_usart_instance = USARTRegister(&conf);
+
+    // 为master process注册daemon,用于判断视觉通信是否离线
+    Daemon_Init_Config_s daemon_conf = {
+        .callback = VisionOfflineCallback, // 离线时调用的回调函数,会重启串口接收
+        .owner_id = NULL,
+        .reload_count = 5, // 50ms
+    };
+    vision_daemon_instance = DaemonRegister(&daemon_conf);
+
+    return &usb_recv_data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +283,17 @@ void DaohangVisionSend()
     USARTSend(vision_usart_instance, daohang_send_buff, 15, USART_TRANSFER_DMA);
 }
 
+
+void UsbVisionSend()
+{
+    static uint8_t usb_send_buff[USB_SEND_SIZE];
+    
+    get_usb_protocol_send_data( &usb_send_data, usb_send_buff);
+    
+    USARTSend(vision_usart_instance,usb_send_buff,USB_SEND_SIZE,USART_TRANSFER_DMA);
+    
+    usbfa++;
+}
 #endif  //VISION_USE_UART
 
  #ifdef VISION_USE_VCP
@@ -276,7 +306,7 @@ void DaohangVisionSend()
 
 static void DecodeVision(uint16_t recv_len)
 {
-    uint16_t flag_register;
+    DaemonReload(vision_daemon_instance); // 喂狗
     usb_flag = get_usb_protocol_info(vis_recv_buff,&usb_recv_data);
     usbsong++;
     // TODO: code to resolve flag_register;
@@ -303,36 +333,36 @@ USB_CTRL *USBVisionInit(UART_HandleTypeDef *_handle)
 void VisionSend()
 {
     static uint8_t send_buff[USB_SEND_SIZE];
-    static uint32_t last_send_time = 0;
-    static uint32_t send_fail_count = 0;
-    static uint32_t usb_send_result = 0;
+    // static uint32_t last_send_time = 0;
+    // static uint32_t send_fail_count = 0;
+    // static uint32_t usb_send_result = 0;
     
     get_usb_protocol_send_data( &usb_send_data, send_buff);
     
-    // 限制发送频率，避免过于频繁
-    uint32_t current_time = HAL_GetTick();
-    if (current_time - last_send_time < 10) {  // 10ms 最小间隔
-        return;
-    }
+    // // 限制发送频率，避免过于频繁
+    // uint32_t current_time = HAL_GetTick();
+    // if (current_time - last_send_time < 10) {  // 10ms 最小间隔
+    //     return;
+    // }
     
-    // 尝试发送，并处理错误
-    usb_send_result = USBTransmit(send_buff, USB_SEND_SIZE);
+    // // 尝试发送，并处理错误
+    USBTransmit(send_buff, sizeof(USB_AUTO_SEND_TO_NUC_DATA_t));
     
-    if (usb_send_result == USBD_OK) {
-        send_fail_count = 0;  // 重置失败计数
-        last_send_time = current_time;
-    } else if (usb_send_result == USBD_BUSY) {
-        send_fail_count++;
-        // 如果连续失败太多次，暂时停止发送
-        if (send_fail_count > 100) {
-            send_fail_count = 0;  // 重置计数器
-            // 可以选择记录错误或重启 USB
-            LOGWARNING("[Vision] USB send failed too many times, skipping");
-        }
-    } else {
-        // 其他错误，记录并跳过
-        LOGERROR("[Vision] USB send error: %d", usb_send_result);
-    }
+    // if (usb_send_result == USBD_OK) {
+    //     send_fail_count = 0;  // 重置失败计数
+    //     last_send_time = current_time;
+    // } else if (usb_send_result == USBD_BUSY) {
+    //     send_fail_count++;
+    //     // 如果连续失败太多次，暂时停止发送
+    //     if (send_fail_count > 100) {
+    //         send_fail_count = 0;  // 重置计数器
+    //         // 可以选择记录错误或重启 USB
+    //         LOGWARNING("[Vision] USB send failed too many times, skipping");
+    //     }
+    // } else {
+    //     // 其他错误，记录并跳过
+    //     LOGERROR("[Vision] USB send error: %d", usb_send_result);
+    // }
     
     usbfa++;
 }

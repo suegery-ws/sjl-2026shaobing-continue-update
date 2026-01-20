@@ -88,7 +88,7 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument)
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
         dmimu_start = DWT_GetTimeline_ms();
-        VisionSend(); 
+        UsbVisionSend(); 
         // DaohangVisionSend(); //15字节导航测试版
         ImuTask_Function(); //达妙陀螺仪数据
         dmimu_dt =  DWT_GetTimeline_ms() - dmimu_start;
