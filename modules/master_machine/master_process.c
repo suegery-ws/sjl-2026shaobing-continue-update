@@ -103,7 +103,9 @@ static void VisionOfflineCallback(void *id)
     LOGWARNING("[vision] vision offline, restart communication.");
     uart_flag = 0;
 
+
 }
+
 
 #ifdef VISION_USE_UART
 
