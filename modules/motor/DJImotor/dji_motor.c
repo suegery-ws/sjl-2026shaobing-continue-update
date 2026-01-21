@@ -254,11 +254,11 @@ static void DecodeDJIMotor(CANInstance *_instance)
     else if (measure->ecd - measure->last_ecd < -4096)
     measure->total_round++;
     
-    if(abs(measure->total_round) == 1 && measure->total_round_flag == 0)
-    {
-        measure->total_round = 0;
-        measure->total_round_flag++;
-    }
+    // if(abs(measure->total_round) == 1 && measure->total_round_flag == 0)
+    // {
+    //     measure->total_round = 0;
+    //     measure->total_round_flag++;
+    // }//改变电机位置解决
 
     measure->total_angle = (measure->total_round * 6.28 + measure->angle_single_round);
     //以下是对2006的特殊处理

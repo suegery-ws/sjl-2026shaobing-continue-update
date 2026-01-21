@@ -170,9 +170,10 @@ double my_cos(double rad)
 void RobotCMDInit()
 {
     rc_data = RemoteControlInit(&huart3);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个，这个串口与我们的车一样
-    usb_recv_data = USBVisionInit(&huart6); //这个不占用串口，把handle放里面完全是因为要消除警告
+    // usb_recv_data = USBVisionInit(&huart6); //这个不占用串口，把handle放里面完全是因为要消除警告
     // bubing_vision_recv_data = BubingVisionInit(&huart6); // 视觉通信串口，这个没问题
     // daoohang_vision_recv_data = DaohangVisionInit(&huart6);
+    usb_recv_data = USBVisionInit(&huart6);
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));

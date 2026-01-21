@@ -30,7 +30,7 @@
 /* 机器人重要参数定义,注意根据不同机器人进行修改,浮点数需要以.0或f结尾,无符号以u结尾 */
 // 云台参数
 #define YAW_CHASSIS_ALIGN_ECD 0.0f // 6020yaw电机位于中间位置时的C板陀螺仪反馈数据
-#define YAW_6020_OFF_SET_RAD 4.68f // 6020yaw电机位于中间位置时电机弧度制的角度值
+#define YAW_6020_OFF_SET_RAD 2.58f// 6020yaw电机位于中间位置时电机弧度制的角度值
 #define PITCH_6020_OFF_SET_RAD 3.08f // 6020pitch电机位于水平位置时电机弧度制的角度值
 
 // #define BIG_YAW_CHASSIS_ANGLE_POS 0 //云台和底盘对齐时的4310位置值
