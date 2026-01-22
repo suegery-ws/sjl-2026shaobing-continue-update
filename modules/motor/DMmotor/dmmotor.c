@@ -84,10 +84,10 @@ void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_m
 {
     static fp32 angle_set;
     static fp32 add;
-    if(gimbal_cmd->big_yaw == 0)
-    {
-        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //这个加入之后可以解决底盘跟随云台
-    }
+    // if(gimbal_cmd->big_yaw == 0)
+    // {
+    //     gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //这个加入之后可以解决底盘跟随云台
+    // }
     add = gimbal_cmd->big_yaw;
     angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
     gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
