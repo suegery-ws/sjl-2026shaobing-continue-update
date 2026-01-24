@@ -35,8 +35,8 @@
 
 #define PITCH_4310_EVERY_RAD_ADD_UP 0.002
 #define PITCH_4310_EVERY_RAD_ADD_DOWN -0.002
-#define BIG_YAW_EVERY_L -0.12
-#define BIG_YAW_EVERY_R 0.12
+#define BIG_YAW_EVERY_L -0.014
+#define BIG_YAW_EVERY_R 0.014
 
 typedef struct 
 {
@@ -70,6 +70,7 @@ typedef struct
     PIDInstance speed_PID;
     PIDInstance absoulte_angle_PID;
     PIDInstance relative_angle_PID;
+    PIDInstance auto_angle_PID;
     gimbal_motor_mode_e motor_mode;//电机控制模式的继承
     float *other_angle_feedback_ptr;
     float *other_speed_feedback_ptr;

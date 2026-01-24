@@ -97,6 +97,7 @@ typedef struct
     PIDInstance speed_PID;
     PIDInstance rotate_speed_PID;
     PIDInstance follow_speed_PID;
+    PIDInstance auto_angle_PID;
 
     loader_mode_e shoot_mode;//发射机构当前模式
     gimbal_motor_mode_e motor_mode;//云台电机当前模式
@@ -145,6 +146,7 @@ typedef struct
     PID_Init_Config_s follow_speed_PID;
     PID_Init_Config_s relative_angle_PID;
     PID_Init_Config_s absoulte_angle_PID;//专门给云台加了两个个角度环，主要是在初始化云台的时候云台电机到底是什么模式还没定，现在这个框架就只能在不同电机的发送函数里面加不同的PID运算了
+    PID_Init_Config_s auto_angle_PID;//专门针对云台加入的pid
 
     int8_t flag; //预留标志位，表示电机的编号
 

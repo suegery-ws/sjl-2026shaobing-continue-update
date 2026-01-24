@@ -269,7 +269,7 @@ void PowerControl()
             {
                 pid_ref = PIDCalculate(&motor_controller->follow_speed_PID, pid_measure, pid_ref);
             }
-            if(motor_controller->chassis_mode == CHASSIS_ROTATE)
+            if(motor_controller->chassis_mode == CHASSIS_ROTATE || motor_controller->chassis_mode == CHASSIS_AUTO_GUIDGENCE)
             {
                 pid_ref = PIDCalculate(&motor_controller->follow_speed_PID, pid_measure, pid_ref);
             }

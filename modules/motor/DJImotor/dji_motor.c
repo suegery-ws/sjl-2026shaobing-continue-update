@@ -1,4 +1,5 @@
 #include "dji_motor.h"
+#include "controller.h"
 #include "motor_def.h"
 #include "robot_cmd.h"
 #include "robot_def.h"
@@ -28,7 +29,7 @@ static int8_t reverse_time = 0;
         add = YAW_EVERY_TIMR_ADD_L;
         yaw_reverse_flag++;
     }
-    if(gimbal_motor_control->pid_ref >= YAW_6020_OFF_SET_RAD && yaw_reverse_flag == 0)
+    if(gimbal_motor_control->pid_ref <= YAW_6020_OFF_SET_RAD && yaw_reverse_flag == 0)
     {
         add = YAW_EVERY_TIMR_ADD_R;
         yaw_reverse_flag++;
@@ -294,6 +295,7 @@ DJIMotorInstance *DJIMotorInit(Motor_Init_Config_s *config)
     PIDInit(&instance->motor_controller.speed_PID, &config->controller_param_init_config.speed_PID);
     PIDInit(&instance->motor_controller.absoulte_angle_PID, &config->controller_param_init_config.absoulte_angle_PID);
     PIDInit(&instance->motor_controller.relative_angle_PID, &config->controller_param_init_config.relative_angle_PID);
+    PIDInit(&instance->motor_controller.auto_angle_PID,  &config->controller_param_init_config.auto_angle_PID);
     // 反馈指针初始化，前馈指针初始化
     instance->motor_controller.other_angle_feedback_ptr = config->controller_param_init_config.other_angle_feedback_ptr;
     instance->motor_controller.other_speed_feedback_ptr = config->controller_param_init_config.other_speed_feedback_ptr;
@@ -408,10 +410,13 @@ void DJIMotorControl()
             pid_ref = DJI2006PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);
             }
             else
-            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE || motor_controller->motor_mode == GIMBAL_MOTOR_ROTATE || motor_controller->motor_mode == GIMBAL_MOTOR_AUTO || motor_controller->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO) //之后再给自瞄一套
+            if(motor_controller->motor_mode == GIMBAL_MOTOR_ENCONDE || motor_controller->motor_mode == GIMBAL_MOTOR_ROTATE) //之后再给自瞄一套
             pid_ref = PIDCalculate(&motor_controller->relative_angle_PID, pid_measure, pid_ref);
             else if(motor_controller->motor_mode == GIMBAL_MOTOR_GYRO )
-            pid_ref = PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);
+            pid_ref = PIDCalculate(&motor_controller->absoulte_angle_PID, pid_measure, pid_ref);//用不到
+            else if(motor_controller->motor_mode == GIMBAL_MOTOR_AUTO || motor_controller->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            pid_ref = PIDCalculate(&motor_controller->auto_angle_PID, pid_measure, pid_ref);
+            
         }
 
         // 计算速度环,(外层闭环为速度或位置)且(启用速度环)时会计算速度环

@@ -77,7 +77,7 @@ void ChassisInit()
         .controller_param_init_config = {
             .other_speed_feedback_ptr = &feedback,
             .follow_speed_PID = {
-                .Kp = 7000.0f,//7000
+                .Kp = 20000.0f,//7000
                 .Ki = 0,//50.0f,   // 0
                 .Kd = 10,//0.0f,
                 .IntegralLimit = 2000.0f,
@@ -87,7 +87,7 @@ void ChassisInit()
                 .DeadBand = 0,
             },
             .rotate_speed_PID = {
-                .Kp =8000,//2000.0f, // 4.5 //8000
+                .Kp =15000,//2000.0f, // 4.5 //8000
                 .Ki =50,//50.0f,   // 0
                 .Kd =0,//0.0f,   // 0
                 .IntegralLimit = 700.0f,
@@ -144,39 +144,15 @@ void ChassisInit()
     };
     PIDInit(&buffer_PID, &Buffer_pid_conf); // 缓冲能量PID初始化 //待调
     PID_Init_Config_s Angle_pid_conf = {
-        .Kp = 5.9f,
-        .Ki = 0.0f,
+        .Kp = 14.0f,
+        .Ki = 1.0f,
         .Kd = 0.05f,
         .IntegralLimit = 0.2f,
         .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
         .MaxOut = 5.0f,
-        .DeadBand = 0.05
+        .DeadBand = 0.08
     };
     PIDInit(&angle_PID, &Angle_pid_conf);
-
-    // SuperCap_Init_Config_s cap_conf = { //超电如果有的话，在这里改
-    //     .can_config = {
-    //         .can_handle = &hcan2,
-    //         .tx_id = 0x302, // 超级电容默认接收id
-    //         .rx_id = 0x301, // 超级电容默认发送id,注意tx和rx在其他人看来是反的
-    //     }};
-    // cap = SuperCapInit(&cap_conf); // 超级电容初始化
-
-    // 发布订阅初始化,如果为双板,则需要can comm来传递消息
-// #ifdef CHASSIS_BOARD
-//     Chassis_IMU_data = INS_Init(); // 底盘IMU初始化
-
-//     CANComm_Init_Config_s comm_conf = {
-//         .can_config = {
-//             .can_handle = &hcan2,
-//             .tx_id = 0x311,
-//             .rx_id = 0x312,
-//         },
-//         .recv_data_len = sizeof(Chassis_Ctrl_Cmd_s),
-//         .send_data_len = sizeof(Chassis_Upload_Data_s),
-//     };
-//     chasiss_can_comm = CANCommInit(&comm_conf); // can comm初始化
-// #endif                                          // CHASSIS_BOARD
 
 // #ifdef ONE_BOARD // 单板控制整车,则通过pubsub来传递消息
     chassis_sub = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
@@ -257,19 +233,6 @@ static void motor_speed_limit()
  *        对于双板的情况,考虑增加来自底盘板IMU的数据
  *
  */
-// static void EstimateSpeed()
-// {
-//     // 根据电机速度和陀螺仪的角速度进行解算,还可以利用加速度计判断是否打滑(如果有)
-//     // chassis_feedback_data.vx vy wz =
-//     //  ...
-//     chassis_move_update->vx = -chassis_move_update->motor_chassis[0].speed * my_sin((45+angle_motion)*angle_to_radian) -chassis_move_update->motor_chassis[1].speed*my_cos((45+angle_motion)*angle_to_radian) 
-// 															+chassis_move_update->motor_chassis[2].speed*my_sin((45+angle_motion)*angle_to_radian) +chassis_move_update->motor_chassis[3].speed*my_cos((45+angle_motion)*angle_to_radian) ;
-		
-// 	chassis_move_update->vy =  chassis_move_update->motor_chassis[0].speed*my_cos((45+angle_motion)*angle_to_radian) -chassis_move_update->motor_chassis[1].speed*my_sin((45+angle_motion)*angle_to_radian)
-// 															-chassis_move_update->motor_chassis[2].speed*my_cos((45+angle_motion)*angle_to_radian) +chassis_move_update->motor_chassis[3].speed*my_sin((45+angle_motion)*angle_to_radian);
-		
-// 	chassis_move_update->wz = (-chassis_move_update->motor_chassis[0].speed - chassis_move_update->motor_chassis[1].speed - chassis_move_update->motor_chassis[2].speed - chassis_move_update->motor_chassis[3].speed) * MOTOR_SPEED_TO_CHASSIS_SPEED_WZ / MOTOR_DISTANCE_TO_CENTER;
-// }
 
 /* 机器人底盘控制核心任务 */
 void ChassisTask()
@@ -313,7 +276,7 @@ void ChassisTask()
         chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, chassis_cmd_recv.offset_angle,0 );//前面可能有一个负号，这个用pid,角度环的输出结果就是速度目标值
         break;
     case CHASSIS_ROTATE: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = -7;
+        chassis_cmd_recv.wz = -3;
         //这里之后加受击改速策略
         break;
     case CHASSIS_FOLLOW_ROS_FOLLOW_GIMBAL_YAW:  //自动模式底盘跟随云台

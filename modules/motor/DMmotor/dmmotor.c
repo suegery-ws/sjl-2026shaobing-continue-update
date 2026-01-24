@@ -1,5 +1,6 @@
 #include "dmmotor.h"
 #include "HT04.h"
+#include "controller.h"
 #include "dmimu.h"
 #include "memory.h"
 #include "general_def.h"
@@ -74,20 +75,16 @@ void DMGimbalnXunLuoNoLimitRef(DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimb
     add = BIG_YAW_EVERY_L;
     angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
     gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
-     if(gimbal_motor->pid_ref == 0)
-    {
-        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle;
-    }
 }
 
 void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data)  //无限位，小陀螺模式
 {
     static fp32 angle_set;
     static fp32 add;
-    if(gimbal_cmd->big_yaw == 0)
-    {
-        gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //这个加入之后可以解决底盘跟随云台
-    }
+    // if(gimbal_cmd->big_yaw == 0)
+    // {
+    //     gimbal_motor->pid_ref = gimbal_data->Big_Yaw_Data.big_yaw_absoulte_angle; //这个加入之后可以解决底盘跟随云台
+    // }
     add = gimbal_cmd->big_yaw;
     angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
     gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
@@ -182,7 +179,7 @@ DMMotorInstance *DMMotorInit(Motor_Init_Config_s *config)
     PIDInit(&motor->speed_PID, &config->controller_param_init_config.speed_PID);
     PIDInit(&motor->absoulte_angle_PID, &config->controller_param_init_config.absoulte_angle_PID);
     PIDInit(&motor->relative_angle_PID, &config->controller_param_init_config.relative_angle_PID);
-    
+    PIDInit(&motor->auto_angle_PID, &config->controller_param_init_config.auto_angle_PID);
     // 初始化位置低通滤波器 (CAN接收频率约1000Hz，截止频率设为100Hz)
     LowPassFilter_Init_ByFreq(&motor->measure.position_filter, 1000.0f, 30.0f);
     LowPassFilter_Init_ByFreq(&motor->measure.velocity_filter, 1000.0f, 50.0f);
@@ -273,8 +270,10 @@ void DMMotorControl()
             {
             pid_ref1 = PIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//根本用不了这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_ROTATE || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO   || motor->motor_mode == GIMBAL_MOTOR_ROTATE  )
             pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
+            else if(motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            pid_ref1 = PIDCalculate(&motor->auto_angle_PID, pid_measure, pid_ref2);
         }
            if(motor->flag == 3)
         {
@@ -282,10 +281,12 @@ void DMMotorControl()
             {
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO )
             pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制
             else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//这个用来特殊控制大yaw
+            else if(motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            pid_ref1 = DMPIDCalculate(&motor->auto_angle_PID, pid_measure, pid_ref2);//自动模式
         }
            
         }

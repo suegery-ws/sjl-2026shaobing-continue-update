@@ -42,15 +42,24 @@ void GimbalInit()
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
                 .MaxOut = 500,
-            },
+            }, //这个不用
             .relative_angle_PID = {
-                .Kp = 300.0f, // 100
-                .Ki = 0.0f,
-                .Kd = 2.0f,
+                .Kp = 300.0f, // 300
+                .Ki = 0.0f, //0
+                .Kd = 2.0f, //2
                 .DeadBand = 0.0f,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                .IntegralLimit = 0.0f,
+                .IntegralLimit = 100.0f,
                 .MaxOut = 50.0f, //数据待更改//用弧度制就注定pid给的比较大
+            },
+             .auto_angle_PID = {
+                .Kp = 920.0f,  // 50
+                .Ki = 300.0f, // 200
+                .Kd = 2.0f,
+                .DeadBand = 0,
+                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
+                .IntegralLimit = 100.0f,
+                .MaxOut = 50.0f,
             },
             .speed_PID = {
                 .Kp = 450.0f,  // 50
@@ -60,6 +69,7 @@ void GimbalInit()
                 .IntegralLimit = 5000.0f,
                 .MaxOut = 16384,
             },
+           
             .other_angle_feedback_ptr = &gimbal_IMU_data->YawTotalAngle,
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = &gimbal_IMU_data->Gyro[2],
@@ -84,12 +94,12 @@ void GimbalInit()
         },
         .controller_param_init_config = {
             .absoulte_angle_PID = {
-                .Kp = 32.0f, // 10
-                .Ki = 1.00f,
-                .Kd = 0.0f,
+                .Kp = 32.0f, // 32
+                .Ki = 1.00f, //1
+                .Kd = 0.0f, 
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                .IntegralLimit = 100,
-                .MaxOut = 6,
+                .IntegralLimit = 100, //100
+                .MaxOut = 6, //6
             },
             .relative_angle_PID = {
                 .Kp = 23, // 10
@@ -97,15 +107,24 @@ void GimbalInit()
                 .Kd = 0.1,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 0.05,
-                .MaxOut = 5, //数据待更改
+                .MaxOut = 5, 
+            },
+            .auto_angle_PID = {
+                .Kp = 40.0f,  
+                .Ki = 1.0f, 
+                .Kd = 0.0f,
+                .DeadBand = 0,
+                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
+                .IntegralLimit = 100.0f,
+                .MaxOut = 6.0f,
             },
             .speed_PID = {
-                .Kp = 1.5f,  // 50
-                .Ki = 0.0f, // 350
+                .Kp = 1.6f,  // 1.5
+                .Ki = 0.0f, // 0
                 .Kd = 0.0f,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 5000.0f,
-                .MaxOut = 10.0f,
+                .MaxOut = 10.0f, //10
             },
             .other_angle_feedback_ptr = (&dm_gimbal_imu_data->oula_data.roll),
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
@@ -132,8 +151,8 @@ void GimbalInit()
         },
         .controller_param_init_config = {
             .absoulte_angle_PID = {
-                .Kp = 9, // 10
-                .Ki = 0.0,
+                .Kp = 15, // 50
+                .Ki = 0.0, //25
                 .Kd = 0.1,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100,
@@ -149,13 +168,22 @@ void GimbalInit()
                 .MaxOut = 3, //
                 .DeadBand = 0
             },
+            .auto_angle_PID = {
+                .Kp = 50.0f,  
+                .Ki = 25.0f, 
+                .Kd = 0.1f,
+                .DeadBand = 0,
+                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
+                .IntegralLimit = 100.0f,
+                .MaxOut = 3.0f,
+            },
             .speed_PID = {
                 .Kp = 7,  // 7
                 .Ki = 0.0, // 0.1
                 .Kd = 0.0,   // 0
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 2500,//2500
-                .MaxOut = 10, //10
+                .MaxOut = 15, //10
                 .DeadBand = 0 //0.02
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->Yaw,
