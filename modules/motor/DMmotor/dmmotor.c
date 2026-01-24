@@ -1,5 +1,6 @@
 #include "dmmotor.h"
 #include "HT04.h"
+#include "controller.h"
 #include "dmimu.h"
 #include "memory.h"
 #include "general_def.h"
@@ -178,7 +179,7 @@ DMMotorInstance *DMMotorInit(Motor_Init_Config_s *config)
     PIDInit(&motor->speed_PID, &config->controller_param_init_config.speed_PID);
     PIDInit(&motor->absoulte_angle_PID, &config->controller_param_init_config.absoulte_angle_PID);
     PIDInit(&motor->relative_angle_PID, &config->controller_param_init_config.relative_angle_PID);
-    
+    PIDInit(&motor->auto_angle_PID, &config->controller_param_init_config.auto_angle_PID);
     // 初始化位置低通滤波器 (CAN接收频率约1000Hz，截止频率设为100Hz)
     LowPassFilter_Init_ByFreq(&motor->measure.position_filter, 1000.0f, 30.0f);
     LowPassFilter_Init_ByFreq(&motor->measure.velocity_filter, 1000.0f, 50.0f);
@@ -269,8 +270,10 @@ void DMMotorControl()
             {
             pid_ref1 = PIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//根本用不了这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_ROTATE || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO   || motor->motor_mode == GIMBAL_MOTOR_ROTATE  )
             pid_ref1 = PIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制)
+            else if(motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            pid_ref1 = PIDCalculate(&motor->auto_angle_PID, pid_measure, pid_ref2);
         }
            if(motor->flag == 3)
         {
@@ -278,10 +281,12 @@ void DMMotorControl()
             {
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//之后的pitch电机应该会用这个
             }
-            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO || motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            else if(motor->motor_mode == GIMBAL_MOTOR_GYRO )
             pid_ref1 = DMPIDCalculate(&motor->absoulte_angle_PID, pid_measure, pid_ref2);//大yaw基本用陀螺仪控制
             else if(motor->motor_mode == GIMBAL_MOTOR_ROTATE)
             pid_ref1 = DMPIDCalculate(&motor->relative_angle_PID, pid_measure, pid_ref2);//这个用来特殊控制大yaw
+            else if(motor->motor_mode == GIMBAL_MOTOR_AUTO || motor->motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
+            pid_ref1 = DMPIDCalculate(&motor->auto_angle_PID, pid_measure, pid_ref2);//自动模式
         }
            
         }

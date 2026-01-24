@@ -44,7 +44,7 @@ double mx_sin(double rad);
 ///////////////////////////////////
 #define YAW_RC_SEN    -0.000008f //0.002//灵敏度
 #define PITCH_RC_SEN  0.000009f //0.005//灵敏度
-#define BIG_YAW_RC_SEN 0.00001f
+#define BIG_YAW_RC_SEN 0.00002f
 /////////////////////////////////
 #define CHASSIS_VY_RC_SEN 0.006f
 #define CHASSIS_VX_RC_SEN 0.005f

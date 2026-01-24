@@ -304,7 +304,7 @@ static void RemoteControlSet()
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
         gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
     }
     else // 右侧开关状态异常,默认跟随模式
@@ -437,7 +437,7 @@ static void RemoteControlSet()
         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
     }
 
-    shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒
+    shoot_cmd_send.shoot_rate = 6;//射频固定8发每秒
     shoot_cmd_send.bullet_speed = SMALL_AMU_25;//设置弹速
 }
 
@@ -448,7 +448,7 @@ static void AUTOKeySet()
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
     gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
     gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
-    chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+    chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
     gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //后面加入检测时间逻辑，这个是瞄准发射模式
     // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
     gimbal_behavior_to_motor();
