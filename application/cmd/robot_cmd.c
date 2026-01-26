@@ -304,7 +304,7 @@ static void RemoteControlSet()
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
+        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
         gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
     }
     else // 右侧开关状态异常,默认跟随模式
@@ -410,7 +410,7 @@ static void RemoteControlSet()
        else 
        {
          mode_flag++;
-         dead_line_time = 5;
+         dead_line_time = 10;
          mode_flag_time = DWT_GetTimeline_ms();
        }
     }   
@@ -429,7 +429,7 @@ static void RemoteControlSet()
 
     if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET)
     {
-        shoot_cmd_send.shoot_flag = 0; //防止模式切换后shoot_flag卡在2里面出不来了
+        shoot_cmd_send.shoot_flag = 1; //防止模式切换后shoot_flag卡在2里面出不来了
     }
 
     if(switch_is_down(rc_data[TEMP].rc.switch_left))
@@ -437,7 +437,7 @@ static void RemoteControlSet()
         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
     }
 
-    shoot_cmd_send.shoot_rate = 6;//射频固定8发每秒
+    shoot_cmd_send.shoot_rate = 20;//射频固定8发每秒 //热量260 //可以给大一点
     shoot_cmd_send.bullet_speed = SMALL_AMU_25;//设置弹速
 }
 

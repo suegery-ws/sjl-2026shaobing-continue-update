@@ -233,14 +233,14 @@ void get_usb_protocol_send_data(USB_AUTO_SEND_TO_NUC_DATA_t *send_data,
     memcpy(&tx_buf[index], &send_data->bullet_count, sizeof(uint16_t));
     index += sizeof(uint16_t);
      
-    // crcr16 (2 bytes)
-    send_data->crc16 = crc_16(tx_buf, index);  // 使用实际长度 index，而不是固定值 29
-    memcpy(&tx_buf[index], &send_data->crc16, sizeof(uint16_t));
-    index += sizeof(uint16_t);
+    // crcr16 (2 bytes) - 低字节在前，高字节在后（小端序）
+    // send_data->crc16 = crc_16(tx_buf, index);  // 使用实际长度 index，而不是固定值 29
+    // tx_buf[index++] = (uint8_t)(send_data->crc16 & 0xFF);        // 低字节
+    // tx_buf[index++] = (uint8_t)((send_data->crc16 >> 8) & 0xFF); // 高字节
     
-    // tx_buf[29] = 0;
-    // tx_buf[30] = 0;
-    
+    tx_buf[index++] = crc_8(tx_buf,  index);
+
+    tx_buf[index++] = FRAME_TAIL;
 
 }
 
@@ -343,7 +343,7 @@ uint16_t get_usb_protocol_info(uint8_t *rx_buf,
     static protocol_rm_struct pro;
     static uint16_t date_length;
 
-    if (protocol_heade_Check(rx_buf) && CRC16_Check_Sum(rx_buf,27))
+    if (protocol_heade_Check(rx_buf) && CRC8_Check_Sum(rx_buf,26) && protocol_tail_Check(28,rx_buf))
     {
         {
             // memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);

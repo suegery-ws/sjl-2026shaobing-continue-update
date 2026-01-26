@@ -20,9 +20,11 @@ static Shoot_Ctrl_Cmd_s shoot_cmd_recv; // 来自cmd的发射控制信息
 static Subscriber_t *shoot_sub;
 static Shoot_Upload_Data_s shoot_feedback_data; // 来自cmd的发射控制信息
 static float pid_ref = 0;
-static int8_t pa6 = 0;
-static int8_t pa7 = 0;
+static int8_t pa12 =0;
+static int8_t pa0 = 0;
 static int8_t pa1 = 0;
+static int32_t dadan = 0;
+static int32_t heat = 0;
 // dwt定时,计算冷却用
 static float hibernate_time = 0, dead_time = 0;
 
@@ -79,7 +81,7 @@ void ShootInit()
         .controller_param_init_config = {
             .absoulte_angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
-                .Kp = 100, // 10
+                .Kp = 300, // 10
                 .Ki = 0,
                 .Kd = 0.5,
                 .MaxOut = 100,
@@ -146,6 +148,24 @@ void ShootTask()
     
     // 休眠时间到达,重置休眠计时器
 
+    pa1 = HAL_GPIO_ReadPin(GPIOF,  GPIO_PIN_1);
+    pa0 = HAL_GPIO_ReadPin(GPIOF,  GPIO_PIN_0);
+    pa12 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_6);
+
+    if(pa1 == 1 && pa0 == 0)
+    {
+        dadan = 0; //打弹状态
+    }
+    else if(pa0 == 1 && pa1 == 0)
+    {
+        dadan = 1; //闲置状态
+    }
+
+    
+    
+    
+
+
     // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
     switch (shoot_cmd_recv.load_mode)
     {
@@ -179,7 +199,7 @@ void ShootTask()
         DJIMotorSetRef(loader, loader->motor_controller.pid_ref); // 达到指定位置之前保持位置不变，持续pid控制
         shoot_feedback_data.feedback_shoot_flag = 2; //发射完成反馈给cmd
     }
-    if( (fabsf(loader->motor_controller.absoulte_angle_PID.Err) <= 0.3f) && shoot_cmd_recv.shoot_flag == 2)
+    if( (fabsf(loader->motor_controller.absoulte_angle_PID.Err) <= 0.1f) && shoot_cmd_recv.shoot_flag == 2)
     {
         DJI2006MotorInhert(&shoot_cmd_recv, loader);
         shoot_feedback_data.feedback_shoot_flag = 0; //发射完成反馈给cmd
@@ -220,8 +240,8 @@ void ShootTask()
             DJIMotorSetRef(friction_r, -20);
             break;
         case SMALL_AMU_25: //25m/s
-            DJIMotorSetRef(friction_l, 23.3);
-            DJIMotorSetRef(friction_r, -23.3);
+            DJIMotorSetRef(friction_l, -23.3);
+            DJIMotorSetRef(friction_r, 23.3);
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
             break;
@@ -232,11 +252,9 @@ void ShootTask()
         DJIMotorSetRef(friction_l, 0);
         DJIMotorSetRef(friction_r, 0);
     }
-    
-    pa6 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_6);
-    pa7 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_7);
-    pa1 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_1);
 
+    
+    
     // 反馈数据,实现单发限位状态机
     PubPushMessage(shoot_pub, (void *)&shoot_feedback_data);
 }

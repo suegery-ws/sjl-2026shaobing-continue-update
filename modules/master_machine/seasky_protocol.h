@@ -23,7 +23,8 @@ typedef __packed struct
   float pitch;
   float pitch_vel;
   float pitch_acc;
-  uint16_t crc16;
+  uint8_t crc8;
+  uint8_t tail;
 }USB_CTRL; //28
 
 typedef __packed struct
@@ -159,7 +160,8 @@ typedef __packed struct
     float pitch_vel;
     float bullet_speed;
     uint16_t bullet_count;  // 子弹累计发送次数
-    uint16_t crc16;
+    uint8_t crc8;
+	uint8_t tail;
 }USB_AUTO_SEND_TO_NUC_DATA_t; //42
 
 /*更新发送数据帧，并计算发送数据帧长度*/

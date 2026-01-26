@@ -23,7 +23,7 @@ uint16_t crc_16(const uint8_t *input_str, uint16_t num_bytes)
     if (ptr != NULL)
         for (a = 0; a < num_bytes; a++)
         {
-            crc = (crc >> 8) ^ crc_tab16[(crc ^ (uint16_t)*ptr++) & 0x00FF];
+            crc = (crc >> 8) ^ crc_tab16[(crc ^ (uint16_t)*ptr++) & 0x00FF];//0x00FF为了保证数在255范围之内
         }
     return crc;
 }
@@ -90,7 +90,7 @@ void init_crc16_tab(void)
         for (j = 0; j < 8; j++)
         {
             if ((crc ^ c) & 0x0001)
-                crc = (crc >> 1) ^ CRC_POLY_16;
+                crc = (crc >> 1) ^ CRC_POLY_CCITT_16;
             else
                 crc = crc >> 1;
             c = c >> 1;

@@ -75,8 +75,8 @@ void DaohangVisionSetAltitude(float yaw, float pitch)
 void UsbVsioionSetAltiitude(float yaw, float pitch, float* q)
 {
     uint8_t i = 0;
-    usb_send_data.pitch = pitch;
-    usb_send_data.yaw = yaw;
+    usb_send_data.pitch = 6.28;
+    usb_send_data.yaw = 6.28;
     usb_send_data.pitch_vel = 0;
     usb_send_data.bullet_count = 0;
     usb_send_data.bullet_speed = 0;
