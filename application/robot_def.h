@@ -274,8 +274,7 @@ typedef struct
 typedef struct
 {
     int16_t feedback_shoot_flag ;
-    // code to go here
-    // ...
+    int16_t dadan;
 } Shoot_Upload_Data_s;
 
 #pragma pack() // 开启字节对齐,结束前面的#pragma pack(1)

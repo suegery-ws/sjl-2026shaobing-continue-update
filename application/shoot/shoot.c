@@ -23,6 +23,7 @@ static float pid_ref = 0;
 static int8_t pa12 =0;
 static int8_t pa0 = 0;
 static int8_t pa1 = 0;
+static int8_t pc8 = 0;
 static int32_t dadan = 0;
 static int32_t heat = 0;
 // dwt定时,计算冷却用
@@ -147,25 +148,20 @@ void ShootTask()
     // }
     
     // 休眠时间到达,重置休眠计时器
-
+    //如果判定过快可以加一个延长时间，即一段时间内不再进入此判断
     pa1 = HAL_GPIO_ReadPin(GPIOF,  GPIO_PIN_1);
     pa0 = HAL_GPIO_ReadPin(GPIOF,  GPIO_PIN_0);
     pa12 = HAL_GPIO_ReadPin(GPIOA,  GPIO_PIN_6);
 
     if(pa1 == 1 && pa0 == 0)
     {
-        dadan = 0; //打弹状态
+        dadan = 0; //有一发弹经过
     }
-    else if(pa0 == 1 && pa1 == 0)
+    if(pa1 == 0 && pa0 == 1)
     {
-        dadan = 1; //闲置状态
+        dadan = 1; //枪管空闲
     }
-
-    
-    
-    
-
-
+    shoot_feedback_data.dadan = dadan;
     // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
     switch (shoot_cmd_recv.load_mode)
     {
@@ -253,7 +249,7 @@ void ShootTask()
         DJIMotorSetRef(friction_r, 0);
     }
 
-    
+    pc8 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8);
     
     // 反馈数据,实现单发限位状态机
     PubPushMessage(shoot_pub, (void *)&shoot_feedback_data);

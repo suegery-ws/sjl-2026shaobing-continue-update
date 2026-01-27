@@ -130,8 +130,8 @@ void GimbalInit()
             // 还需要增加角速度额外反馈指针,注意方向,ins_task.md中有c板的bodyframe坐标系说明
             .other_speed_feedback_ptr = (&dm_gimbal_imu_data->gyro_data.x_gyro), //这个以后改达妙陀螺仪了
             .flag = 2,
-            .motor_limit_left = 0.54f,//待修改
-            .motor_limit_right = -0.57f,//待修改
+            .motor_limit_left = 0.54f,//54
+            .motor_limit_right = 0.0f,//-0.57
             
         },
         .controller_setting_init_config = {
