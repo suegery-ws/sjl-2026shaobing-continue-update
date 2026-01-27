@@ -142,5 +142,6 @@ void ImuTask_Function(void)
 			vTaskDelay(1);
 			IMU_RequestData(&hcan2,DM_IMU_TX_ID,3);
 			vTaskDelay(1);
-	
+	        IMU_RequestData(&hcan2,DM_IMU_TX_ID,4);
+			vTaskDelay(1);
 }

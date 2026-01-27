@@ -59,8 +59,6 @@ static attitude_t *IMU_data; //imu数据就直接放命令层了，到时候直�
 static int16_t mode_flag = 0; // 发射标志位,12345分别表示不同的拨弹模式
 extern uint8_t rc_offline_flag;
 extern uint8_t last_rc_offline_flag;
-// BMI088Instance *bmi088_test; // 云台IMU
-// BMI088_Data_t bmi088_data;
 
 /**
   * @brief          一阶低通滤波初始化
@@ -281,7 +279,7 @@ static void RemoteControlSet()
     static int16_t big_yaw_channel = 0;
     static int16_t vx_channel=0, vy_channel=0;
     static float vx_set_channel=0, vy_set_channel=0;
-
+    static int16_t dadan = 1;
     static int16_t flag = 0; //单发限位标志位
 
     chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
@@ -290,7 +288,8 @@ static void RemoteControlSet()
     gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
     shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;
     shoot_cmd_send.shoot_flag = shoot_fetch_data.feedback_shoot_flag;
-    
+    dadan = shoot_fetch_data.dadan;
+
     // 控制底盘和云台运行模式,云台待添加,云台是否始终使用IMU数据?
     if (switch_is_down(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[下],无力模式,底盘和云台均不动
     {
@@ -422,12 +421,12 @@ static void RemoteControlSet()
     }
         shoot_cmd_send.load_mode = mode_flag; //模式切换
 
-    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0)//单发模式下做一个限位 //之后这里可以让上位机再发一个flag，即刻做到精准的单发限位
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0 && dadan == 1)//单发模式下做一个限位 //之后这里可以让上位机再发一个flag，即刻做到精准的单发限位
     {
         shoot_cmd_send.shoot_flag = 1;  
     }
 
-    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET)
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET && dadan == 1)
     {
         shoot_cmd_send.shoot_flag = 1; //防止模式切换后shoot_flag卡在2里面出不来了
     }
@@ -437,7 +436,7 @@ static void RemoteControlSet()
         shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
     }
 
-    shoot_cmd_send.shoot_rate = 20;//射频固定8发每秒 //热量260 //可以给大一点
+    shoot_cmd_send.shoot_rate = 8;//射频固定8发每秒 //热量260 //可以给大一点
     shoot_cmd_send.bullet_speed = SMALL_AMU_25;//设置弹速
 }
 
@@ -631,7 +630,7 @@ void RobotCMDTask()
     // 设置视觉发送数据,还需增加加速度和角速度数据 
     // DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
     // BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
-    UsbVsioionSetAltiitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.small_gimbal_data->quar_data.q);
+    UsbVsioionSetAltiitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.small_gimbal_data->quar_data.q,gimbal_fetch_data.small_gimbal_data->gyro_data.z_gyro,gimbal_fetch_data.small_gimbal_data->gyro_data.x_gyro,shoot_cmd_send.bullet_speed);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置

@@ -158,7 +158,7 @@ typedef __packed struct
     float yaw_vel;
     float pitch;
     float pitch_vel;
-    float bullet_speed;
+    float bullet_speed; //弹速
     uint16_t bullet_count;  // 子弹累计发送次数
     uint8_t crc8;
 	uint8_t tail;

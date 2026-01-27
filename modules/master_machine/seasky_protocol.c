@@ -343,7 +343,8 @@ uint16_t get_usb_protocol_info(uint8_t *rx_buf,
     static protocol_rm_struct pro;
     static uint16_t date_length;
 
-    if (protocol_heade_Check(rx_buf) && CRC8_Check_Sum(rx_buf,26) && protocol_tail_Check(28,rx_buf))
+    // if (protocol_heade_Check(rx_buf) && CRC8_Check_Sum(rx_buf,26) && protocol_tail_Check(28,rx_buf))
+    if (protocol_heade_Check(rx_buf) && protocol_tail_Check(28,rx_buf))
     {
         {
             // memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);

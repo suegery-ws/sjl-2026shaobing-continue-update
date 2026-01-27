@@ -21,11 +21,13 @@
 #include "message_center.h"
 #include "referee_task.h"
 #include "wholecardata.h"
+#include "lowpass_filter.h"
 
 #include "general_def.h"
 #include "bsp_dwt.h"
 #include "referee_UI.h"
 #include "arm_math.h"
+#include <stdint.h>
 
 /* 根据robot_def.h中的macro自动计算的参数 */
 #define HALF_WHEEL_BASE (WHEEL_BASE / 2.0f)     // 半轴距
@@ -62,12 +64,14 @@ static Chassis_Data_s* chassis_data;
 static attitude_t* Chassis_IMU_data;
 static float feedback;
 static float delat_angle;
-/* 用于自旋变速策略的时间变量 */
-// static float t;
 
 /* 私有函数计算的中介变量,设为静态避免参数传递的开销 */
 static float chassis_vx, chassis_vy;                      // 将云台系的速度投影到底盘
 static float vt_lf, vt_rf, vt_lb, vt_rb;                  // 底盘速度解算后的临时输出,待进行限幅
+static int16_t random_time = 0;
+static float random_speed;
+static float base_speed = 0;
+static LowPassFilter_t* change_speed_pass_filter;
 
 void ChassisInit()
 {   
@@ -154,6 +158,8 @@ void ChassisInit()
     };
     PIDInit(&angle_PID, &Angle_pid_conf);
 
+    LowPassFilter_Init_ByFreq(change_speed_pass_filter,256,50);//不好掌控频率的话可以尝试另一个初始化
+
 // #ifdef ONE_BOARD // 单板控制整车,则通过pubsub来传递消息
     chassis_sub = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
     chassis_pub = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
@@ -237,6 +243,7 @@ static void motor_speed_limit()
 /* 机器人底盘控制核心任务 */
 void ChassisTask()
 {
+
     // 后续增加没收到消息的处理(双板的情况)
     // 获取新的控制信息
 #ifdef ONE_BOARD
@@ -248,6 +255,7 @@ void ChassisTask()
 
 #endif // CHASSIS_BOARD
 
+    random_time++;
     Chassis_IMU_data = chassis_cmd_recv.IMU_data;
     DJIGetChassisMotorData(chassis_data,&chassis_cmd_recv,Chassis_IMU_data,motor_lf,motor_rf,motor_lb,motor_rb);
     chassis_behavior_to_motor(&chassis_cmd_recv);//将底盘的行为模式转换为电机控制模式
@@ -283,11 +291,44 @@ void ChassisTask()
         chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, chassis_cmd_recv.offset_angle,0 );//只需要下x,y的速度
         break;
     case CHASSIS_NO_FOLLOW_YAW: //给定一个角度转过去
-        // delat_angle = chassis_cmd_recv.no_follow_yaw_angle - chassis_data->chassis_posture_data.car_yaw_posture;
-        // chassis_cmd_recv.wz = -PIDCalculate(&angle_PID, 0, delat_angle);//前面可能有一个负号，这个用pid,角度环的输出结果就是速度目标值
+        delat_angle = chassis_cmd_recv.no_follow_yaw_angle - chassis_data->chassis_posture_data.car_yaw_posture;
+        chassis_cmd_recv.wz = PIDCalculate(&angle_PID, 0, delat_angle);//前面可能有一个负号，这个用pid,角度环的输出结果就是速度目标值
         break;
-    case CHASSIS_AUTO_NO_FOLLOW_YAW: //哨兵变速小陀螺
-       //变速逻辑后面再加
+    case CHASSIS_AUTO_NO_FOLLOW_YAW: //哨兵变速小陀螺 //未解锁裁判系统，之后再试
+    /////////////////////////////////这部分决定base_speed////////////////////////////
+            //if(robot_hurt_t.HP_deduction_reason ==0 )
+			// {
+			// 	hurt_spin_time=0;
+			// 	robot_hurt_t.HP_deduction_reason =6;  //default
+			// }
+			// else 
+			// {
+			// 	hurt_spin_time++;
+			// }
+			
+			// if(hurt_spin_time < 6000)
+			// {
+			// 	//chassis_move_control->wz_set =3.0f;
+			// 	base_speed=3;
+			// }		
+			// else
+			// {
+			//   //chassis_move_control->wz_set =0.0f;    //无minipc，测试使用
+			// 	base_speed=2;
+			// } //挨打的时候速度快点，平时速度慢点
+			base_speed = 7;
+			////////////////////////////随机转速///////////////////////////////////
+			if(random_time>500)
+			{
+			srand(HAL_GetTick());
+			random_speed = (rand() % 3) * 0.5 + base_speed; // 0 0.5 1  9
+			random_time=0;
+			}
+
+            random_speed = LowPassFilter_Update(change_speed_pass_filter, random_speed);
+            chassis_cmd_recv.wz = random_speed; 
+			///////////////////////////////////////////////////////////////////////
+			
         break;
     case CHASSIS_AUTO_GUIDGENCE:  //哨兵旋转小陀螺自动导航，速度恒定，旋转速度由上位机给出，暂时写恒定
         chassis_cmd_recv.wz = -7;  //其实可以什么都不用写

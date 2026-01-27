@@ -165,7 +165,7 @@ void BubingVisionSetAltitude(float yaw, float pitch,float big_yaw);
 
 void DaohangVisionSetAltitude(float yaw, float pitch);
 
-void UsbVsioionSetAltiitude(float yaw, float pitch, float* q);
+void UsbVsioionSetAltiitude(float yaw, float pitch, float* q, float yaw_vel, float pitch_vel, float bullet_speed);
 
 
 #endif // !MASTER_PROCESS_H

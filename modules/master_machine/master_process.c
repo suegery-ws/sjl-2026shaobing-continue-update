@@ -72,19 +72,24 @@ void DaohangVisionSetAltitude(float yaw, float pitch)
     daohang_send_data.roll = 0;
 }
 
-void UsbVsioionSetAltiitude(float yaw, float pitch, float* q)
+void UsbVsioionSetAltiitude(float yaw, float pitch, float* q, float yaw_vel, float pitch_vel, float bullet_speed)
 {
     uint8_t i = 0;
-    usb_send_data.pitch = 6.28;
-    usb_send_data.yaw = 6.28;
-    usb_send_data.pitch_vel = 0;
+    usb_send_data.pitch = pitch;
+    usb_send_data.yaw = yaw;
+    usb_send_data.pitch_vel = pitch_vel;
     usb_send_data.bullet_count = 0;
-    usb_send_data.bullet_speed = 0;
-    for(i = 0; i < 4 ; i++)
-    {
-       usb_send_data.q[i] = q[i];
-    }
-    usb_send_data.yaw_vel= 0;
+    usb_send_data.bullet_speed = bullet_speed;
+    // for(i = 0; i < 4 ; i++)
+    // {
+    //    usb_send_data.q[i] = q[i];
+    // }
+    usb_send_data.q[0] = q[0];
+    usb_send_data.q[1] = q[2];
+    usb_send_data.q[2] = q[1];
+    usb_send_data.q[3] = q[3];
+    //////////////////////////////////
+    usb_send_data.yaw_vel= yaw_vel;
     usb_send_data.mode = 0;
 }
 
