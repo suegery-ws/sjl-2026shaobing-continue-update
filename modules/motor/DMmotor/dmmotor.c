@@ -593,12 +593,13 @@ void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_
     fp32 add = 0.0f;
     static int as = 0;
     if(gimbal_motor->pid_ref == 0 && as == 0)
+    // if(gimbal_motor->pid_ref == 0)
     {
         gimbal_motor->pid_ref =  dm_imu_data->oula_data.roll;
         as++;
     }
     add = gimbal_cmd->pitch;
-    bias_angle = (gimbal_motor->pid_ref - dm_imu_data->oula_data.roll);//这边原函数减的是绝对角度，我认为是相对角度，之后调试再看
+    bias_angle = (gimbal_motor->pid_ref - dm_imu_data->oula_data.roll);//这边原函数减的是绝对角度
     if (dm_imu_data->oula_data.roll + bias_angle + add > gimbal_motor->motor_limit_left)
     {
         //如果是往最大机械角度控制方向左

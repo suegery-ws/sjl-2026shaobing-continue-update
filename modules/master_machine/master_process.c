@@ -33,6 +33,7 @@ static USARTInstance *vision_usart_instance;
 static int uart_flag = 0;
 static int fsong = 0; //累计发送次数
 static int usbfa = 0;
+
 //数据耦合性最低的写法
 void VisionSetAltitude(float yaw, float pitch,float big_yaw)
 {
@@ -93,6 +94,19 @@ void UsbVsioionSetAltiitude(float yaw, float pitch, float* q, float yaw_vel, flo
     usb_send_data.mode = 0;
 }
 
+
+void UsbVisionSend()
+{
+    static uint8_t usb_send_buff[USB_SEND_SIZE];
+    
+    get_usb_protocol_send_data( &usb_send_data, usb_send_buff);
+    
+    USARTSend(vision_usart_instance,usb_send_buff,USB_SEND_SIZE,USART_TRANSFER_DMA);
+    
+    usbfa++;
+
+   
+}
 /**
  * @brief 离线回调函数,将在daemon.c中被daemon task调用
  * @attention 由于HAL库的设计问题,串口开启DMA接收之后同时发送有概率出现__HAL_LOCK()导致的死锁,使得无法
@@ -138,6 +152,7 @@ static void DecodeVision()//usb
 {
     DaemonReload(vision_daemon_instance); // 喂狗
     uart_flag = get_usb_protocol_info(vision_usart_instance->recv_buff,&usb_recv_data);
+    UsbVisionSend();
     // TODO: code to resolve flag_register;
     fsong++;
 
@@ -291,16 +306,7 @@ void DaohangVisionSend()
 }
 
 
-void UsbVisionSend()
-{
-    static uint8_t usb_send_buff[USB_SEND_SIZE];
-    
-    get_usb_protocol_send_data( &usb_send_data, usb_send_buff);
-    
-    USARTSend(vision_usart_instance,usb_send_buff,USB_SEND_SIZE,USART_TRANSFER_DMA);
-    
-    usbfa++;
-}
+
 #endif  //VISION_USE_UART
 
  #ifdef VISION_USE_VCP

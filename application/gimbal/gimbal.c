@@ -100,6 +100,7 @@ void GimbalInit()
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 100, //100
                 .MaxOut = 6, //6
+                .DeadBand = 0,
             },
             .relative_angle_PID = {
                 .Kp = 23, // 10
@@ -108,10 +109,10 @@ void GimbalInit()
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
                 .IntegralLimit = 0.05,
                 .MaxOut = 5, 
-            },
+            }, //用不到
             .auto_angle_PID = {
-                .Kp = 40.0f,  
-                .Ki = 1.0f, 
+                .Kp = 38.0f,  
+                .Ki = 20.0f, 
                 .Kd = 0.0f,
                 .DeadBand = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,

@@ -23,15 +23,23 @@ void usb_memory_from_buffer(uint8_t *buffer, USB_CTRL *ctrl)
 {
 	//////////////////////////////////////////////////////////////////
 	//需要的部分
-    memcpy(&ctrl->mode, &buffer[1], 1);
-    memcpy(&ctrl->yaw, &buffer[1+1 * 4], 4);
-    memcpy(&ctrl->yaw_vel, &buffer[1+2 * 4], 4);
-	memcpy(&ctrl->yaw_acc, &buffer[1+3*4], 4);
-	memcpy(&ctrl->pitch, &buffer[1+4*4], 4);
-	memcpy(&ctrl->pitch_vel, &buffer[1+5*4], 4);
-	memcpy(&ctrl->pitch_acc, &buffer[1+6*4], 4);
-	///////////////////////////////////////////////////////////////////
+   uint8_t index = 0;
+ 
+    ctrl->head = buffer[index++];
+    ctrl->mode = buffer[index++];
+ 
+    memcpy(&ctrl->yaw,       &buffer[index], sizeof(float)); index += sizeof(float);
+    memcpy(&ctrl->yaw_vel,   &buffer[index], sizeof(float)); index += sizeof(float);
+    memcpy(&ctrl->yaw_acc,   &buffer[index], sizeof(float)); index += sizeof(float);
+    memcpy(&ctrl->pitch,     &buffer[index], sizeof(float)); index += sizeof(float);
+    memcpy(&ctrl->pitch_vel, &buffer[index], sizeof(float)); index += sizeof(float);
+    memcpy(&ctrl->pitch_acc, &buffer[index], sizeof(float)); index += sizeof(float);
+ 
+    ctrl->crc8 = buffer[index++];
+    ctrl->tail = buffer[index++];
 }
+	///////////////////////////////////////////////////////////////////
+
 
 /**
  * @brief 解包BUBING_CTRL类型数据
@@ -341,13 +349,13 @@ uint16_t get_usb_protocol_info(uint8_t *rx_buf,
 {
     // 放在静态区,避免反复申请栈上空间
     static protocol_rm_struct pro;
-    static uint16_t date_length;
+    // static uint8_t crc = 0;
 
-    // if (protocol_heade_Check(rx_buf) && CRC8_Check_Sum(rx_buf,26) && protocol_tail_Check(28,rx_buf))
+    // if (protocol_heade_Check(rx_buf) && CRC8_Check_Sum(rx_buf, sizeof(USB_CTRL) - 1) && protocol_tail_Check(28,rx_buf))
     if (protocol_heade_Check(rx_buf) && protocol_tail_Check(28,rx_buf))
     {
         {
-            // memcpy(rx_data, rx_buf + 8, pro.header.data_length - 2);
+            // crc = crc_8(rx_buf, 26);
             usb_memory_from_buffer(rx_buf,rx_data);
             return 1;
         }
