@@ -132,7 +132,7 @@ void GimbalInit()
             .other_speed_feedback_ptr = (&dm_gimbal_imu_data->gyro_data.x_gyro), //这个以后改达妙陀螺仪了
             .flag = 2,
             .motor_limit_left = 0.54f,//54
-            .motor_limit_right = 0.0f,//-0.57
+            .motor_limit_right = -0.57f,//-0.57
             
         },
         .controller_setting_init_config = {
