@@ -1,6 +1,7 @@
 #include "dmmotor.h"
 #include "HT04.h"
 #include "controller.h"
+#include "dji_motor.h"
 #include "dmimu.h"
 #include "memory.h"
 #include "general_def.h"
@@ -76,6 +77,29 @@ void DMGimbalnXunLuoNoLimitRef(DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimb
     angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
     gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后的目标值，这个也不需要限幅//负号是为了向左转正确
 }
+
+
+void DMGimbalnAutoNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data,DJIMotorInstance* yaw_motor)  //自瞄模式下大yaw跟随
+{
+    static fp32 angle_set;
+    static fp32 add = 0;
+    angle_set = gimbal_motor->pid_ref;  //在transit里把absolute_angle_set设置成了当前角度//pid_ref可能需要初始化
+    if(fabs(yaw_motor->motor_controller.pid_ref - yaw_motor->motor_controller.motor_limit_left) < 0.2)
+    {
+        gimbal_motor->pid_ref = rad_format(angle_set + 0.006);
+        yaw_motor->motor_controller.pid_ref -= 0.05;
+        return;
+    }
+    if(fabs(yaw_motor->motor_controller.pid_ref - yaw_motor->motor_controller.motor_limit_right) < 0.2)
+    {
+        gimbal_motor->pid_ref = rad_format(angle_set - 0.006);
+        yaw_motor->motor_controller.pid_ref += 0.05;
+        return;
+    }
+    gimbal_motor->pid_ref = rad_format(angle_set + add);  //更新为增加后
+    
+}
+
 
 void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data)  //无限位，小陀螺模式
 {
@@ -484,7 +508,7 @@ void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInsta
 }
    
 
-void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data, dm_imu_data_t* dm_imu_data)
+void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data, dm_imu_data_t* dm_imu_data, DJIMotorInstance* yaw_motor)
 {
     Gimbal_Ctrl_Cmd_s* gimbal_cmd = gimbal_cmd_recv; //cmd层传过来的数据
     // DM_Motor_Measure_s* gimbal_motor_measure = &gimbal_motor->measure; //电机反馈至
@@ -523,7 +547,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     }
     if(gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO)
     {
-        DMGimbalnNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data);
+        DMGimbalnAutoNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data,yaw_motor);
     }
     if(gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO_XUNLUO)
     {
