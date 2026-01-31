@@ -447,14 +447,16 @@ static void AUTOKeySet()
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
     gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
     gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
-    chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //后面加入检测时间逻辑，这个是瞄准发射模式
+    chassis_cmd_send.chassis_mode = CHASSIS_OPEN;
+    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO; //后面加入检测时间逻辑，这个是瞄准发射模式
     // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
     gimbal_behavior_to_motor();
     //自动瞄准模式
-    // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
-    gimbal_cmd_send.pitch = 0;
-    gimbal_cmd_send.yaw = 0;
+    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
+    // gimbal_cmd_send.pitch = 0;
+    // gimbal_cmd_send.yaw = 0;
+    gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
+
     //自动巡逻模式云台
     // gimbal_cmd_send.pitch = 0;
     // gimbal_cmd_send.big_yaw = 0;
@@ -463,22 +465,22 @@ static void AUTOKeySet()
     // chassis_cmd_send.vx = -daoohang_vision_recv_data->linery;
     // chassis_cmd_send.vy = daoohang_vision_recv_data->linearx;
     //////////////////////////////////////////自动模式瞄准部分////////////////////////////////////////////////////////
-    shoot_cmd_send.shoot_mode = SHOOT_ON;
-    shoot_cmd_send.shoot_rate = 6;
-    shoot_cmd_send.bullet_speed = SMALL_AMU_25;
-    shoot_cmd_send.friction_mode = FRICTION_OFF;
+    // shoot_cmd_send.shoot_mode = SHOOT_ON;
+    // shoot_cmd_send.shoot_rate = 6;
+    // shoot_cmd_send.bullet_speed = SMALL_AMU_25;
+    // shoot_cmd_send.friction_mode = FRICTION_OFF;
 
-    if(bubing_vision_recv_data->fire_advice == 1)
-    {
-    shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-    shoot_cmd_send.friction_mode = FRICTION_ON;
-    }
-    else
-    {
-    shoot_cmd_send.load_mode = LOAD_STOP;
-    shoot_cmd_send.friction_mode = FRICTION_OFF;
-    }
-    // shoot_cmd_send.shoot_mode = SHOOT_OFF;
+    // if(bubing_vision_recv_data->fire_advice == 1)
+    // {
+    // shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    // shoot_cmd_send.friction_mode = FRICTION_ON;
+    // }
+    // else
+    // {
+    // shoot_cmd_send.load_mode = LOAD_STOP;
+    // shoot_cmd_send.friction_mode = FRICTION_OFF;
+    // }
+    shoot_cmd_send.shoot_mode = SHOOT_OFF;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

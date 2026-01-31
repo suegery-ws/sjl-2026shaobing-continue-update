@@ -560,9 +560,9 @@ void DMGimbalNUCAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimb
     fp32 bias_angle = 0.0f;
     fp32 add = 0.0f;
     static int as = 0;
-    if(gimbal_motor->pid_ref == 0 && as <= 100)
+    if(gimbal_motor->pid_ref == 0 && as == 0)
     {
-        gimbal_motor->pid_ref =  -0.036;
+        gimbal_motor->pid_ref =  dm_imu_data->oula_data.roll;
         as++;
     }
     add = gimbal_cmd->pitch;
@@ -583,7 +583,7 @@ void DMGimbalNUCAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimb
         }
     }
     // gimbal_motor->pid_ref = gimbal_motor->pid_ref + add;
-    gimbal_motor->pid_ref = -0.02;
+    gimbal_motor->pid_ref = gimbal_motor->pid_ref + add;
     
 }
 
@@ -595,7 +595,7 @@ void DMGimbalAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_
     if(gimbal_motor->pid_ref == 0 && as == 0)
     // if(gimbal_motor->pid_ref == 0)
     {
-        gimbal_motor->pid_ref =  dm_imu_data->oula_data.roll;
+        gimbal_motor->pid_ref = dm_imu_data->oula_data.roll;
         as++;
     }
     add = gimbal_cmd->pitch;
