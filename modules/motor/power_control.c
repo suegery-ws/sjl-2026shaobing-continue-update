@@ -265,7 +265,7 @@ void PowerControl()
                 pid_measure_1 = measure->speed_aps /RPM_2_RAD_PER_SEC;
                }
             // 更新pid_ref进入下一个环
-            if(motor_controller->chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || motor_controller->chassis_mode == CHASSIS_NO_FOLLOW_YAW || motor_controller->chassis_mode == CHASSIS_NO_MOVE)
+            if(motor_controller->chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || motor_controller->chassis_mode == CHASSIS_NO_FOLLOW_YAW || motor_controller->chassis_mode == CHASSIS_NO_MOVE || motor_controller->chassis_mode == CHASSIS_OPEN)
             {
                 pid_ref = PIDCalculate(&motor_controller->follow_speed_PID, pid_measure, pid_ref);
             }

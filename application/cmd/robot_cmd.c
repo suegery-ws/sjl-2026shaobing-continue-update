@@ -303,7 +303,7 @@ static void RemoteControlSet()
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+        chassis_cmd_send.chassis_mode = CHASSIS_OPEN;
         gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
     }
     else // 右侧开关状态异常,默认跟随模式
@@ -358,7 +358,7 @@ static void RemoteControlSet()
         chassis_cmd_send.vx = 0;
         chassis_cmd_send.vy = 0;
     }
-    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || chassis_cmd_send.chassis_mode == CHASSIS_NO_MOVE)
+    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || chassis_cmd_send.chassis_mode == CHASSIS_NO_MOVE || chassis_cmd_send.chassis_mode == CHASSIS_OPEN)
     {
         
 		rc_deadband_limit(rc_data[TEMP].rc.rocker_r_, vx_channel, CHASSIS_RC_DEADLINE);
