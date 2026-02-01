@@ -242,7 +242,7 @@ static void gimbal_behavior_to_motor()
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄打弹模式，目前大yaw固定，后期加入跟随，小yaw和pitch会自己动
     {
         gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_AUTO; //相当于encode
-		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO; //相当于rotatae
+		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO; //自动跟随
         gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_AUTO; //相当于gyro
     }
     else if(gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO_XUNLUO)
@@ -455,8 +455,6 @@ static void AUTOKeySet()
     gimbal_behavior_to_motor();
     //自动瞄准模式
     gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
-    // gimbal_cmd_send.pitch = 0;
-    // gimbal_cmd_send.yaw = 0;
     gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
 
     //自动巡逻模式云台
