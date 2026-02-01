@@ -545,7 +545,7 @@ void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimba
     {
         DMGimbalAutoRefLimit(gimbal_cmd,gimbal_motor,dm_imu_data); //这个不会被用到
     }
-    if(gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO)
+    if(gimbal_cmd->big_yaw_motor_mode == GIMBAL_MOTOR_AUTO) //大yaw自动跟随
     {
         DMGimbalnAutoNoLimitRef(gimbal_cmd,gimbal_motor,gimbal_data,yaw_motor);
     }
