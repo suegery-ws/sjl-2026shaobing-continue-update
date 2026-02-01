@@ -235,9 +235,9 @@ static void gimbal_behavior_to_motor()
     }
     else if (gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//调试模式
     {
-        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ROTATE;
-		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_GYRO;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
+        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ENCONDE;
+		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_RAW;
     }    
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄打弹模式，目前大yaw固定，后期加入跟随，小yaw和pitch会自己动
     {
@@ -299,12 +299,12 @@ static void RemoteControlSet()
     else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘跟随云台模式
     {
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;  
-        gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;    
+        gimbal_cmd_send.gimbal_mode = GIMBAL_ABSOLUTE_ANGLE;    
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
         chassis_cmd_send.chassis_mode = CHASSIS_OPEN;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;
     }
     else // 右侧开关状态异常,默认跟随模式
     {
@@ -347,9 +347,11 @@ static void RemoteControlSet()
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l_ , yaw_channel, GIMBAL_RC_DEADBAND);
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l1 , pitch_channel, GIMBAL_RC_DEADBAND);
 
-    gimbal_cmd_send.big_yaw = yaw_channel * BIG_YAW_RC_SEN;
+    gimbal_cmd_send.big_yaw = 0;
     gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
-       }
+    gimbal_cmd_send.yaw = yaw_channel*YAW_RC_SEN;
+
+    }
 
 
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整  ////////////////////////////////////////////////////////////底盘
