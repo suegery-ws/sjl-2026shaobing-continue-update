@@ -336,6 +336,8 @@ void ChassisTask()
     case CHASSIS_NO_MOVE : //突发奇想，如果我保持地盘角度不变呢
         chassis_cmd_recv.wz = PIDCalculate(&angle_PID, chassis_data->chassis_posture_data.car_yaw_posture,0 );
         break;
+    case CHASSIS_OPEN :
+        break;
     default:
         break;
     }

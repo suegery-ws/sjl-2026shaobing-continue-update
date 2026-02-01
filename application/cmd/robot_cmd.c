@@ -235,9 +235,9 @@ static void gimbal_behavior_to_motor()
     }
     else if (gimbal_cmd_send.gimbal_mode == GIMBAL_MOTIONLESS)//调试模式
     {
-        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ROTATE;
-		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_GYRO;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
+        gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ENCONDE;
+		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_RAW;
     }    
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄打弹模式，目前大yaw固定，后期加入跟随，小yaw和pitch会自己动
     {
@@ -299,12 +299,12 @@ static void RemoteControlSet()
     else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘跟随云台模式
     {
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;  
-        gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;    
+        gimbal_cmd_send.gimbal_mode = GIMBAL_ABSOLUTE_ANGLE;    
     }
     else if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],小陀螺模式
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_RELATIVE_ANGLE;
+        chassis_cmd_send.chassis_mode = CHASSIS_OPEN;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_MOTIONLESS;
     }
     else // 右侧开关状态异常,默认跟随模式
     {
@@ -347,9 +347,11 @@ static void RemoteControlSet()
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l_ , yaw_channel, GIMBAL_RC_DEADBAND);
     rc_deadband_limit(rc_data[TEMP].rc.rocker_l1 , pitch_channel, GIMBAL_RC_DEADBAND);
 
-    gimbal_cmd_send.big_yaw = yaw_channel * BIG_YAW_RC_SEN;
+    gimbal_cmd_send.big_yaw = 0;
     gimbal_cmd_send.pitch = pitch_channel * PITCH_RC_SEN;
-       }
+    gimbal_cmd_send.yaw = yaw_channel*YAW_RC_SEN;
+
+    }
 
 
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整  ////////////////////////////////////////////////////////////底盘
@@ -358,7 +360,7 @@ static void RemoteControlSet()
         chassis_cmd_send.vx = 0;
         chassis_cmd_send.vy = 0;
     }
-    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || chassis_cmd_send.chassis_mode == CHASSIS_NO_MOVE)
+    if(chassis_cmd_send.chassis_mode == CHASSIS_ROTATE || chassis_cmd_send.chassis_mode == CHASSIS_FOLLOW_GIMBAL_YAW || chassis_cmd_send.chassis_mode == CHASSIS_NO_MOVE || chassis_cmd_send.chassis_mode == CHASSIS_OPEN)
     {
         
 		rc_deadband_limit(rc_data[TEMP].rc.rocker_r_, vx_channel, CHASSIS_RC_DEADLINE);
@@ -447,14 +449,16 @@ static void AUTOKeySet()
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
     gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
     gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
-    chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //后面加入检测时间逻辑，这个是瞄准发射模式
+    chassis_cmd_send.chassis_mode = CHASSIS_OPEN;
+    gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO; //后面加入检测时间逻辑，这个是瞄准发射模式
     // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
     gimbal_behavior_to_motor();
     //自动瞄准模式
-    // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
-    gimbal_cmd_send.pitch = 0;
-    gimbal_cmd_send.yaw = 0;
+    gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
+    // gimbal_cmd_send.pitch = 0;
+    // gimbal_cmd_send.yaw = 0;
+    gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
+
     //自动巡逻模式云台
     // gimbal_cmd_send.pitch = 0;
     // gimbal_cmd_send.big_yaw = 0;
@@ -463,22 +467,22 @@ static void AUTOKeySet()
     // chassis_cmd_send.vx = -daoohang_vision_recv_data->linery;
     // chassis_cmd_send.vy = daoohang_vision_recv_data->linearx;
     //////////////////////////////////////////自动模式瞄准部分////////////////////////////////////////////////////////
-    shoot_cmd_send.shoot_mode = SHOOT_ON;
-    shoot_cmd_send.shoot_rate = 6;
-    shoot_cmd_send.bullet_speed = SMALL_AMU_25;
-    shoot_cmd_send.friction_mode = FRICTION_OFF;
+    // shoot_cmd_send.shoot_mode = SHOOT_ON;
+    // shoot_cmd_send.shoot_rate = 6;
+    // shoot_cmd_send.bullet_speed = SMALL_AMU_25;
+    // shoot_cmd_send.friction_mode = FRICTION_OFF;
 
-    if(bubing_vision_recv_data->fire_advice == 1)
-    {
-    shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-    shoot_cmd_send.friction_mode = FRICTION_ON;
-    }
-    else
-    {
-    shoot_cmd_send.load_mode = LOAD_STOP;
-    shoot_cmd_send.friction_mode = FRICTION_OFF;
-    }
-    // shoot_cmd_send.shoot_mode = SHOOT_OFF;
+    // if(bubing_vision_recv_data->fire_advice == 1)
+    // {
+    // shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    // shoot_cmd_send.friction_mode = FRICTION_ON;
+    // }
+    // else
+    // {
+    // shoot_cmd_send.load_mode = LOAD_STOP;
+    // shoot_cmd_send.friction_mode = FRICTION_OFF;
+    // }
+    shoot_cmd_send.shoot_mode = SHOOT_OFF;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

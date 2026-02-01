@@ -137,8 +137,9 @@ static void VisionOfflineCallback(void *id)
 #endif // !VISION_USE_UART
     LOGWARNING("[vision] vision offline, restart communication.");
     uart_flag = 0;
-
-
+    memset(&daohang_recv_data,0,15);
+    memset(&usb_recv_data,0,28);
+    memset(&bubing_recv_data,0,32);
 }
 
 

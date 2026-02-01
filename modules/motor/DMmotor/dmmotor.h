@@ -11,6 +11,7 @@
 #include "robot_cmd.h"
 #include "dmimu.h"
 #include "lowpass_filter.h"
+#include "dji_motor.h"
 
 #define DM_MOTOR_CNT 2
 
@@ -130,7 +131,7 @@ void DMMotorinhert(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance)
 
 void DMModeChangeControlTransmit(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv,DMMotorInstance* Instance,Gimbal_Data_s* gimbal_posture_data);
 
-void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data, dm_imu_data_t* dm_imu_data);
+void DMMotorRefVerify(Gimbal_Ctrl_Cmd_s* gimbal_cmd_recv, DMMotorInstance* gimbal_motor, Gimbal_Data_s* gimbal_data, dm_imu_data_t* dm_imu_data, DJIMotorInstance* yaw_motor);
 
 fp32 motor4310_gyro_control_change(float rad, float offset_rad);
 
@@ -146,4 +147,5 @@ void DMGimbalnXunLuoNoLimitRef(DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimb
 
 void DMGimbalNUCAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data);
 
+void DMGimbalnAutoNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data,DJIMotorInstance* yaw_motor);  //自瞄模式下大yaw跟随
 #endif // !DMMOTOR
