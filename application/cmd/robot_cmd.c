@@ -423,12 +423,12 @@ static void RemoteControlSet()
     }
         shoot_cmd_send.load_mode = mode_flag; //模式切换
 
-    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0 && dadan == 1)//单发模式下做一个限位 //之后这里可以让上位机再发一个flag，即刻做到精准的单发限位
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0 && dadan == 0)//单发模式下做一个限位 //之后这里可以让上位机再发一个flag，即刻做到精准的单发限位
     {
         shoot_cmd_send.shoot_flag = 1;  
     }
 
-    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET && dadan == 1)
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET && dadan == 0)
     {
         shoot_cmd_send.shoot_flag = 1; //防止模式切换后shoot_flag卡在2里面出不来了
     }

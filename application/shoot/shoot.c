@@ -8,6 +8,7 @@
 #include "bsp_dwt.h"
 #include "general_def.h"
 #include "stm32f407xx.h"
+#include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_gpio.h"
 #include <stdint.h>
 
@@ -26,6 +27,7 @@ static int8_t pa1 = 0;
 static int8_t pc8 = 0;
 static int32_t dadan = 0;
 static int32_t heat = 0;
+static int32_t time = 0;
 // dwt定时,计算冷却用
 static float hibernate_time = 0, dead_time = 0;
 
@@ -82,15 +84,15 @@ void ShootInit()
         .controller_param_init_config = {
             .absoulte_angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
-                .Kp = 300, // 10
-                .Ki = 0,
+                .Kp = 400, // 10
+                .Ki = 3,
                 .Kd = 0.5,
-                .MaxOut = 100,
+                .MaxOut = 200,
                 .DeadBand = 0,
             },
             .speed_PID = {
                 .Kp = 28, // 10
-                .Ki = 3, // 1
+                .Ki = 0, // 1
                 .Kd = 0,
                 .Improve = PID_Integral_Limit,
                 .IntegralLimit = 10000,
@@ -156,11 +158,21 @@ void ShootTask()
     if(pa1 == 1 && pa0 == 0)
     {
         dadan = 0; //有一发弹经过
+        time = DWT_GetTimeline_ms();
     }
     if(pa1 == 0 && pa0 == 1)
     {
         dadan = 1; //枪管空闲
     }
+    
+    if(shoot_cmd_recv.load_mode == LOAD_1_BULLET)
+    {
+        if(DWT_GetTimeline_ms() - time >= 500)
+        {
+            dadan = 0;
+        }
+    }
+
     shoot_feedback_data.dadan = dadan;
     // 若不在休眠状态,根据robotCMD传来的控制模式进行拨盘电机参考值设定和模式切换
     switch (shoot_cmd_recv.load_mode)
@@ -191,6 +203,9 @@ void ShootTask()
     }
     if(shoot_cmd_recv.shoot_flag == 2)
     {
+        loader->motor_settings.close_loop_type = ANGLE_LOOP|SPEED_LOOP; // 开启速度环和角度环双闭环控制
+        loader->motor_settings.outer_loop_type = ANGLE_LOOP;
+        loader->motor_controller.motor_mode = GIMBAL_MOTOR_GYRO; //写这个的目的完全是想要用绝对角度的pid控制，算是前面留的石了
         DJI2006MotorInhert(&shoot_cmd_recv, loader);
         DJIMotorSetRef(loader, loader->motor_controller.pid_ref); // 达到指定位置之前保持位置不变，持续pid控制
         shoot_feedback_data.feedback_shoot_flag = 2; //发射完成反馈给cmd
@@ -218,7 +233,7 @@ void ShootTask()
     {
         trigger_motor_turn_back(loader);//反转处理
     }
-
+     
       
 
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
