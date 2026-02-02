@@ -237,7 +237,7 @@ static void gimbal_behavior_to_motor()
     {
         gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ENCONDE;
 		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_RAW;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
     }    
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄打弹模式，目前大yaw固定，后期加入跟随，小yaw和pitch会自己动
     {
@@ -632,8 +632,8 @@ void RobotCMDTask()
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
     // DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
-    BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
-    // UsbVsioionSetAltiitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.small_gimbal_data->quar_data.q,gimbal_fetch_data.small_gimbal_data->gyro_data.z_gyro,gimbal_fetch_data.small_gimbal_data->gyro_data.x_gyro,shoot_cmd_send.bullet_speed);
+    // BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
+    UsbVsioionSetAltiitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.small_gimbal_data->quar_data.q,gimbal_fetch_data.small_gimbal_data->gyro_data.z_gyro,gimbal_fetch_data.small_gimbal_data->gyro_data.x_gyro,shoot_cmd_send.bullet_speed);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
