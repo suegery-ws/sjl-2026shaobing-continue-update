@@ -237,7 +237,7 @@ static void gimbal_behavior_to_motor()
     {
         gimbal_cmd_send.yaw_motor_mode = GIMBAL_MOTOR_ENCONDE;
 		gimbal_cmd_send.big_yaw_motor_mode = GIMBAL_MOTOR_AUTO;
-        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_RAW;
+        gimbal_cmd_send.pitch_motor_mode = GIMBAL_MOTOR_GYRO;
     }    
 	else if (gimbal_cmd_send.gimbal_mode == GIMBAL_AUTO)//自瞄打弹模式，目前大yaw固定，后期加入跟随，小yaw和pitch会自己动
     {
