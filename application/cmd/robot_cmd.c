@@ -456,8 +456,8 @@ static void AUTOKeySet()
     //自动瞄准模式
     // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
     // gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
-    gimbal_cmd_send.pitch = usb_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
-    gimbal_cmd_send.yaw = usb_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
+    gimbal_cmd_send.pitch = usb_recv_data->pitch*PITCH_AUTO_SEN;
+    gimbal_cmd_send.yaw = usb_recv_data->yaw*YAW_AUTO_SEN;
     //自动巡逻模式云台
     // gimbal_cmd_send.pitch = 0;
     // gimbal_cmd_send.big_yaw = 0;
