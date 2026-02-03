@@ -150,7 +150,7 @@ typedef enum
     GIMBAL_MOTOR_AUTO,     //自瞄控制，为了拍视频熬出来的，大yaw固定，小yaw和pitch可以自由转动，后面考虑大yaw跟随
     GIMBAL_MOTOR_ROTATE,   //小陀螺控制
     GIMBAL_MOTOR_AUTO_XUNLUO, //自动巡逻模式，大yaw转圈，小yaw和pitch上下平移
-
+    GIMBAL_MOTOR_STRENGTH_XUNLUO, //力控云台模式，理想响应会很快
 } gimbal_motor_mode_e; //云台电机控制模式
 
 // 发射模式设置
