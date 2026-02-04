@@ -470,7 +470,13 @@ void DJIMotorControl()
     {
         if (sender_enable_flag[i])
         {
-          CANTransmit(&sender_assignment[i], 1);
+            CANTransmit(&sender_assignment[i], 1);
+            // 等待邮箱至少有 1 个空闲，避免连续占用所有邮箱
+            // 最多等待 0.5ms，确保不阻塞整个控制周期
+            float wait_start = DWT_GetTimeline_ms();
+            while (HAL_CAN_GetTxMailboxesFreeLevel(sender_assignment[i].can_handle) == 0) {
+                if (DWT_GetTimeline_ms() - wait_start > 0.5f) break;
+            }
         }
     }
 }

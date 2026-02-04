@@ -81,7 +81,7 @@ static void IMU_RequestData(CAN_HandleTypeDef* hcan,uint16_t can_id,uint8_t reg)
     dm_imu->tx_buff[2] = cmd[2];
 	dm_imu->tx_buff[3] = cmd[3];
 
-	abt = CANTransmit(dm_imu, 10);
+	abt = CANTransmit(dm_imu, 1);
 }
 
 static void IMUOfflineCallback(void *id)
