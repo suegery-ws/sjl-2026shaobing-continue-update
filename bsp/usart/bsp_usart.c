@@ -104,7 +104,7 @@ uint8_t USARTIsReady(USARTInstance *_instance)
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     // 打印接收到的数据大小
-    LOGINFO("[USART] RxCallback triggered, Size = %d bytes\r\n", Size);
+    // LOGINFO("[USART] RxCallback triggered, Size = %d bytes\r\n", Size);
     for (uint8_t i = 0; i < idx; ++i)
     { // find the instance which is being handled
         if (huart == usart_instance[i]->usart_handle)
