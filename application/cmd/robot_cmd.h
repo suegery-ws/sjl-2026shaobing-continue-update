@@ -49,9 +49,13 @@ double mx_sin(double rad);
 #define CHASSIS_VY_RC_SEN 0.006f
 #define CHASSIS_VX_RC_SEN 0.005f
 
+#define TONGJI_PITCH_AUTO_SEN 0.017f
+#define TONGJI_YAW_AUTO_SEN 0.025f
+
+
 /////////////////////////////////
-#define PITCH_AUTO_SEN    0.02f                            //
-#define YAW_AUTO_SEN  0.02f                                //
+#define PITCH_AUTO_SEN    0.015f                            //
+#define YAW_AUTO_SEN  0.015f                                //
 #define ONE_PI   (3.14159265)
 /**
  * @brief 机器人核心控制任务初始化,会被RobotInit()调用
