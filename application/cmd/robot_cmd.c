@@ -460,9 +460,13 @@ static void AUTOKeySet()
     gimbal_cmd_send.yaw = usb_recv_data->yaw*TONGJI_YAW_AUTO_SEN;
     //拒绝不合理数据
     if(usb_recv_data->pitch > 1.5)
-    gimbal_cmd_send.pitch = 0;
+    {
+        gimbal_cmd_send.pitch = 0;
+    }
     if(usb_recv_data->yaw > 0.7)
-    gimbal_cmd_send.yaw = 0;
+    {
+        gimbal_cmd_send.yaw = 0;
+    }
     //自动巡逻模式云台
     // gimbal_cmd_send.pitch = 0;
     // gimbal_cmd_send.big_yaw = 0;
