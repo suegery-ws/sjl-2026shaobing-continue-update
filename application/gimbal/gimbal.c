@@ -278,11 +278,13 @@ void GimbalTask()
     {
     case GIMBAL_MOTOR_RAW:
         DMMotorStop(pitch_motor);
+        DMMotorSetMode(DM_CMD_MOTOR_MODE,pitch_motor);//解决莫名的失能问题
         DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
         DMGet4310MotorData(Gimbal_motor_posture_data,pitch_motor,gimbal_IMU_data,dm_gimbal_imu_data);
         break;
     case GIMBAL_MOTOR_GYRO: //基本上只用这个
         DMMotorEnable(pitch_motor);
+        DMMotorSetMode(DM_CMD_MOTOR_MODE,pitch_motor);
         DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP,OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP,OTHER_FEED);
@@ -292,6 +294,7 @@ void GimbalTask()
         break;
     case GIMBAL_MOTOR_ENCONDE: //基本不用
         DMMotorEnable(pitch_motor);
+        DMMotorSetMode(DM_CMD_MOTOR_MODE,pitch_motor);
         DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP,MOTOR_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP,MOTOR_FEED);
@@ -301,6 +304,7 @@ void GimbalTask()
         break;
     case GIMBAL_MOTOR_AUTO: 
         DMMotorEnable(pitch_motor);
+        DMMotorSetMode(DM_CMD_MOTOR_MODE,pitch_motor);
         DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP,OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP,OTHER_FEED);
@@ -310,6 +314,7 @@ void GimbalTask()
         break;
     case GIMBAL_MOTOR_AUTO_XUNLUO:
         DMMotorEnable(pitch_motor);
+        DMMotorSetMode(DM_CMD_MOTOR_MODE,pitch_motor);
         DMMotorinhert(&gimbal_cmd_recv, pitch_motor);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP,OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP,OTHER_FEED);

@@ -115,7 +115,7 @@ void DMGimbalnNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_m
 }
 
 
-static void DMMotorSetMode(DMMotor_Mode_e cmd, DMMotorInstance *motor)
+void DMMotorSetMode(DMMotor_Mode_e cmd, DMMotorInstance *motor)
 {
     memset(motor->motor_can_instace->tx_buff, 0xff, 7);  // 发送电机指令的时候前面7bytes都是0xff
     motor->motor_can_instace->tx_buff[7] = (uint8_t)cmd; // 最后一位是命令id

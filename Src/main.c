@@ -28,6 +28,7 @@
 #include "rng.h"
 #include "rtc.h"
 #include "spi.h"
+#include "stm32f4xx_hal.h"
 #include "tim.h"
 #include "usart.h"
 #include "usb_device.h"
@@ -122,6 +123,7 @@ int main(void)
   MX_DAC_Init();
   /* USER CODE BEGIN 2 */
   // TestUARTTaskStart();
+  HAL_Delay(21000);//等电管初始化
 	RobotInit(); // 唯一的初始化函数
   LOGINFO("[main] SystemInit() and RobotInit() done");
   /* USER CODE END 2 */

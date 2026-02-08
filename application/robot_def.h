@@ -120,7 +120,7 @@ typedef enum
     CHASSIS_AUTO_GUIDGENCE,         //叉乘小陀螺导航,这个是边转边走--4 这个模式下是边转边走，旋转速度恒定
     CHASSIS_AUTO_NO_FOLLOW_YAW,      //自瞄模式下的小陀螺，即底盘不跟随云台，但是云台可以自己转动并且会按照云台的方向进行运动 --5
     CHASSIS_NO_FOLLOW_YAW,      //和云台间没有任何联系，转过的角度自己给
-    CHASSIS_OPEN,               //此模式下预设值成比例直接写进速度环
+    CHASSIS_OPEN,               //前后左右运动
     CHASSIS_NO_MOVE,            //保证chassis_yaw等于0
 } chassis_mode_e; //顺序带来的影响未知（底盘行为模式），一个行为模式就够了
 

@@ -148,4 +148,6 @@ void DMGimbalnXunLuoNoLimitRef(DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimb
 void DMGimbalNUCAutoRefLimit(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor, dm_imu_data_t* dm_imu_data);
 
 void DMGimbalnAutoNoLimitRef(Gimbal_Ctrl_Cmd_s* gimbal_cmd,DMMotorInstance* gimbal_motor,Gimbal_Data_s* gimbal_data,DJIMotorInstance* yaw_motor);  //自瞄模式下大yaw跟随
+
+void DMMotorSetMode(DMMotor_Mode_e cmd, DMMotorInstance *motor);
 #endif // !DMMOTOR
