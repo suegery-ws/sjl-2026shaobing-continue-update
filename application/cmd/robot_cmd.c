@@ -475,10 +475,10 @@ static void AUTOKeySet()
     // chassis_cmd_send.vx = -daoohang_vision_recv_data->linery;
     // chassis_cmd_send.vy = daoohang_vision_recv_data->linearx;
     //////////////////////////////////////////自动模式瞄准部分////////////////////////////////////////////////////////
-    // shoot_cmd_send.shoot_mode = SHOOT_ON;
-    // shoot_cmd_send.shoot_rate = 6;
-    // shoot_cmd_send.bullet_speed = SMALL_AMU_25;
-    // shoot_cmd_send.friction_mode = FRICTION_OFF;
+    shoot_cmd_send.shoot_mode = SHOOT_ON;
+    shoot_cmd_send.shoot_rate = 6;
+    shoot_cmd_send.bullet_speed = SMALL_AMU_25;
+    shoot_cmd_send.friction_mode = FRICTION_ON;
 
     // if(bubing_vision_recv_data->fire_advice == 1)
     // {
@@ -490,7 +490,18 @@ static void AUTOKeySet()
     // shoot_cmd_send.load_mode = LOAD_STOP;
     // shoot_cmd_send.friction_mode = FRICTION_OFF;
     // }
-    shoot_cmd_send.shoot_mode = SHOOT_OFF;
+
+    if(usb_recv_data->mode == 2)
+    {
+    shoot_cmd_send.load_mode = LOAD_1_BULLET;
+    // shoot_cmd_send.friction_mode = FRICTION_ON;
+    }
+    else
+    {
+    shoot_cmd_send.load_mode = LOAD_STOP;
+    // shoot_cmd_send.friction_mode = FRICTION_OFF;
+    }
+    // shoot_cmd_send.shoot_mode = SHOOT_OFF;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
