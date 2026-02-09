@@ -456,8 +456,17 @@ static void AUTOKeySet()
     //自动瞄准模式
     // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
     // gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
-    gimbal_cmd_send.pitch = usb_recv_data->pitch*PITCH_AUTO_SEN;
-    gimbal_cmd_send.yaw = usb_recv_data->yaw*YAW_AUTO_SEN;
+    gimbal_cmd_send.pitch = usb_recv_data->pitch*TONGJI_PITCH_AUTO_SEN;
+    gimbal_cmd_send.yaw = usb_recv_data->yaw*TONGJI_YAW_AUTO_SEN;
+    //拒绝不合理数据
+    if(usb_recv_data->pitch > 1.5)
+    {
+        gimbal_cmd_send.pitch = 0;
+    }
+    if(usb_recv_data->yaw > 0.7)
+    {
+        gimbal_cmd_send.yaw = 0;
+    }
     //自动巡逻模式云台
     // gimbal_cmd_send.pitch = 0;
     // gimbal_cmd_send.big_yaw = 0;
@@ -466,10 +475,10 @@ static void AUTOKeySet()
     // chassis_cmd_send.vx = -daoohang_vision_recv_data->linery;
     // chassis_cmd_send.vy = daoohang_vision_recv_data->linearx;
     //////////////////////////////////////////自动模式瞄准部分////////////////////////////////////////////////////////
-    // shoot_cmd_send.shoot_mode = SHOOT_ON;
-    // shoot_cmd_send.shoot_rate = 6;
-    // shoot_cmd_send.bullet_speed = SMALL_AMU_25;
-    // shoot_cmd_send.friction_mode = FRICTION_OFF;
+    shoot_cmd_send.shoot_mode = SHOOT_ON;
+    shoot_cmd_send.shoot_rate = 6;
+    shoot_cmd_send.bullet_speed = SMALL_AMU_25;
+    shoot_cmd_send.friction_mode = FRICTION_ON;
 
     // if(bubing_vision_recv_data->fire_advice == 1)
     // {
@@ -481,7 +490,18 @@ static void AUTOKeySet()
     // shoot_cmd_send.load_mode = LOAD_STOP;
     // shoot_cmd_send.friction_mode = FRICTION_OFF;
     // }
-    shoot_cmd_send.shoot_mode = SHOOT_OFF;
+
+    if(usb_recv_data->mode == 2)
+    {
+    shoot_cmd_send.load_mode = LOAD_1_BULLET;
+    // shoot_cmd_send.friction_mode = FRICTION_ON;
+    }
+    else
+    {
+    shoot_cmd_send.load_mode = LOAD_STOP;
+    // shoot_cmd_send.friction_mode = FRICTION_OFF;
+    }
+    // shoot_cmd_send.shoot_mode = SHOOT_OFF;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
@@ -632,8 +652,8 @@ void RobotCMDTask()
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
     // DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
-    // BubingVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
-    UsbVsioionSetAltiitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.small_gimbal_data->quar_data.q,gimbal_fetch_data.small_gimbal_data->gyro_data.z_gyro,gimbal_fetch_data.small_gimbal_data->gyro_data.x_gyro,shoot_cmd_send.bullet_speed);
+    // BubingVisionSetAltitude(gimbal_fetch_data.small_gimbal_data->oula_data.yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,0);
+    UsbVsioionSetAltiitude(gimbal_fetch_data.small_gimbal_data->oula_data.yaw,gimbal_fetch_data.gimbal_data->Pitch_Data.pitch_absoulte_angle,gimbal_fetch_data.small_gimbal_data->quar_data.q,gimbal_fetch_data.small_gimbal_data->gyro_data.z_gyro,gimbal_fetch_data.small_gimbal_data->gyro_data.x_gyro,shoot_cmd_send.bullet_speed);
     ////////////////////////////////////////////////////////////////////////////////////TongjiVisionSetFlag(double bullet_speed, Mode mode, ShootMode shoot_mode, double ft_angle);
     // 推送消息,双板通信,视觉通信等
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置

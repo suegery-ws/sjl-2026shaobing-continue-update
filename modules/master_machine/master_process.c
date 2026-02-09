@@ -167,11 +167,31 @@ static void DecodeVisiondanghang()
 
 static void DecodeVision()//usb
 {
+    static uint32_t usb_dbg_cnt = 0;
     DaemonReload(vision_daemon_instance); // 喂狗
     uart_flag = get_usb_protocol_info(vision_usart_instance->recv_buff,&usb_recv_data);
+    
+        
+        // usb_dbg_cnt++;
+        // if (uart_flag && (usb_dbg_cnt % 50 == 0))
+        // {
+        //     LOGINFO("[USB][recv] head=0x%02X mode=%u yaw=%f yaw_vel=%f yaw_acc=%f pitch=%f pitch_vel=%f pitch_acc=%f crc8=0x%02X tail=0x%02X\r\n",
+        //             usb_recv_data.head,
+        //             usb_recv_data.mode,
+        //             usb_recv_data.yaw,
+        //             usb_recv_data.yaw_vel,
+        //             usb_recv_data.yaw_acc,
+        //             usb_recv_data.pitch,
+        //             usb_recv_data.pitch_vel,
+        //             usb_recv_data.pitch_acc,
+        //             usb_recv_data.crc8,
+        //             usb_recv_data.tail);
+        // }
+    
     UsbVisionSend();
     // TODO: code to resolve flag_register;
     fsong++;
+    
 
 }
 
@@ -327,6 +347,25 @@ static void DecodeVision(uint16_t recv_len)
 {
     DaemonReload(vision_daemon_instance); // 喂狗
     usb_flag = get_usb_protocol_info(vis_recv_buff,&usb_recv_data);
+    (void)recv_len;
+    {
+        static uint32_t usb_dbg_cnt = 0;
+        usb_dbg_cnt++;
+        if (usb_flag && (usb_dbg_cnt % 50u == 0u))
+        {
+            LOGINFO("[USB][recv] head=0x%02X mode=%u yaw=%f yaw_vel=%f yaw_acc=%f pitch=%f pitch_vel=%f pitch_acc=%f crc8=0x%02X tail=0x%02X\r\n",
+                    usb_recv_data.head,
+                    usb_recv_data.mode,
+                    usb_recv_data.yaw,
+                    usb_recv_data.yaw_vel,
+                    usb_recv_data.yaw_acc,
+                    usb_recv_data.pitch,
+                    usb_recv_data.pitch_vel,
+                    usb_recv_data.pitch_acc,
+                    usb_recv_data.crc8,
+                    usb_recv_data.tail);
+        }
+    }
     usbsong++;
     // TODO: code to resolve flag_register;
 }
