@@ -57,8 +57,10 @@ static Robot_Status_e robot_state; // 机器人整体工作状态
 static attitude_t *IMU_data; //imu数据就直接放命令层了，到时候直接通过发布者发给订阅者
 
 static int16_t mode_flag = 0; // 发射标志位,12345分别表示不同的拨弹模式
+static int64_t shoot_flag_time = 0;
 extern uint8_t rc_offline_flag;
 extern uint8_t last_rc_offline_flag;
+
 
 /**
   * @brief          一阶低通滤波初始化
@@ -444,15 +446,46 @@ static void RemoteControlSet()
 
 static void AUTOKeySet()
 {
+    static int16_t dadan = 0;
+    static int16_t time_flag = 0;
+    
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
     gimbal_cmd_send.last_pitch_motor_mode = gimbal_cmd_send.pitch_motor_mode;
-    gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; //为模式切换的数据继承做准备
+    gimbal_cmd_send.last_yaw_motor_mode = gimbal_cmd_send.yaw_motor_mode; 
+    shoot_cmd_send.shoot_flag = shoot_fetch_data.feedback_shoot_flag;
+    shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;
+    dadan = shoot_fetch_data.dadan; //为模式切换的数据继承做准备
+    
+    if(time_flag == 0)
+    {
+        shoot_cmd_send.shoot_flag = 0;
+        shoot_flag_time = DWT_GetTimeline_ms();
+        time_flag++;
+    }
+
+    if(shoot_cmd_send.shoot_flag == 0 && shoot_cmd_send.load_mode == LOAD_1_BULLET)
+    {
+        shoot_flag_time = DWT_GetTimeline_ms();
+        if((DWT_GetTimeline_ms() - shoot_flag_time) > 2000)
+    {
+        shoot_cmd_send.shoot_flag = 1;
+    }
+    
+    }
+    // else 
+    // {
+    //     shoot_flag_time = 0;
+    // }
+    
+    
+
     chassis_cmd_send.chassis_mode = CHASSIS_OPEN;
     gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO; //后面加入检测时间逻辑，这个是瞄准发射模式
     // gimbal_cmd_send.gimbal_mode = GIMBAL_AUTO_XUNLUO; //巡逻状态
     gimbal_behavior_to_motor();
+
     //自动瞄准模式
     // gimbal_cmd_send.pitch = bubing_vision_recv_data->pitch*angle_to_radian*PITCH_AUTO_SEN;
     // gimbal_cmd_send.yaw = bubing_vision_recv_data->yaw*angle_to_radian*YAW_AUTO_SEN;
@@ -479,6 +512,7 @@ static void AUTOKeySet()
     shoot_cmd_send.shoot_rate = 6;
     shoot_cmd_send.bullet_speed = SMALL_AMU_25;
     shoot_cmd_send.friction_mode = FRICTION_ON;
+    shoot_cmd_send.load_mode = LOAD_1_BULLET;
 
     // if(bubing_vision_recv_data->fire_advice == 1)
     // {
@@ -491,16 +525,27 @@ static void AUTOKeySet()
     // shoot_cmd_send.friction_mode = FRICTION_OFF;
     // }
 
-    if(usb_recv_data->mode == 2)
+    // if(usb_recv_data->mode == 2)
+    // {
+    // shoot_cmd_send.load_mode = LOAD_1_BULLET;
+    // // shoot_cmd_send.friction_mode = FRICTION_ON;
+    // }
+    // else
+    // {
+    // shoot_cmd_send.load_mode = LOAD_STOP;
+    // // shoot_cmd_send.friction_mode = FRICTION_OFF;
+    // }
+
+     if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0 && dadan == 0 && usb_recv_data->mode == 2)//单发模式下做一个限位 //之后这里可以让上位机再发一个flag，即刻做到精准的单发限位
     {
-    shoot_cmd_send.load_mode = LOAD_1_BULLET;
-    // shoot_cmd_send.friction_mode = FRICTION_ON;
+        shoot_cmd_send.shoot_flag = 1;  
     }
-    else
+
+    if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET && dadan == 0 && usb_recv_data->mode == 2)
     {
-    shoot_cmd_send.load_mode = LOAD_STOP;
-    // shoot_cmd_send.friction_mode = FRICTION_OFF;
+        shoot_cmd_send.shoot_flag = 0; //防止模式切换后shoot_flag卡在2里面出不来了
     }
+
     // shoot_cmd_send.shoot_mode = SHOOT_OFF;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

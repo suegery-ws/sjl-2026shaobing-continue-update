@@ -50,7 +50,7 @@ double mx_sin(double rad);
 #define CHASSIS_VX_RC_SEN 0.005f
 
 #define TONGJI_PITCH_AUTO_SEN 0.017f
-#define TONGJI_YAW_AUTO_SEN 0.025f
+#define TONGJI_YAW_AUTO_SEN 0.055f
 
 
 /////////////////////////////////

@@ -85,10 +85,11 @@ void ShootInit()
             .absoulte_angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
                 .Kp = 400, // 10
-                .Ki = 3,
-                .Kd = 0.5,
+                .Ki = 0,
+                .Kd = 0.2,
                 .MaxOut = 200,
                 .DeadBand = 0,
+                .IntegralLimit = 100,
             },
             .speed_PID = {
                 .Kp = 28, // 10
@@ -210,7 +211,7 @@ void ShootTask()
         DJIMotorSetRef(loader, loader->motor_controller.pid_ref); // 达到指定位置之前保持位置不变，持续pid控制
         shoot_feedback_data.feedback_shoot_flag = 2; //发射完成反馈给cmd
     }
-    if( (fabsf(loader->motor_controller.absoulte_angle_PID.Err) <= 0.1f) && shoot_cmd_recv.shoot_flag == 2)
+    if( (fabsf(loader->motor_controller.absoulte_angle_PID.Err) <= 0.09f) && shoot_cmd_recv.shoot_flag == 2)
     {
         DJI2006MotorInhert(&shoot_cmd_recv, loader);
         shoot_feedback_data.feedback_shoot_flag = 0; //发射完成反馈给cmd
