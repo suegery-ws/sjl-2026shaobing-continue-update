@@ -108,7 +108,7 @@ void VisionSend()
     // IT发送会自动处理TX忙的情况
     USARTSend(vision_usart_instance, send_buff, 32, USART_TRANSFER_DMA);
 
-     usbfa++;
+    usbfa++;
 }
 
 void UsbVisionSend()
