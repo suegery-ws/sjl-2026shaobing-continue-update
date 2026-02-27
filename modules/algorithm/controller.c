@@ -308,8 +308,21 @@ float DJI2006PIDCalculate(PIDInstance *pid, float measure, float ref)
     // 保存上次的测量值和误差,计算当前error
     pid->Measure = measure;
     pid->Ref = ref;
-    pid->Err = pid->Ref - pid->Measure;
+    // pid->Err = pid->Ref - pid->Measure;
 
+     float raw_err = pid->Ref - pid->Measure;
+
+    // 先把误差压到 [-PI, PI]，避免数值特别大的跳变
+    if (raw_err > PI)
+    {
+        raw_err -= 2.0f * PI;
+    }
+    else if (raw_err < -PI)
+    {
+        raw_err += 2.0f * PI;
+    }
+
+      pid->Err = raw_err;
     
 
     // 如果在死区外,则计算PID

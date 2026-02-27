@@ -84,10 +84,10 @@ void ShootInit()
         .controller_param_init_config = {
             .absoulte_angle_PID = {
                 // 如果启用位置环来控制发弹,需要较大的I值保证输出力矩的线性度否则出现接近拨出的力矩大幅下降
-                .Kp = 400, // 10
+                .Kp = 450, // 10
                 .Ki = 0,
                 .Kd = 0.2,
-                .MaxOut = 200,
+                .MaxOut = 400,
                 .DeadBand = 0,
                 .IntegralLimit = 100,
             },
@@ -197,7 +197,8 @@ void ShootTask()
         DJIMotorSetRef(loader, (loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE)); // 控制量增加一发弹丸的角度
         if(loader->measure.total_angle - ONE_BULLET_DELTA_ANGLE >= 6.28f)
         {
-            DJIMotorSetRef(loader, (loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE - 6.28f)); // 控制量增加一发弹丸的角度
+            //DJIMotorSetRef(loader, (loader->measure.total_angle + ONE_BULLET_DELTA_ANGLE - 6.28f)); // 控制量增加一发弹丸的角度
+            DJIMotorSetRef(loader, 0.785); // 控制量增加一发弹丸的角度
         }
         shoot_feedback_data.feedback_shoot_flag = 2;                                                 // 完成1发弹丸发射的时间
         break;

@@ -283,6 +283,7 @@ static void RemoteControlSet()
     static float vx_set_channel=0, vy_set_channel=0;
     static int16_t dadan = 1;
     static int16_t flag = 0; //单发限位标志位
+    static int16_t shoot2_flag = 0;
 
     chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
     gimbal_cmd_send.last_big_yaw_motor_mode = gimbal_cmd_send.big_yaw_motor_mode;
@@ -425,11 +426,22 @@ static void RemoteControlSet()
     }
         shoot_cmd_send.load_mode = mode_flag; //模式切换
 
+    if(shoot_cmd_send.shoot_flag == 2)
+    {
+       shoot2_flag++;
+       if(shoot2_flag >= 100)
+       {
+         shoot_cmd_send.shoot_flag = 1;
+         shoot2_flag =0;
+       }
+    }
+
     if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.shoot_flag == 0 && dadan == 0)//单发模式下做一个限位 //之后这里可以让上位机再发一个flag，即刻做到精准的单发限位
     {
         shoot_cmd_send.shoot_flag = 1;  
     }
 
+     
     if(shoot_cmd_send.load_mode == LOAD_1_BULLET && shoot_cmd_send.last_lode_mode != LOAD_1_BULLET && dadan == 0)
     {
         shoot_cmd_send.shoot_flag = 1; //防止模式切换后shoot_flag卡在2里面出不来了
@@ -448,6 +460,7 @@ static void AUTOKeySet()
 {
     static int16_t dadan = 0;
     static int16_t time_flag = 0;
+    static int16_t shoot2_flag = 0;
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     chassis_cmd_send.last_chassis_mode = chassis_cmd_send.chassis_mode;//底盘的数据继承
@@ -458,22 +471,32 @@ static void AUTOKeySet()
     shoot_cmd_send.last_lode_mode = shoot_cmd_send.load_mode;
     dadan = shoot_fetch_data.dadan; //为模式切换的数据继承做准备
     
-    if(time_flag == 0)
+    // if(time_flag == 0)
+    // {
+    //     shoot_cmd_send.shoot_flag = 0;
+    //     shoot_flag_time = DWT_GetTimeline_ms();
+    //     time_flag++;
+    // }
+
+    if(shoot_cmd_send.shoot_flag == 2 && shoot_cmd_send.load_mode == LOAD_1_BULLET)
     {
-        shoot_cmd_send.shoot_flag = 0;
-        shoot_flag_time = DWT_GetTimeline_ms();
-        time_flag++;
+       shoot2_flag++;
+       if(shoot2_flag >= 100)
+       {
+         shoot_cmd_send.shoot_flag = 1;
+         shoot2_flag =0;
+       }
     }
 
-    if(shoot_cmd_send.shoot_flag == 0 && shoot_cmd_send.load_mode == LOAD_1_BULLET)
-    {
-        shoot_flag_time = DWT_GetTimeline_ms();
-        if((DWT_GetTimeline_ms() - shoot_flag_time) > 2000)
-    {
-        shoot_cmd_send.shoot_flag = 1;
-    }
-    
-    }
+    // if(shoot_cmd_send.shoot_flag == 0 && shoot_cmd_send.load_mode == LOAD_1_BULLET)
+    // {
+    //     shoot_flag_time = DWT_GetTimeline_ms();
+        
+    // }
+    // if((DWT_GetTimeline_ms() - shoot_flag_time) > 2000 && usb_recv_data->mode == 2)
+    // {
+    //     shoot_cmd_send.shoot_flag = 1;
+    // }
     // else 
     // {
     //     shoot_flag_time = 0;
@@ -693,7 +716,7 @@ void RobotCMDTask()
 
 
     chassis_cmd_send.IMU_data = &gimbal_fetch_data.gimbal_imu_data;//把在云台初始化的陀螺仪的地址传到了底盘里面
-    EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
+    // EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
     // 设置视觉发送数据,还需增加加速度和角速度数据 
     // DaohangVisionSetAltitude(gimbal_fetch_data.gimbal_imu_data.Yaw,gimbal_fetch_data.gimbal_imu_data.Pitch);
