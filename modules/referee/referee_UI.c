@@ -20,32 +20,32 @@
 		Del_Operate  对应头文件删除操作
 		Del_Layer    要删除的层 取值0-9
 *****************************************************************************************/
-void UIDelete(referee_id_t *_id, uint8_t Del_Operate, uint8_t Del_Layer)
-{
-	static UI_delete_t UI_delete_data;
-	uint8_t temp_datalength = Interactive_Data_LEN_Head + UI_Operate_LEN_Del; // 计算交互数据长度
+// void UIDelete(referee_id_t *_id, uint8_t Del_Operate, uint8_t Del_Layer)
+// {
+// 	static UI_delete_t UI_delete_data;
+// 	uint8_t temp_datalength = Interactive_Data_LEN_Head + UI_Operate_LEN_Del; // 计算交互数据长度
 
-	UI_delete_data.FrameHeader.SOF = REFEREE_SOF;
-	UI_delete_data.FrameHeader.DataLength = temp_datalength;
-	UI_delete_data.FrameHeader.Seq = UI_Seq;
-	UI_delete_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_delete_data, LEN_CRC8, 0xFF);
+// 	UI_delete_data.FrameHeader.SOF = REFEREE_SOF;
+// 	UI_delete_data.FrameHeader.DataLength = temp_datalength;
+// 	UI_delete_data.FrameHeader.Seq = UI_Seq;
+// 	UI_delete_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_delete_data, LEN_CRC8, 0xFF);
 
-	UI_delete_data.CmdID = ID_student_interactive;
+// 	UI_delete_data.CmdID = ID_student_interactive;
 
-	UI_delete_data.datahead.data_cmd_id = UI_Data_ID_Del;
-	UI_delete_data.datahead.receiver_ID = _id->Cilent_ID;
-	UI_delete_data.datahead.sender_ID = _id->Robot_ID;
+// 	UI_delete_data.datahead.data_cmd_id = UI_Data_ID_Del;
+// 	UI_delete_data.datahead.receiver_ID = _id->Cilent_ID;
+// 	UI_delete_data.datahead.sender_ID = _id->Robot_ID;
 
-	UI_delete_data.Delete_Operate = Del_Operate; // 删除操作
-	UI_delete_data.Layer = Del_Layer;
+// 	UI_delete_data.Delete_Operate = Del_Operate; // 删除操作
+// 	UI_delete_data.Layer = Del_Layer;
 
-	UI_delete_data.frametail = Get_CRC16_Check_Sum((uint8_t *)&UI_delete_data, LEN_HEADER + LEN_CMDID + temp_datalength, 0xFFFF);
-	/* 填入0xFFFF,关于crc校验 */
+// 	UI_delete_data.frametail = Get_CRC16_Check_Sum((uint8_t *)&UI_delete_data, LEN_HEADER + LEN_CMDID + temp_datalength, 0xFFFF);
+// 	/* 填入0xFFFF,关于crc校验 */
 
-	RefereeSend((uint8_t *)&UI_delete_data, LEN_HEADER + LEN_CMDID + temp_datalength + LEN_TAIL); // 发送
+// 	RefereeSend((uint8_t *)&UI_delete_data, LEN_HEADER + LEN_CMDID + temp_datalength + LEN_TAIL); // 发送
 
-	UI_Seq++; // 包序号+1
-}
+// 	UI_Seq++; // 包序号+1
+// }
 /************************************************绘制直线*************************************************
 **参数：*graph Graph_Data类型变量指针，用于存放图形数据
 		graphname[3]   图片名称，用于标识更改
@@ -345,80 +345,80 @@ void UICharDraw(String_Data_t *graph, char graphname[3], uint32_t Graph_Operate,
 			...   图形变量参数
    Tips：：该函数只能推送1，2，5，7个图形，其他数目协议未涉及
  */
-void UIGraphRefresh(referee_id_t *_id, int cnt, ...)
-{
-	UI_GraphReFresh_t UI_GraphReFresh_data;
-	Graph_Data_t graphData;
+// void UIGraphRefresh(referee_id_t *_id, int cnt, ...)
+// {
+// 	UI_GraphReFresh_t UI_GraphReFresh_data;
+// 	Graph_Data_t graphData;
 
-	uint8_t temp_datalength = LEN_HEADER + LEN_CMDID + Interactive_Data_LEN_Head + UI_Operate_LEN_PerDraw * cnt + LEN_TAIL; // 计算交互数据长度
+// 	uint8_t temp_datalength = LEN_HEADER + LEN_CMDID + Interactive_Data_LEN_Head + UI_Operate_LEN_PerDraw * cnt + LEN_TAIL; // 计算交互数据长度
 
-	static uint8_t buffer[512]; // 交互数据缓存
+// 	static uint8_t buffer[512]; // 交互数据缓存
 
-	va_list ap;		   // 创建一个 va_list 类型变量
-	va_start(ap, cnt); // 初始化 va_list 变量为一个参数列表
+// 	va_list ap;		   // 创建一个 va_list 类型变量
+// 	va_start(ap, cnt); // 初始化 va_list 变量为一个参数列表
 
-	UI_GraphReFresh_data.FrameHeader.SOF = REFEREE_SOF;
-	UI_GraphReFresh_data.FrameHeader.DataLength = Interactive_Data_LEN_Head + cnt * UI_Operate_LEN_PerDraw;
-	UI_GraphReFresh_data.FrameHeader.Seq = UI_Seq;
-	UI_GraphReFresh_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_GraphReFresh_data, LEN_CRC8, 0xFF);
+// 	UI_GraphReFresh_data.FrameHeader.SOF = REFEREE_SOF;
+// 	UI_GraphReFresh_data.FrameHeader.DataLength = Interactive_Data_LEN_Head + cnt * UI_Operate_LEN_PerDraw;
+// 	UI_GraphReFresh_data.FrameHeader.Seq = UI_Seq;
+// 	UI_GraphReFresh_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_GraphReFresh_data, LEN_CRC8, 0xFF);
 
-	UI_GraphReFresh_data.CmdID = ID_student_interactive;
+// 	UI_GraphReFresh_data.CmdID = ID_student_interactive;
 
-	switch (cnt)
-	{
-	case 1:
-		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw1;
-		break;
-	case 2:
-		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw2;
-		break;
-	case 5:
-		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw5;
-		break;
-	case 7:
-		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw7;
-		break;
-	}
+// 	switch (cnt)
+// 	{
+// 	case 1:
+// 		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw1;
+// 		break;
+// 	case 2:
+// 		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw2;
+// 		break;
+// 	case 5:
+// 		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw5;
+// 		break;
+// 	case 7:
+// 		UI_GraphReFresh_data.datahead.data_cmd_id = UI_Data_ID_Draw7;
+// 		break;
+// 	}
 
-	UI_GraphReFresh_data.datahead.receiver_ID = _id->Cilent_ID;
-	UI_GraphReFresh_data.datahead.sender_ID = _id->Robot_ID;
-	memcpy(buffer, (uint8_t *)&UI_GraphReFresh_data, LEN_HEADER + LEN_CMDID + Interactive_Data_LEN_Head); // 将帧头、命令码、交互数据帧头三部分复制到缓存中
+// 	UI_GraphReFresh_data.datahead.receiver_ID = _id->Cilent_ID;
+// 	UI_GraphReFresh_data.datahead.sender_ID = _id->Robot_ID;
+// 	memcpy(buffer, (uint8_t *)&UI_GraphReFresh_data, LEN_HEADER + LEN_CMDID + Interactive_Data_LEN_Head); // 将帧头、命令码、交互数据帧头三部分复制到缓存中
 
-	for (uint8_t i = 0; i < cnt; i++) // 发送交互数据的数据帧，并计算CRC16校验值
-	{
-		graphData = va_arg(ap, Graph_Data_t); // 访问参数列表中的每个项,第二个参数是你要返回的参数的类型,在取值时需要将其强制转化为指定类型的变量
-		memcpy(buffer + (LEN_HEADER + LEN_CMDID + Interactive_Data_LEN_Head + UI_Operate_LEN_PerDraw * i), (uint8_t *)&graphData, UI_Operate_LEN_PerDraw);
-	}
-	Append_CRC16_Check_Sum(buffer, temp_datalength);
-	RefereeSend(buffer, temp_datalength);
+// 	for (uint8_t i = 0; i < cnt; i++) // 发送交互数据的数据帧，并计算CRC16校验值
+// 	{
+// 		graphData = va_arg(ap, Graph_Data_t); // 访问参数列表中的每个项,第二个参数是你要返回的参数的类型,在取值时需要将其强制转化为指定类型的变量
+// 		memcpy(buffer + (LEN_HEADER + LEN_CMDID + Interactive_Data_LEN_Head + UI_Operate_LEN_PerDraw * i), (uint8_t *)&graphData, UI_Operate_LEN_PerDraw);
+// 	}
+// 	Append_CRC16_Check_Sum(buffer, temp_datalength);
+// 	RefereeSend(buffer, temp_datalength);
 
-	va_end(ap); // 结束可变参数的获取
-}
+// 	va_end(ap); // 结束可变参数的获取
+// }
 
-/************************************************UI推送字符（使更改生效）*********************************/
-void UICharRefresh(referee_id_t *_id, String_Data_t string_Data)
-{
-	static UI_CharReFresh_t UI_CharReFresh_data;
+// /************************************************UI推送字符（使更改生效）*********************************/
+// void UICharRefresh(referee_id_t *_id, String_Data_t string_Data)
+// {
+// 	static UI_CharReFresh_t UI_CharReFresh_data;
 
-	uint8_t temp_datalength = Interactive_Data_LEN_Head + UI_Operate_LEN_DrawChar; // 计算交互数据长度
+// 	uint8_t temp_datalength = Interactive_Data_LEN_Head + UI_Operate_LEN_DrawChar; // 计算交互数据长度
 
-	UI_CharReFresh_data.FrameHeader.SOF = REFEREE_SOF;
-	UI_CharReFresh_data.FrameHeader.DataLength = temp_datalength;
-	UI_CharReFresh_data.FrameHeader.Seq = UI_Seq;
-	UI_CharReFresh_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_CharReFresh_data, LEN_CRC8, 0xFF);
+// 	UI_CharReFresh_data.FrameHeader.SOF = REFEREE_SOF;
+// 	UI_CharReFresh_data.FrameHeader.DataLength = temp_datalength;
+// 	UI_CharReFresh_data.FrameHeader.Seq = UI_Seq;
+// 	UI_CharReFresh_data.FrameHeader.CRC8 = Get_CRC8_Check_Sum((uint8_t *)&UI_CharReFresh_data, LEN_CRC8, 0xFF);
 
-	UI_CharReFresh_data.CmdID = ID_student_interactive;
+// 	UI_CharReFresh_data.CmdID = ID_student_interactive;
 
-	UI_CharReFresh_data.datahead.data_cmd_id = UI_Data_ID_DrawChar;
+// 	UI_CharReFresh_data.datahead.data_cmd_id = UI_Data_ID_DrawChar;
 
-	UI_CharReFresh_data.datahead.receiver_ID = _id->Cilent_ID;
-	UI_CharReFresh_data.datahead.sender_ID = _id->Robot_ID;
+// 	UI_CharReFresh_data.datahead.receiver_ID = _id->Cilent_ID;
+// 	UI_CharReFresh_data.datahead.sender_ID = _id->Robot_ID;
 
-	UI_CharReFresh_data.String_Data = string_Data;
+// 	UI_CharReFresh_data.String_Data = string_Data;
 
-	UI_CharReFresh_data.frametail = Get_CRC16_Check_Sum((uint8_t *)&UI_CharReFresh_data, LEN_HEADER + LEN_CMDID + temp_datalength, 0xFFFF);
+// 	UI_CharReFresh_data.frametail = Get_CRC16_Check_Sum((uint8_t *)&UI_CharReFresh_data, LEN_HEADER + LEN_CMDID + temp_datalength, 0xFFFF);
 
-	RefereeSend((uint8_t *)&UI_CharReFresh_data, LEN_HEADER + LEN_CMDID + temp_datalength + LEN_TAIL); // 发送
+// 	RefereeSend((uint8_t *)&UI_CharReFresh_data, LEN_HEADER + LEN_CMDID + temp_datalength + LEN_TAIL); // 发送
 
-	UI_Seq++; // 包序号+1
-}
+// 	UI_Seq++; // 包序号+1
+// }

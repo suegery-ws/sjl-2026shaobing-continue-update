@@ -27,8 +27,6 @@ osThreadId robotTaskHandle;
 osThreadId motorTaskHandle;
 osThreadId daemonTaskHandle;
 // osThreadId uiTaskHandle;
-// osThreadId dmimuTaskHandle;
-
 
 void StartINSTASK(void const *argument);
 void StartMOTORTASK(void const *argument);

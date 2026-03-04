@@ -8,6 +8,8 @@
 #include "FreeRTOS.h"
 
 extern uint8_t UI_Seq;
+// 裁判系统服务器 ID（协议附录：0x8080 用于哨兵/雷达自主决策指令）
+#define REFEREE_SERVER_ID 0x8080u
 
 #pragma pack(1)
 typedef struct
@@ -29,17 +31,29 @@ typedef struct
 	ext_game_result_t GameResult;						   // 0x0002
 	ext_game_robot_HP_t GameRobotHP;					   // 0x0003
 	ext_event_data_t EventData;							   // 0x0101
-	ext_supply_projectile_action_t SupplyProjectileAction; // 0x0102
+	referee_warning_t referee_warning;                     // 0x0104
+	dart_info_t dart_info;                                // 0x0105
 	ext_game_robot_state_t GameRobotState;				   // 0x0201
-	ext_power_heat_data_t PowerHeatData;				   // 0x0202
-	ext_game_robot_pos_t GameRobotPos;					   // 0x0203
-	ext_buff_musk_t BuffMusk;							   // 0x0204
-	aerial_robot_energy_t AerialRobotEnergy;			   // 0x0205
-	ext_robot_hurt_t RobotHurt;							   // 0x0206
-	ext_shoot_data_t ShootData;							   // 0x0207
-
-	// 自定义交互数据的接收
-	Communicate_ReceiveData_t ReceiveData;
+	robot_pos_t robot_pos;                                 //
+	buff_t buff;                                           //
+    ext_robot_hurt_t ext_robot_hurt;
+	ext_shoot_data_t ext_shoot_data;
+	projectile_allowance_t projectile_allowance;
+	rfid_status_t rfid_status;
+    dart_client_cmd_t dart_client_cmd;
+	ground_robot_position_t ground_robot_position;
+	radar_mark_data_t radar_mark_data;
+	sentry_info_t sentry_info;     
+	radar_info_t radar_info;
+    robot_interaction_data_t robot_interaction_data;
+	sentry_cmd_t sentry_cmd;
+	radar_cmd_t radar_cmd;
+	// interaction_layer_delete_t interaction_layer_delete;
+	map_command_t map_command;
+	map_robot_data_t map_robot_data;
+	map_data_t map_data;
+	custom_info_t custom_info;
+	remote_control_t remote_control;
 
 	uint8_t init_flag;
 
@@ -96,5 +110,12 @@ referee_info_t *RefereeInit(UART_HandleTypeDef *referee_usart_handle);
  * @param tx_len 发送长度
  */
 void RefereeSend(uint8_t *send, uint16_t tx_len);
+
+/**
+ * @brief 发送哨兵自主决策指令（0x0301/0x0120）到裁判系统服务器
+ *
+ * @param sentry_cmd_bits sentry_cmd_t.sentry_cmd 的 32bit 命令位
+ */
+void RefereeSendSentryDecision(uint32_t sentry_cmd_bits);
 
 #endif // !REFEREE_H

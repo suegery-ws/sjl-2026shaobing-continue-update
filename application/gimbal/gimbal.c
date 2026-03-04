@@ -111,8 +111,8 @@ void GimbalInit()
                 .MaxOut = 5, 
             }, //用不到
             .auto_angle_PID = {
-                .Kp = 38.0f,  
-                .Ki = 20.0f, 
+                .Kp = 40.0f,  
+                .Ki = 30.0f, 
                 .Kd = 0.0f,
                 .DeadBand = 0,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,

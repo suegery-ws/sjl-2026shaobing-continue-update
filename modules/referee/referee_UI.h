@@ -13,7 +13,7 @@ typedef struct
 {
    xFrameHeader FrameHeader;
    uint16_t CmdID;
-   ext_student_interactive_header_data_t datahead;
+   // ext_student_interactive_header_data_t datahead;
    uint8_t Delete_Operate; // 删除操作
    uint8_t Layer;
    uint16_t frametail;
@@ -23,7 +23,7 @@ typedef struct
 {
    xFrameHeader FrameHeader;
    uint16_t CmdID;
-   ext_student_interactive_header_data_t datahead;
+   // ext_student_interactive_header_data_t datahead;
    uint16_t frametail;
 } UI_GraphReFresh_t;
 
@@ -31,7 +31,7 @@ typedef struct
 {
    xFrameHeader FrameHeader;
    uint16_t CmdID;
-   ext_student_interactive_header_data_t datahead;
+   // ext_student_interactive_header_data_t datahead;
    String_Data_t String_Data;
    uint16_t frametail;
 } UI_CharReFresh_t; // 打印字符串数据

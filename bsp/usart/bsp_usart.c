@@ -109,7 +109,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     { // find the instance which is being handled
         if (huart == usart_instance[i]->usart_handle)
         { // call the callback function if it is not NULL
-            if (usart_instance[i]->module_callback != NULL && Size == usart_instance[i]->recv_buff_size)
+            // if (usart_instance[i]->module_callback != NULL && Size == usart_instance[i]->recv_buff_size)
+            if (usart_instance[i]->module_callback != NULL)
             {
                 usart_instance[i]->module_callback();
                 memset(usart_instance[i]->recv_buff, 0, Size); // 接收结束后清空buffer,对于变长数据是必要的 从初始地址开始，把size个字节变成同一个值
