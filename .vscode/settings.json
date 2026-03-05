@@ -14,8 +14,10 @@
         "dji_motor.h": "c",
         "bsp_log.h": "c"
     },
+    "clangd.path": "/home/orion/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/21.1.8/clangd_21.1.8/bin/clangd",
     "clangd.arguments":
     [
-        "--compile-commands-dir=build."
+        "--compile-commands-dir=build",
+        "--query-driver=/home/orion/.local/share/stm32cube/bundles/gnu-tools-for-stm32/14.3.1+st.2/bin/arm-none-eabi-*"
     ]
 }

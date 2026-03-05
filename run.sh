@@ -8,6 +8,29 @@ COLOR_BLUE="\e[34m"
 COLOR_BOLD_GREEN="\e[1;32m"
 COLOR_RESET="\e[0m"
 
+# 自动探测 Arm GNU 工具链路径（优先使用 STM32Cube 安装目录）
+if ! command -v arm-none-eabi-gcc >/dev/null 2>&1; then
+    latest_stm32cube_toolchain=$(ls -1d "$HOME"/.local/share/stm32cube/bundles/gnu-tools-for-stm32/*/bin 2>/dev/null | sort -V | tail -n1)
+    if [ -n "$latest_stm32cube_toolchain" ] && [ -x "$latest_stm32cube_toolchain/arm-none-eabi-gcc" ]; then
+        export PATH="$latest_stm32cube_toolchain:$PATH"
+        echo -e "${COLOR_BLUE}已加载 Arm 工具链路径: ${latest_stm32cube_toolchain}${COLOR_RESET}"
+    fi
+fi
+
+# 检查关键工具是否可用
+required_tools=(
+    arm-none-eabi-gcc
+    arm-none-eabi-objcopy
+    arm-none-eabi-objdump
+    arm-none-eabi-size
+)
+for tool in "${required_tools[@]}"; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        echo -e "${COLOR_RED}错误：未找到 $tool，请先安装 Arm GNU Toolchain 并加入 PATH。${COLOR_RESET}"
+        exit 1
+    fi
+done
+
 # 记录编译开始时间
 start_time=$(date +%s)
 
@@ -15,12 +38,28 @@ start_time=$(date +%s)
 mkdir -p build
 cd build
 rm -rf _*
+rm -rf CMakeCache.txt CMakeFiles
 
-# 运行 CMake 和 Ninja 构建
+# 选择构建工具：优先 Ninja，不可用则回退到 Makefiles
+if command -v ninja >/dev/null 2>&1; then
+    cmake_generator="Ninja"
+else
+    cmake_generator="Unix Makefiles"
+    echo -e "${COLOR_YELLOW}未检测到 Ninja，自动切换到 Unix Makefiles。${COLOR_RESET}"
+fi
+
+# 获取并行编译任务数
+if command -v nproc >/dev/null 2>&1; then
+    build_jobs=$(nproc)
+else
+    build_jobs=16
+fi
+
+# 运行 CMake 和构建
 echo -e "${COLOR_BLUE}正在生成构建系统...${COLOR_RESET}"
-cmake -G Ninja .. && \
+cmake -G "$cmake_generator" .. && \
 echo -e "${COLOR_BLUE}开始编译项目...${COLOR_RESET}" && \
-cmake --build . --target all --config Release -- -j 16
+cmake --build . --target all --config Release -- -j "$build_jobs"
 
 # 检查构建是否成功
 if [ $? -ne 0 ]; then
