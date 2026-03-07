@@ -1,54 +1,74 @@
-# Prerequisites
-*.d
+# ------------------------------
+# OS / Editor temporary files
+# ------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.cache/
 
-# Object files
+# ------------------------------
+# IDE / workspace metadata
+# ------------------------------
+.idea/
+.clangd
+.vscode/.cortex-debug.peripherals.state.json
+.vscode/.cortex-debug.registers.state.json
+
+# ------------------------------
+# Build directories
+# ------------------------------
+/build/
+/out/
+/Debug/
+/Release/
+cmake-build-*/
+
+# ------------------------------
+# CMake-generated files
+# ------------------------------
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+
+# ------------------------------
+# Compiled / linked artifacts
+# ------------------------------
+*.d
 *.o
-*.ko
 *.obj
 *.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
+*.axf
 *.out
 *.app
 *.i*86
 *.x86_64
-
-# Debug files
+*.ilk
+*.map
+*.exp
+*.gch
+*.pch
+*.la
+*.lo
+*.a
+*.lib
+*.dll
+*.so
+*.so.*
+*.dylib
 *.dSYM/
 *.su
 *.idb
 *.pdb
+*.lst
+*.bin
+*.hex
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-build
-./idea
-.vscode/.cortex-debug.peripherals.state.json
-.vscode/.cortex-debug.registers.state.json
+# ------------------------------
+# Debugger / flasher artifacts
+# ------------------------------
 *.jdebug*
+*.jlinklog
